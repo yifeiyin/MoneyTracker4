@@ -1,0 +1,150 @@
+{
+    "_accountNodes": {
+        "0": {
+            "isFolder": true,
+            "name": "Root",
+            "parentId": null,
+            "_CREATING_ROOT": true,
+            "_ID": 0,
+            "accountType": "debit"
+        },
+        "10": {
+            "isFolder": true,
+            "name": "Asset",
+            "parentId": 0,
+            "accountType": "debit"
+        },
+        "20": {
+            "isFolder": true,
+            "name": "Liability",
+            "parentId": 0,
+            "accountType": "credit"
+        },
+        "30": {
+            "isFolder": true,
+            "name": "Equity",
+            "parentId": 0,
+            "accountType": "credit"
+        },
+        "103": {
+            "parentId": 10,
+            "isFolder": true,
+            "name": "Cash",
+            "accountType": "debit",
+            "description": ""
+        },
+        "105": {
+            "parentId": 103,
+            "isFolder": false,
+            "name": "Canadian Cash",
+            "accountType": "debit",
+            "description": ""
+        },
+        "106": {
+            "parentId": 103,
+            "isFolder": false,
+            "name": "Chinese Cash",
+            "accountType": "debit",
+            "description": ""
+        },
+        "107": {
+            "parentId": 10,
+            "isFolder": true,
+            "name": "Banking",
+            "accountType": "debit",
+            "description": ""
+        },
+        "108": {
+            "parentId": 107,
+            "isFolder": false,
+            "name": "BMO Chequeing",
+            "accountType": "debit",
+            "description": ""
+        },
+        "109": {
+            "parentId": 107,
+            "isFolder": false,
+            "name": "BMO Saving",
+            "accountType": "debit",
+            "description": ""
+        },
+        "110": {
+            "parentId": 107,
+            "isFolder": false,
+            "name": "BMO USD",
+            "accountType": "debit",
+            "description": ""
+        },
+        "112": {
+            "parentId": 20,
+            "isFolder": false,
+            "name": "BMO MasterCard",
+            "accountType": "credit",
+            "description": ""
+        },
+        "113": {
+            "parentId": 30,
+            "isFolder": true,
+            "name": "Fixed Expense",
+            "accountType": "credit",
+            "description": ""
+        },
+        "114": {
+            "parentId": 30,
+            "isFolder": true,
+            "name": "Flexible Expense",
+            "accountType": "credit",
+            "description": ""
+        },
+        "115": {
+            "parentId": 30,
+            "isFolder": true,
+            "name": "Earned Income",
+            "accountType": "credit",
+            "description": "Money that I earned myself"
+        },
+        "116": {
+            "parentId": 30,
+            "isFolder": true,
+            "name": "Gifted Income",
+            "accountType": "credit",
+            "description": "Money I obtained from parents and relatives"
+        },
+        "117": {
+            "parentId": 30,
+            "isFolder": true,
+            "name": "Gain/Loss",
+            "accountType": "credit",
+            "description": "Accounts that are subjected to fluctuate"
+        },
+        "118": {
+            "parentId": 113,
+            "isFolder": false,
+            "name": "Housing Expense",
+            "accountType": "credit",
+            "description": "Rental, hydro, water, internet, etc"
+        },
+        "119": {
+            "parentId": 113,
+            "isFolder": false,
+            "name": "Tuition Expense",
+            "accountType": "credit",
+            "description": "Tuitions, textbooks, etc"
+        },
+        "120": {
+            "parentId": 114,
+            "isFolder": false,
+            "name": "Software Expense",
+            "accountType": "credit",
+            "description": "subscription services, music, app store, etc"
+        },
+        "121": {
+            "parentId": 114,
+            "isFolder": false,
+            "name": "Food Expense",
+            "accountType": "credit",
+            "description": "Supermarket shopping, eating out, etc"
+        }
+    },
+    "_greatestIdUsed": 121
+}

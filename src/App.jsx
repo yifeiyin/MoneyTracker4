@@ -15,27 +15,34 @@ import {
 } from '@material-ui/core';
 
 import ImportExportScreen from './screens/ImportExportScreen';
+import AccountsScreen from './screens/AccountsScreen';
+
+import { AccountManager } from './core/account-manager';
 
 function App() {
+  console.log('New Account Manager');
+  global.accountManager = new AccountManager(JSON.stringify(require('./Accounts.json')));
+
   return (
     <Router>
       <AppBar position="static">
         <Toolbar>
           <Button color="inherit" href="/">Home</Button>
           <Button color="inherit" href="/import-export">Import Export</Button>
-          <Button color="inherit" href="/users">Users</Button>
+          <Button color="inherit" href="/accounts">Accounts</Button>
         </Toolbar>
       </AppBar>
-
 
       {/* A <Switch> looks through its children <Route>s and
               renders the first one that matches the current URL. */}
       <Switch>
         <Route path="/import-export">
+          <h1>Import Export</h1>
           <ImportExportScreen />
         </Route>
-        <Route path="/users">
-          <h1>Users</h1>
+        <Route path="/accounts">
+          <h1>Accounts</h1>
+          <AccountsScreen />
         </Route>
         <Route path="/">
           <h1>Home</h1>
