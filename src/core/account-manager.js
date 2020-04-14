@@ -143,6 +143,7 @@ class AccountManager {
         for (let [propertyKey, newValue] of Object.entries(changes)) {
 
             if (propertyKey == 'name') {
+                if (newValue === targetAccount.name) continue;
                 // Ensuring name is unique within its siblings
                 if (!this._isNameUniqueUnderParent(newValue, targetAccount.parentId))
                     throw new Error(`AccountManager: name is not unique within its siblings: ${newValue}`);
@@ -150,6 +151,8 @@ class AccountManager {
             }
 
             else if (propertyKey == 'parentId') {
+                if (newValue === targetAccount.parentId) continue;
+
                 // Ensuring the parent exists
                 if (!(newValue in this._accountNodes))
                     throw new ReferenceError(`ParentId not found: ${newValue}`);
@@ -226,6 +229,9 @@ class AccountManager {
     }
 
     getTreeData(startsFrom = this._rootAccount) {
+        if (startsFrom === this._rootAccount) {
+            return this._accountNodeHierarchy[startsFrom].children.map(c => this.getTreeData(c))
+        }
         return {
             id: '' + startsFrom,
             name: this.fromIdToName(startsFrom),

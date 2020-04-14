@@ -3,8 +3,9 @@ type:
 	- multiline text
 	- boolean
 	- integer
-	- choice
+	- select (choices: { value, label = value })
 	- time/date/timedate
+	- account
 
 label
 

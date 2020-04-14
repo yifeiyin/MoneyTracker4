@@ -17,11 +17,8 @@ import {
 import ImportExportScreen from './screens/ImportExportScreen';
 import AccountsScreen from './screens/AccountsScreen';
 
-import { AccountManager } from './core/account-manager';
 
 function App() {
-  console.log('New Account Manager');
-  global.accountManager = new AccountManager(JSON.stringify(require('./Accounts.json')));
 
   return (
     <Router>

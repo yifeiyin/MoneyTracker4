@@ -5,9 +5,14 @@ import App from './App';
 import * as serviceWorker from './serviceWorker';
 import CssBaseline from '@material-ui/core/CssBaseline';
 
-
 // import { Provider } from 'react-redux'
 // import store from './store'
+
+import { SnackbarProvider } from 'notistack';
+
+import { AccountManager } from './core/account-manager';
+console.log('Loading new app instance');
+global.accountManager = new AccountManager(JSON.stringify(require('./Accounts.json')));
 
 
 ReactDOM.render(
@@ -17,7 +22,12 @@ ReactDOM.render(
     <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width" />
     <CssBaseline />
     {/* <Provider store={store}> */}
+    <SnackbarProvider maxSnack={5} anchorOrigin={{
+      vertical: 'top',
+      horizontal: 'right',
+    }}>
       <App />
+    </SnackbarProvider>
     {/* </Provider> */}
   </React.StrictMode>,
   document.getElementById('root')
