@@ -1,0 +1,8 @@
+{
+    "acceptableCurrencies": [
+        "CAD",
+        "CNY",
+        "USD"
+    ],
+    "defaultCurrency": "CAD"
+}

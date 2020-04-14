@@ -47,7 +47,9 @@ class AccountsScreen extends React.Component {
       alert(error);
       return;
     }
+
     this.props.enqueueSnackbar('Success!', { variant: 'success' });
+
     this.setState({ treeData: global.accountManager.getTreeData() });
     this.onEdit(targetId);
   }

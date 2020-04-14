@@ -25,8 +25,14 @@ function App() {
       <AppBar position="static">
         <Toolbar>
           <Button color="inherit" href="/">Home</Button>
-          <Button color="inherit" href="/import-export">Import Export</Button>
+          {/* <Button color="inherit" href="/import-export">Import Export</Button> */}
           <Button color="inherit" href="/accounts">Accounts</Button>
+
+          <span style={{ marginLeft: 'auto' }}>
+            <Button color="inherit" onClick={() => global.loadInitialData()}>Reset</Button>
+            <Button color="inherit" onClick={() => global.loadAllData()}>Reload</Button>
+            <Button color="inherit" onClick={() => global.saveAllData()}>Save</Button>
+          </span>
         </Toolbar>
       </AppBar>
 
