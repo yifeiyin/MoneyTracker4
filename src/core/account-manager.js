@@ -79,7 +79,7 @@ class AccountManager {
 
     createAccountNode(newAccountNode) {
 
-        for (let [key, type] of Object.entries({ 'isFolder': 'boolean', 'name': 'string', 'parentId': 'number', 'accountType': 'string' })) {
+        for (let [key, type] of Object.entries({ 'isFolder': 'boolean', 'name': 'string', 'parentId': 'string', 'accountType': 'string' })) {
             if (!(key in newAccountNode)) throw new Error(`Missing mandatory key in newAccountNode: ${key}`);
             if (typeof (newAccountNode[key]) != type && !newAccountNode._CREATING_ROOT) throw new Error(`${key} in newAccountNode should be of type ${type}, but is: ${typeof (newAccountNode[key])}`);
         }
@@ -97,6 +97,10 @@ class AccountManager {
 
             if (!(newAccountNode.parentId in this._accountNodes))
                 throw new ReferenceError(`parentId in newAccountNode cannot be found: ${newAccountNode.parentId}`);
+
+            if (this._accountNodes[newAccountNode.parentId].isFolder !== true) {
+                throw new ReferenceError(`Parent specified is not a folder.`);
+            }
 
             if (!this._isNameUniqueUnderParent(newAccountNode.name, newAccountNode.parentId))
                 throw new Error(`name is not unique within its siblings: ${newAccountNode.name}`);

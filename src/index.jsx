@@ -77,8 +77,8 @@ ReactDOM.render(
     <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width" />
     <CssBaseline />
     {/* <Provider store={store}> */}
-    <SnackbarProvider maxSnack={5} anchorOrigin={{
-      vertical: 'top',
+    <SnackbarProvider maxSnack={5} autoHideDuration={2500} anchorOrigin={{
+      vertical: 'bottom',
       horizontal: 'center',
     }}>
       <App />

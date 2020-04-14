@@ -1,5 +1,5 @@
 import React from 'react';
-// import { Button, IconButton, TextField } from '@material-ui/core';
+import { Modal, Backdrop, Paper, Fade, Button } from '@material-ui/core';
 // import { TreeView, TreeItem } from '@material-ui/lab';
 // import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 // import ChevronRightIcon from '@material-ui/icons/ChevronRight';
@@ -13,10 +13,21 @@ const AccountFormat = {
   title: 'Account $name ($id)',
   fields: [
     { id: 'id', type: 'input', propertyType: 'immutable' },
-    { id: 'name', type: 'input', },
+    { id: 'name', type: 'input' },
     { id: 'parentId', type: 'account' },
     { id: 'isFolder', type: 'boolean', propertyType: 'immutable' },
     { id: 'accountType', type: 'select', choices: ['debit', 'credit'], propertyType: 'immutable' },
+    { id: 'description', type: 'multiline' },
+  ]
+}
+
+const NewAccountFormat = {
+  title: 'Create new account',
+  fields: [
+    { id: 'name', type: 'input' },
+    { id: 'parentId', type: 'account' },
+    { id: 'isFolder', type: 'boolean' },
+    { id: 'accountType', type: 'select', choices: ['debit', 'credit'] },
     { id: 'description', type: 'multiline' },
   ]
 }
@@ -25,6 +36,27 @@ class AccountsScreen extends React.Component {
   state = {
     treeData: global.accountManager.getTreeData(),
     accountValue: {},
+    creatingNewAccount: false,
+    creatingNewAccountValue: {},
+  }
+
+  reloadAccountTree = () => {
+    this.setState({ treeData: global.accountManager.getTreeData() });
+  }
+
+  onSaveNewAccount = (aborting) => {
+    if (!aborting) {
+      try {
+        global.accountManager.createAccountNode(this.state.creatingNewAccountValue);
+        this.props.enqueueSnackbar('Created!', { variant: 'success' });
+        this.reloadAccountTree();
+      } catch (error) {
+        alert(error);
+        return;
+      }
+    }
+
+    this.setState({ creatingNewAccount: false, creatingNewAccountValue: {} });
   }
 
   onEdit = (id) => {
@@ -50,7 +82,7 @@ class AccountsScreen extends React.Component {
 
     this.props.enqueueSnackbar('Success!', { variant: 'success' });
 
-    this.setState({ treeData: global.accountManager.getTreeData() });
+    this.reloadAccountTree();
     this.onEdit(targetId);
   }
 
@@ -63,12 +95,32 @@ class AccountsScreen extends React.Component {
           onEdit={this.onEdit}
           onSave={this.onSave}
         />
+        <Button color='primary' variant='outlined' onClick={this.reloadAccountTree}>Reload Account Tree</Button>
+        <Button color='primary' variant='outlined' onClick={() => this.setState({ creatingNewAccount: true })}>Creating New Account</Button>
         <ObjectEditor
           format={AccountFormat}
           values={this.state.accountValue}
           onChange={(accountValue) => this.setState({ accountValue })}
           onSave={this.onSave}
         />
+        <Modal
+          closeAfterTransition
+          open={this.state.creatingNewAccount}
+          onClose={() => this.onSaveNewAccount(true)}
+          BackdropComponent={Backdrop}
+          BackdropProps={{ timeout: 500 }}
+        ><Fade in={this.state.creatingNewAccount}>
+            <Paper style={{ width: '70vw', margin: 'auto', marginTop: 30, padding: 20 }}>
+              <ObjectEditor
+                format={NewAccountFormat}
+                values={this.state.creatingNewAccountValue}
+                onChange={(creatingNewAccountValue) => this.setState({ creatingNewAccountValue })}
+                onSave={this.onSaveNewAccount}
+              />
+            </Paper>
+          </Fade>
+        </Modal>
+
       </>
     );
   }

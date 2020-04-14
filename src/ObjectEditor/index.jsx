@@ -125,8 +125,9 @@ function ObjectEditorField(props) {
     case 'boolean':
       return (
         <>
-          <Select value={value === true ? 'true' : value === false ? 'false' : ''} onChange={(newValue) => onChange(newValue === 'true' ? true : newValue === 'false' ? false : undefined)}>
-            <MenuItem value=''><em>None</em></MenuItem><MenuItem value='true'>True</MenuItem>
+          <Select value={value === true ? 'true' : value === false ? 'false' : ''} onChange={(e) => onChange(e.target.value === 'true' ? true : e.target.value === 'false' ? false : undefined)}>
+            <MenuItem value=''><em>None</em></MenuItem>
+            <MenuItem value='true'>True</MenuItem>
             <MenuItem value='false'>False</MenuItem>
           </Select>
         </>
