@@ -79,7 +79,11 @@ export default class ObjectEditor extends React.Component {
           </Fade>
         </Modal>
 
-        <Button variant='contained' color='primary' onClick={() => onSave ? onSave() : console.error('onSave is not defined.')}>Save</Button>
+        <Button
+          variant='contained' color='primary'
+          onClick={() => onSave ? onSave() : console.error('onSave is not defined.')}
+          style={{ margin: 15 }}
+        >Save</Button>
       </>
     );
   }
@@ -117,7 +121,7 @@ function ObjectEditorField(props) {
         <Select value={ensureDefined(value)} onChange={(e) => onChange(e.target.value)}>
           {
             choices.map(choice =>
-              <MenuItem value={choice.value}>{choice.label || choice.value}</MenuItem>
+              <MenuItem key={choice.value} value={choice.value}>{choice.label || choice.value}</MenuItem>
             )
           }
         </Select>

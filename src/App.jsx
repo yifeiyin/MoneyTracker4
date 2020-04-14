@@ -16,42 +16,53 @@ import {
 
 import ImportExportScreen from './screens/ImportExportScreen';
 import AccountsScreen from './screens/AccountsScreen';
+import TransactionsScreen from './screens/TransactionsScreen';
 
+const routes = [
+  ['/accounts', AccountsScreen, 'Accounts'],
+  ['/import-export', ImportExportScreen, 'Import/Export'],
+  ['/transactions', TransactionsScreen, 'Transactions'],
+];
 
 function App() {
-
   return (
     <Router>
-      <AppBar position="static">
-        <Toolbar>
-          <Button color="inherit" href="/">Home</Button>
-          {/* <Button color="inherit" href="/import-export">Import Export</Button> */}
-          <Button color="inherit" href="/accounts">Accounts</Button>
-
-          <span style={{ marginLeft: 'auto' }}>
-            <Button color="inherit" onClick={() => global.loadInitialData()}>Reset</Button>
-            <Button color="inherit" onClick={() => global.loadAllData()}>Reload</Button>
-            <Button color="inherit" onClick={() => global.saveAllData()}>Save</Button>
-          </span>
-        </Toolbar>
-      </AppBar>
-
-      {/* A <Switch> looks through its children <Route>s and
-              renders the first one that matches the current URL. */}
       <Switch>
-        <Route path="/import-export">
-          <h1>Import Export</h1>
-          <ImportExportScreen />
-        </Route>
-        <Route path="/accounts">
-          <h1>Accounts</h1>
-          <AccountsScreen />
-        </Route>
-        <Route path="/">
-          <h1>Home</h1>
-        </Route>
+        {
+          routes.map(([path, Component, name]) =>
+            <Route key={path} path={path}>
+              <AppBarWrapper path={path} />
+              <Component />
+            </Route>
+          )
+        }
       </Switch>
     </Router>
+  );
+}
+
+
+const AppBarWrapper = (props) => {
+  return (
+    <AppBar position="static" style={{ marginBottom: 20 }}>
+      <Toolbar>
+        {
+          routes.map(([path, component, name]) =>
+            <Button
+              key={path}
+              color="inherit"
+              style={{ border: path !== props.path ? '1px solid transparent' : '1px solid white' }}
+              href={path}
+            >{name}</Button>
+          )
+        }
+        <span style={{ marginLeft: 'auto' }}>
+          <Button color="inherit" onClick={() => global.loadInitialData()}>Reset</Button>
+          <Button color="inherit" onClick={() => global.loadAllData()}>Reload</Button>
+          <Button color="inherit" onClick={() => global.saveAllData()}>Save</Button>
+        </span>
+      </Toolbar>
+    </AppBar>
   );
 }
 
