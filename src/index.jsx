@@ -16,6 +16,20 @@ import { ScheduleContainer } from './core/schedule-container';
 import { TransactionContainer } from './core/transaction-container';
 import { TransactionManager } from './core/transaction-manager';
 
+import DateFnsUtils from '@date-io/date-fns';
+import { MuiPickersUtilsProvider } from '@material-ui/pickers';
+
+if (global.deepCopyReviver) console.error('deepCopyReviver is already defined.');
+global.deepCopyReviver = (k, v) => {
+  return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z/.test(v) ? new Date(v) :
+    v._class === 'monum' ? Monum.fromObject(v) : v;
+};
+
+if (global.deepCopy) console.error('deepCopy is already defined.');
+global.deepCopy = function (obj) {
+  return this.JSON.parse(JSON.stringify(obj), global.deepCopyReviver);
+}
+
 global.loadInitialData = function () {
   console.log('Loading new app instance');
   global.accountManager = new AccountManager(JSON.stringify(require('./sampleData/Accounts.json')));
@@ -81,7 +95,9 @@ ReactDOM.render(
       vertical: 'bottom',
       horizontal: 'center',
     }}>
-      <App />
+      <MuiPickersUtilsProvider utils={DateFnsUtils}>
+        <App />
+      </MuiPickersUtilsProvider>
     </SnackbarProvider>
     {/* </Provider> */}
   </React.StrictMode>,

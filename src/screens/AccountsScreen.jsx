@@ -1,12 +1,14 @@
 import React from 'react';
-import { Modal, Backdrop, Paper, Fade, Button } from '@material-ui/core';
+import { Button } from '@material-ui/core';
+
+
 // import { TreeView, TreeItem } from '@material-ui/lab';
 // import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 // import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 // import EditIcon from '@material-ui/icons/Edit';
 
 import ObjectEditor from '../ObjectEditor/index';
-import { AccountTreeView } from '../components';
+import { AccountTreeView, Modal } from '../components';
 import { withSnackbar } from 'notistack';
 
 const AccountFormat = {
@@ -103,24 +105,15 @@ class AccountsScreen extends React.Component {
           onChange={(accountValue) => this.setState({ accountValue })}
           onSave={this.onSave}
         />
-        <Modal
-          closeAfterTransition
-          open={this.state.creatingNewAccount}
-          onClose={() => this.onSaveNewAccount(true)}
-          BackdropComponent={Backdrop}
-          BackdropProps={{ timeout: 500 }}
-        ><Fade in={this.state.creatingNewAccount}>
-            <Paper style={{ width: '70vw', margin: 'auto', marginTop: 30, padding: 20 }}>
-              <ObjectEditor
-                format={NewAccountFormat}
-                values={this.state.creatingNewAccountValue}
-                onChange={(creatingNewAccountValue) => this.setState({ creatingNewAccountValue })}
-                onSave={this.onSaveNewAccount}
-              />
-            </Paper>
-          </Fade>
-        </Modal>
 
+        <Modal open={this.state.creatingNewAccount} onModalRequestClose={() => this.onSaveNewAccount(true)}>
+          <ObjectEditor
+            format={NewAccountFormat}
+            values={this.state.creatingNewAccountValue}
+            onChange={(creatingNewAccountValue) => this.setState({ creatingNewAccountValue })}
+            onSave={this.onSaveNewAccount}
+          />
+        </Modal>
       </>
     );
   }
