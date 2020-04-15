@@ -84,8 +84,6 @@ function ensureDefined(value) {
 }
 
 function isValidMonum(input) {
-  console.log(input);
-
   try {
     parseMonum(input);
   } catch {
@@ -103,7 +101,6 @@ function getMonumStringByPriority(monum) {
 }
 
 function tryParseMonum(input) {
-  console.log(input);
   let result = new global.Monum();
   try {
     result = parseMonum(input);

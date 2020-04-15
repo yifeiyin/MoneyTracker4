@@ -12,10 +12,10 @@ import DebitsCreditsEditor from './DebitsCreditsEditor';
 import ObjectEditorField from './ObjectEditorField';
 
 export default class ObjectEditor extends React.Component {
-
   state = {
     showingAccountModal: false,
   }
+
   accountModalCallBack = null;
 
   onChange = (key, newValue) => {
@@ -36,21 +36,24 @@ export default class ObjectEditor extends React.Component {
   render() {
     const { format, values, onSave } = this.props;
     return (
-      <>
+      <div>
         <Typography variant='h4'>{templateString(format.title, values)}</Typography>
         <FormGroup row={true}>
           {
             format.fields.map(field =>
               field.type === 'debits/credits' ?
                 // <FormControl disabled={field.propertyType === 'immutable'} key={field.id[0]} margin='normal' style={{ minWidth: '90%', margin: 1 }}>
-                <DebitsCreditsEditor
+                <DebitsCreditsEditor key={field.id.toString()}
                   {...field} accountModalControl={this.accountModalControl}
                   value={[values[field.id[0]] || [], values[field.id[1]] || []]}
                   onChange={(debits, credits) => { if (debits !== null) this.onChange(field.id[0], debits); if (credits !== null) this.onChange(field.id[1], credits); }}
                 />
                 // </FormControl>
                 :
-                <FormControl disabled={field.propertyType === 'immutable'} key={field.id} margin='normal' style={{ minWidth: '32%', margin: 1 }}>
+                <FormControl key={field.id}
+                  disabled={field.propertyType === 'immutable'}
+                  margin='normal' style={{ minWidth: '32%', margin: 1 }}
+                >
                   {
                     // Show labels unless the component provides its own
                     ['date', 'time', 'datetime'].includes(field.type) ? null :
@@ -79,7 +82,7 @@ export default class ObjectEditor extends React.Component {
           onClick={() => onSave ? onSave() : console.error('onSave is not defined.')}
           style={{ margin: 15 }}
         >Save</Button>
-      </>
+      </div>
     );
   }
 }

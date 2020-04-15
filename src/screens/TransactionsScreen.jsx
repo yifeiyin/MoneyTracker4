@@ -3,7 +3,6 @@ import { Button, Paper, TableToolbar, TableContainer, Table, TableHead, TableBod
 import {
   Edit as EditIcon,
   Delete as DeleteIcon,
-  ContactSupportOutlined,
 } from '@material-ui/icons'
 
 import { Modal } from '../components';
@@ -24,10 +23,6 @@ class TransactionsScreen extends React.Component {
     }
   }
 
-  // state = {
-  //   data:
-  // }
-
   reloadData = () => {
     const t = global.transactionContainer.getAllTransactions();
     this.setState({
@@ -36,6 +31,7 @@ class TransactionsScreen extends React.Component {
   }
 
   onEdit = (data) => {
+    console.log(data);
     this.setState({ currentTransactionId: data.id, currentTransactionValue: global.deepCopy(data) })
   }
 
@@ -44,7 +40,6 @@ class TransactionsScreen extends React.Component {
       const newValue = global.deepCopy(this.state.currentTransactionValue);
       delete newValue.id;
       const id = this.state.currentTransactionId;
-      console.log(newValue);
       try {
         if (id === 'new') {
           global.transactionManager.createTransaction(newValue);
@@ -125,9 +120,6 @@ class TransactionsScreen extends React.Component {
 
                       {
                         generateTransactionTableCells(data)
-                        // Object.values(data).map(v =>
-                        //   <TableCell key={JSON.stringify(v)}>{JSON.stringify(v)}</TableCell>
-                        // )
                       }
                     </TableRow>
                   )
