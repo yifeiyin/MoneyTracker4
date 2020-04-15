@@ -11,28 +11,7 @@ import ObjectEditor from '../ObjectEditor/index';
 import { AccountTreeView, Modal } from '../components';
 import { withSnackbar } from 'notistack';
 
-const AccountFormat = {
-  title: 'Account $name ($id)',
-  fields: [
-    { id: 'id', type: 'input', propertyType: 'immutable' },
-    { id: 'name', type: 'input' },
-    { id: 'parentId', type: 'account' },
-    { id: 'isFolder', type: 'boolean', propertyType: 'immutable' },
-    { id: 'accountType', type: 'select', choices: ['debit', 'credit'], propertyType: 'immutable' },
-    { id: 'description', type: 'multiline' },
-  ]
-}
-
-const NewAccountFormat = {
-  title: 'Create new account',
-  fields: [
-    { id: 'name', type: 'input' },
-    { id: 'parentId', type: 'account' },
-    { id: 'isFolder', type: 'boolean' },
-    { id: 'accountType', type: 'select', choices: ['debit', 'credit'] },
-    { id: 'description', type: 'multiline' },
-  ]
-}
+import { AccountEditFormat, AccountCreateFormat } from '../ObjectEditor/ObjectFormats';
 
 class AccountsScreen extends React.Component {
   state = {
@@ -100,7 +79,7 @@ class AccountsScreen extends React.Component {
         <Button color='primary' variant='outlined' onClick={this.reloadAccountTree}>Reload Account Tree</Button>
         <Button color='primary' variant='outlined' onClick={() => this.setState({ creatingNewAccount: true })}>Creating New Account</Button>
         <ObjectEditor
-          format={AccountFormat}
+          format={AccountEditFormat}
           values={this.state.accountValue}
           onChange={(accountValue) => this.setState({ accountValue })}
           onSave={this.onSave}
@@ -108,7 +87,7 @@ class AccountsScreen extends React.Component {
 
         <Modal open={this.state.creatingNewAccount} onModalRequestClose={() => this.onSaveNewAccount(true)}>
           <ObjectEditor
-            format={NewAccountFormat}
+            format={AccountCreateFormat}
             values={this.state.creatingNewAccountValue}
             onChange={(creatingNewAccountValue) => this.setState({ creatingNewAccountValue })}
             onSave={this.onSaveNewAccount}

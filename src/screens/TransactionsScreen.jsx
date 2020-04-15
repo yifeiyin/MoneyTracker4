@@ -8,27 +8,19 @@ import {
 
 import { Modal } from '../components';
 import ObjectEditor from '../ObjectEditor/index';
+import { withSnackbar } from 'notistack';
 
-const TransactionFormat = {
-  title: 'Creating Transaction',
-  fields: [
-    { id: 'title', type: 'input' },
-    { id: 'time', type: 'datetime' },
-    { id: ['debits', 'credits'], type: 'debits/credits' },
-    { id: 'description', type: 'multiline' },
-  ]
-};
+import { TransactionCreateFormat } from '../ObjectEditor/ObjectFormats';
 
-
-export default class ImportExportScreen extends React.Component {
+class TransactionsScreen extends React.Component {
 
   constructor(props) {
     super(props);
     const t = global.transactionContainer.getAllTransactions();
     this.state = {
       data: Object.keys(t).map(id => ({ id, ...t[id] })),
-      creatingTransaction: false,
-      creatingTransactionValue: {},
+      currentTransactionId: null,
+      currentTransactionValue: {},
     }
   }
 
@@ -44,33 +36,60 @@ export default class ImportExportScreen extends React.Component {
   }
 
   onEdit = (data) => {
-    this.setState({ creatingTransaction: true, creatingTransactionValue: global.deepCopy(data) })
+    this.setState({ currentTransactionId: data.id, currentTransactionValue: global.deepCopy(data) })
   }
 
-  saveTransaction = (aborting) => {
+  onSaveTransaction = (aborting) => {
     if (!aborting) {
-
+      const newValue = global.deepCopy(this.state.currentTransactionValue);
+      delete newValue.id;
+      const id = this.state.currentTransactionId;
+      console.log(newValue);
+      try {
+        if (id === 'new') {
+          global.transactionManager.createTransaction(newValue);
+          this.props.enqueueSnackbar('Created!', { variant: 'success' });
+        } else {
+          global.transactionManager.changeTransactionProperty(id, newValue);
+          this.props.enqueueSnackbar('Updated!', { variant: 'success' });
+        }
+        this.reloadData();
+      } catch (error) {
+        alert(error);
+        return;
+      }
     }
 
     this.setState({
-      creatingTransaction: false,
-      creatingTransactionValue: {},
+      currentTransactionId: null,
+      currentTransactionValue: {},
     });
   }
 
+  onRemove = (id) => {
+    try {
+      global.transactionManager.removeTransaction(id);
+
+    } catch (error) {
+      alert(error);
+    }
+
+    this.props.enqueueSnackbar('Removed!', { variant: 'success' });
+    this.reloadData();
+  }
+
   render() {
-    console.log(this.state.creatingTransactionValue);
     return (
       <div style={{ padding: 5 }}>
         <Button variant='outlined' color='primary' onClick={this.reloadData}>Reload Data</Button>
-        <Button variant='outlined' color='primary' onClick={() => this.setState({ creatingTransaction: true })}>Create New Transaction</Button>
+        <Button variant='outlined' color='primary' onClick={() => this.setState({ currentTransactionId: 'new' })}>Create New Transaction</Button>
 
-        <Modal open={this.state.creatingTransaction} onModalRequestClose={() => this.saveTransaction(true)}>
+        <Modal open={this.state.currentTransactionId !== null} onModalRequestClose={() => this.onSaveTransaction(true)}>
           <ObjectEditor
-            format={TransactionFormat}
-            values={this.state.creatingTransactionValue}
-            onChange={(creatingTransactionValue) => this.setState({ creatingTransactionValue })}
-            onSave={this.onSave}
+            format={TransactionCreateFormat}
+            values={this.state.currentTransactionValue}
+            onChange={(currentTransactionValue) => this.setState({ currentTransactionValue })}
+            onSave={this.onSaveTransaction}
           />
         </Modal>
 
@@ -101,7 +120,7 @@ export default class ImportExportScreen extends React.Component {
                     >
                       <TableCell padding='checkbox'>
                         <IconButton size='small' onClick={() => this.onEdit(data)}><EditIcon color="inherit" /></IconButton>
-                        <IconButton size='small'><DeleteIcon color="inherit" /></IconButton>
+                        <IconButton size='small' onClick={() => this.onRemove(data.id)}><DeleteIcon color="inherit" /></IconButton>
                       </TableCell>
 
                       {
@@ -191,3 +210,6 @@ function formatDate(date, withTimezone = true) {
     return s < 10 ? '0' + s : s;
   }
 }
+
+
+export default withSnackbar(TransactionsScreen);

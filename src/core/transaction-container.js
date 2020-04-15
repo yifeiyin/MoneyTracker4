@@ -98,9 +98,10 @@ class TransactionContainer {
         }
 
         const target = this._getTransactionById(id);
-        for (let [key, value] in Object.entries(changes)) {
+        for (let [key, value] of Object.entries(changes)) {
             if (value == undefined) delete target[key];
             else target[key] = value;
+            console.log(key, value);
         }
     }
 
