@@ -59,13 +59,13 @@ export default function ObjectEditorField(props) {
       />
 
     case 'account':
-      let { accountModalControl } = props;
+      let { accountModalControl, placeholder } = props;
       return (<>
         <Select open={false} value={1} onOpen={() => accountModalControl.open(onChange)}>
           <MenuItem value={1}>
             {
               value === undefined || value === null ?
-                'Please select' :
+                placeholder || 'Please select' :
                 value + ' - ' + global.accountManager.fromIdToName(value)
             }
           </MenuItem>

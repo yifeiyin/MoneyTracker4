@@ -26,12 +26,14 @@ export default function DebitsCreditsEditor(props) {
   const isBalanced = debitTotal.sub(creditTotal).isZero();
 
   return (
-    <div style={{ margin: '10px 0', padding: 15, borderRadius: 15, border: '1px solid #DDD' }}>
-      <Alert style={{ width: '100%' }} severity={isBalanced ? 'success' : 'error'}>{isBalanced ? 'Balanced' : 'Not balanced'}</Alert>
+    <div style={{ width: '100%', margin: '10px 0', padding: 15, borderRadius: 15, border: '1px solid #DDD' }}>
+      <Alert severity={isBalanced ? 'success' : 'error'}>
+        {isBalanced ? 'Balanced: ' + debitsTotalReadable : `Not balanced: ${debitsTotalReadable} -- ${creditsTotalReadable}`}
+      </Alert>
 
       <div style={{ display: 'flex', justifyContent: 'space-around', width: '100%' }}>
         <div style={{ marginRight: 5, flex: 1 }}>
-          <Typography variant='h6' align='center'>{`Debits (${debitsTotalReadable})`}</Typography>
+          <Typography variant='h6' align='center'>Debits</Typography>
           <DebitCreditOneSide
             side={debits}
             label={labelForDebits}
@@ -45,7 +47,7 @@ export default function DebitsCreditsEditor(props) {
         </div>
 
         <div style={{ marginLeft: 5, flex: 1 }}>
-          <Typography variant='h6' align='center'>{`Credits (${creditsTotalReadable})`}</Typography>
+          <Typography variant='h6' align='center'>Credits</Typography>
           <DebitCreditOneSide
             side={credits}
             label={labelForCredits}

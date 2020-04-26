@@ -1,15 +1,22 @@
 import React from 'react';
 import {
   Button,
+  ButtonGroup,
   FormControl,
   FormGroup,
   Typography,
   InputLabel,
+  IconButton,
 } from '@material-ui/core';
 import { AccountTreeView } from '../components';
 import { Modal } from '../components';
 import DebitsCreditsEditor from './DebitsCreditsEditor';
 import ObjectEditorField from './ObjectEditorField';
+
+import {
+  Add as AddIcon,
+} from '@material-ui/icons';
+
 
 export default class ObjectEditor extends React.Component {
   state = {
@@ -19,7 +26,10 @@ export default class ObjectEditor extends React.Component {
   accountModalCallBack = null;
 
   onChange = (key, newValue) => {
-    this.props.values[key] = newValue;
+    if (newValue === undefined)
+      delete this.props.values[key];
+    else
+      this.props.values[key] = newValue;
     this.props.onChange(this.props.values);
   }
 
@@ -42,13 +52,11 @@ export default class ObjectEditor extends React.Component {
           {
             format.fields.map(field =>
               field.type === 'debits/credits' ?
-                // <FormControl disabled={field.propertyType === 'immutable'} key={field.id[0]} margin='normal' style={{ minWidth: '90%', margin: 1 }}>
                 <DebitsCreditsEditor key={field.id.toString()}
                   {...field} accountModalControl={this.accountModalControl}
                   value={[values[field.id[0]] || [], values[field.id[1]] || []]}
                   onChange={(debits, credits) => { if (debits !== null) this.onChange(field.id[0], debits); if (credits !== null) this.onChange(field.id[1], credits); }}
                 />
-                // </FormControl>
                 :
                 <FormControl key={field.id}
                   disabled={field.propertyType === 'immutable'}
@@ -66,6 +74,36 @@ export default class ObjectEditor extends React.Component {
                     accountModalControl={this.accountModalControl}
                   />
                 </FormControl>
+            )
+          }
+          <div style={{ width: '100%', marginTop: 20, display: 'flex', alignItems: 'center' }}>
+            <Typography variant='h5' display='inline'>Custom Properties</Typography>
+            {/* <IconButton color='primary' variant='outlined' size='small' style={{ margin: 5 }}><AddIcon /></IconButton> */}
+            <Button
+              color='primary' variant='outlined' size='small' style={{ margin: 5 }} startIcon={<AddIcon />}
+              onClick={() => {
+                const newPair = global.prompt('Enter a key-value pair: (use space to separate)', 'key value');
+                if (newPair === null) return;
+                let [key, ...value] = newPair.split(' ');
+                value = value.join(' ');
+                if (value === undefined) { return alert('No value was detected!'); }
+                this.onChange(key, value);
+              }}
+            >Add New</Button>
+          </div>
+          {
+            Object.keys(values).filter(k => !format.fields.map(f => f.id).flat().includes(k)).map(key =>
+              <ButtonGroup color='primary' size='small' style={{ margin: 5 }} key={key}>
+                <Button style={{ textTransform: 'none' }} onClick={() => {
+                  if (global.confirm(`Confirm delete key ${key}?`))
+                    this.onChange(key, undefined);
+                }}>{key}</Button>
+
+                <Button style={{ textTransform: 'none' }} onClick={() => {
+                  const newValue = global.prompt(`Editing ${key}:`, values[key]);
+                  if (newValue !== null) this.onChange(key, newValue);
+                }}>{values[key]}</Button>
+              </ButtonGroup>
             )
           }
         </FormGroup>

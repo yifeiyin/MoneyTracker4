@@ -25,6 +25,7 @@ export const AccountCreateFormat = {
 export const TransactionEditFormat = {
     title: 'Editing Transaction',
     fields: [
+        { id: 'id', type: 'input', propertyType: 'immutable' },
         { id: 'title', type: 'input' },
         { id: 'time', type: 'datetime' },
         { id: ['debits', 'credits'], type: 'debits/credits' },
@@ -34,6 +35,7 @@ export const TransactionEditFormat = {
 
 export const TransactionCreateFormat = {
     ...TransactionEditFormat,
+    fields: TransactionEditFormat.fields.filter(o => o.id !== 'id'),
     title: 'Creating Transaction',
 };
 

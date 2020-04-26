@@ -9,7 +9,7 @@ import { Modal } from '../components';
 import ObjectEditor from '../ObjectEditor/index';
 import { withSnackbar } from 'notistack';
 
-import { TransactionCreateFormat } from '../ObjectEditor/ObjectFormats';
+import { TransactionCreateFormat, TransactionEditFormat } from '../ObjectEditor/ObjectFormats';
 
 class TransactionsScreen extends React.Component {
 
@@ -81,7 +81,7 @@ class TransactionsScreen extends React.Component {
 
         <Modal open={this.state.currentTransactionId !== null} onModalRequestClose={() => this.onSaveTransaction(true)}>
           <ObjectEditor
-            format={TransactionCreateFormat}
+            format={this.state.currentTransactionId === 'new' ? TransactionCreateFormat : TransactionEditFormat}
             values={this.state.currentTransactionValue}
             onChange={(currentTransactionValue) => this.setState({ currentTransactionValue })}
             onSave={this.onSaveTransaction}
