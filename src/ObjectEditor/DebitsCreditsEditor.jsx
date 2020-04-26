@@ -26,7 +26,9 @@ export default function DebitsCreditsEditor(props) {
   const isBalanced = debitTotal.sub(creditTotal).isZero();
 
   return (
-    <>
+    <div style={{ margin: '10px 0', padding: 15, borderRadius: 15, border: '1px solid #DDD' }}>
+      <Alert style={{ width: '100%' }} severity={isBalanced ? 'success' : 'error'}>{isBalanced ? 'Balanced' : 'Not balanced'}</Alert>
+
       <div style={{ display: 'flex', justifyContent: 'space-around', width: '100%' }}>
         <div style={{ marginRight: 5, flex: 1 }}>
           <Typography variant='h6' align='center'>{`Debits (${debitsTotalReadable})`}</Typography>
@@ -56,8 +58,7 @@ export default function DebitsCreditsEditor(props) {
           />
         </div>
       </div>
-      <Alert style={{ width: '100%' }} severity={isBalanced ? 'success' : 'error'}>{isBalanced ? 'Balanced' : 'Not balanced'}</Alert>
-    </>
+    </div>
   );
 }
 
@@ -70,13 +71,13 @@ function DebitCreditOneSide(props) {
           <div style={{ display: 'flex' }} key={id + index}>
             <span style={{ flex: 2 }}>
               <ObjectEditorField
-                value={targetAcc} type='account' label={label + index} accountModalControl={accountModalControl}
+                value={targetAcc} type='account' accountModalControl={accountModalControl}
                 onChange={(value) => onChangeTarget(index, value)}
               />
             </span>
             <span style={{ flex: 1 }}>
               <ObjectEditorField
-                value={monum} type='monum' label={label + index}
+                value={monum} type='monum'
                 onChange={(value) => onChangeMonum(index, value)}
               />
             </span>
@@ -87,7 +88,7 @@ function DebitCreditOneSide(props) {
       <div style={{ display: 'flex' }}>
         <span style={{ flex: 1 }}>
           <ObjectEditorField
-            value={null} type='account' label={label + ' New'} accountModalControl={accountModalControl}
+            value={null} type='account' placeholder='Add New' accountModalControl={accountModalControl}
             onChange={(newTarget) => onAdd(newTarget)}
           />
         </span>
