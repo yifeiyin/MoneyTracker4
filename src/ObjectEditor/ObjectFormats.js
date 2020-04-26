@@ -39,3 +39,11 @@ export const TransactionCreateFormat = {
     title: 'Creating Transaction',
 };
 
+export const FileItemCreateFormat = (fileTypes) => ({
+    disableCustomProperties: true,
+    saveButtonText: 'Create New',
+    fields: [
+        { id: 'name', type: 'input' },
+        { id: 'type', type: 'select', choices: Object.keys(fileTypes) },
+    ]
+});

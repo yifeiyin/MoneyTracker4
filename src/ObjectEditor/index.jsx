@@ -47,7 +47,10 @@ export default class ObjectEditor extends React.Component {
     const { format, values, onSave } = this.props;
     return (
       <div>
-        <Typography variant='h4'>{templateString(format.title, values)}</Typography>
+        {
+          !format.title ? null :
+            <Typography variant='h4'>{templateString(format.title, values)}</Typography>
+        }
         <FormGroup row={true}>
           {
             format.fields.map(field =>
@@ -76,35 +79,40 @@ export default class ObjectEditor extends React.Component {
                 </FormControl>
             )
           }
-          <div style={{ width: '100%', marginTop: 20, display: 'flex', alignItems: 'center' }}>
-            <Typography variant='h5' display='inline'>Custom Properties</Typography>
-            {/* <IconButton color='primary' variant='outlined' size='small' style={{ margin: 5 }}><AddIcon /></IconButton> */}
-            <Button
-              color='primary' variant='outlined' size='small' style={{ margin: 5 }} startIcon={<AddIcon />}
-              onClick={() => {
-                const newPair = global.prompt('Enter a key-value pair: (use space to separate)', 'key value');
-                if (newPair === null) return;
-                let [key, ...value] = newPair.split(' ');
-                value = value.join(' ');
-                if (value === undefined) { return alert('No value was detected!'); }
-                this.onChange(key, value);
-              }}
-            >Add New</Button>
-          </div>
           {
-            Object.keys(values).filter(k => !format.fields.map(f => f.id).flat().includes(k)).map(key =>
-              <ButtonGroup color='primary' size='small' style={{ margin: 5 }} key={key}>
-                <Button style={{ textTransform: 'none' }} onClick={() => {
-                  if (global.confirm(`Confirm delete key ${key}?`))
-                    this.onChange(key, undefined);
-                }}>{key}</Button>
+            format.disableCustomProperties === true ? null :
+              <>
+                <div style={{ width: '100%', marginTop: 20, display: 'flex', alignItems: 'center' }}>
+                  <Typography variant='h5' display='inline'>Custom Properties</Typography>
+                  {/* <IconButton color='primary' variant='outlined' size='small' style={{ margin: 5 }}><AddIcon /></IconButton> */}
+                  <Button
+                    color='primary' variant='outlined' size='small' style={{ margin: 5 }} startIcon={<AddIcon />}
+                    onClick={() => {
+                      const newPair = global.prompt('Enter a key-value pair: (use space to separate)', 'key value');
+                      if (newPair === null) return;
+                      let [key, ...value] = newPair.split(' ');
+                      value = value.join(' ');
+                      if (value === undefined) { return alert('No value was detected!'); }
+                      this.onChange(key, value);
+                    }}
+                  >Add New</Button>
+                </div>
+                {
+                  Object.keys(values).filter(k => !format.fields.map(f => f.id).flat().includes(k)).map(key =>
+                    <ButtonGroup color='primary' size='small' style={{ margin: 5 }} key={key}>
+                      <Button style={{ textTransform: 'none' }} onClick={() => {
+                        if (global.confirm(`Confirm delete key ${key}?`))
+                          this.onChange(key, undefined);
+                      }}>{key}</Button>
 
-                <Button style={{ textTransform: 'none' }} onClick={() => {
-                  const newValue = global.prompt(`Editing ${key}:`, values[key]);
-                  if (newValue !== null) this.onChange(key, newValue);
-                }}>{values[key]}</Button>
-              </ButtonGroup>
-            )
+                      <Button style={{ textTransform: 'none' }} onClick={() => {
+                        const newValue = global.prompt(`Editing ${key}:`, values[key]);
+                        if (newValue !== null) this.onChange(key, newValue);
+                      }}>{values[key]}</Button>
+                    </ButtonGroup>
+                  )
+                }
+              </>
           }
         </FormGroup>
 
@@ -119,7 +127,7 @@ export default class ObjectEditor extends React.Component {
           variant='contained' color='primary'
           onClick={() => onSave ? onSave() : console.error('onSave is not defined.')}
           style={{ margin: 15 }}
-        >Save</Button>
+        >{format.saveButtonText || 'Save'}</Button>
       </div>
     );
   }
