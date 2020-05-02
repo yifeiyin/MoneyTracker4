@@ -7,6 +7,8 @@ import 'prismjs/components/prism-clike';
 import 'prismjs/components/prism-javascript';
 import 'prismjs/components/prism-json';
 
+import bmoDebitCodeToReadableType from '../sampleData/bmoDebitCodeToReadable';
+
 import { DropzoneArea } from 'material-ui-dropzone';
 
 import {
@@ -15,22 +17,13 @@ import {
   FileCopy as FileCopyIcon,
 } from '@material-ui/icons';
 import ObjectEditor from '../ObjectEditor';
-import { FileItemCreateFormat } from '../ObjectEditor/ObjectFormats';
-
-
-const initialCode = `function transform(file, Monum, accountsNameToId, console) {    // ==== start ====
-
-  return [{ title, time, credits, debits, description,
-    importBatch, importId }];
-
-
-}    // ==== end ====`;
+import { FileItemCreateFormat, RunScriptFormat } from '../ObjectEditor/ObjectFormats';
 
 
 const fileTypes = {
   'Transform Statement': { format: 'js', executable: true, inputs: ['Plain Text'], outputs: ['JSON'] },  // Transform csv into array of strings
-  'Generate Transactions': { format: 'js', executable: true, inputs: ['JSON'], outputs: ['JSON'] },      // Apply rules, string to transaction objects
-  'Post-Process Transactions': { format: 'js', executable: true, inputs: ['JSON'], outputs: ['JSON'] },  // Post-process to assert outputs, transform shorthand syntax
+  'Generate Transactions': { format: 'js', executable: true, inputs: ['JSON'], outputs: ['JSON'], iterative: true },      // Apply rules, string to transaction objects
+  'Post-Process Transactions': { format: 'js', executable: true, inputs: ['JSON'], outputs: ['JSON'], iterative: true },  // Post-process to assert outputs, transform shorthand syntax
   'Commit Transactions': { format: 'none', executable: true, inputs: ['JSON'] },                         // Commit
   'JSON': { format: 'json', executable: false },                       // json, non executable
   'Plain Text': { format: 'plain', executable: false },                // non executable
@@ -45,6 +38,9 @@ export default class ImportExportScreen extends React.Component {
     currentEditorContent: null,
     currentEditorType: null,
     newFileValues: {},
+
+    objectEditorRunValues: {},
+    dropZoneContent: '',
   };
 
   componentDidMount() {
@@ -85,6 +81,7 @@ export default class ImportExportScreen extends React.Component {
 
   onFileEditSave = () => {
     const contentToSave = this.state.currentEditorContent;
+    if (JSON.stringify(this.state.fileList[this.state.currentEditingFileIndex].content) === JSON.stringify(contentToSave)) return;
     this.state.fileList[this.state.currentEditingFileIndex].content = contentToSave;          // eslint-disable-line react/no-direct-mutation-state
     this.state.fileList[this.state.currentEditingFileIndex].lastChanged = getTimeAsString();  // eslint-disable-line react/no-direct-mutation-state
     this.setState({ fileList: this.state.fileList });
@@ -96,6 +93,7 @@ export default class ImportExportScreen extends React.Component {
   }
 
   createNewFile = (newFile) => {
+    if (!newFile.lastChanged) newFile.lastChanged = getTimeAsString();
     this.setState({ fileList: [...this.state.fileList, newFile] });
     localStorage.setItem('fileList', JSON.stringify([...this.state.fileList, newFile]));
   }
@@ -104,7 +102,6 @@ export default class ImportExportScreen extends React.Component {
     const newFileFormat = this.state.newFileValues;
     if (!newFileFormat.name) return alert('name is falsy!');
     if (!newFileFormat.type) return alert('type is falsy!');
-    newFileFormat.lastChanged = getTimeAsString();
     newFileFormat.content = getNewFileContent(newFileFormat.type);
 
     this.setState({ newFileValues: {} });
@@ -119,6 +116,8 @@ export default class ImportExportScreen extends React.Component {
     } else if (currentEditingFileIndex > index) {
       this.setState({ fileList: newFileList, currentEditingFileIndex: currentEditingFileIndex - 1 });
     } else if (currentEditingFileIndex < index) {
+      this.setState({ fileList: newFileList });
+    } else { // currentEditingFileIndex is null
       this.setState({ fileList: newFileList });
     }
     localStorage.setItem('fileList', JSON.stringify(newFileList));
@@ -144,10 +143,10 @@ export default class ImportExportScreen extends React.Component {
     const file = files[0];
     const reader = new FileReader();
     reader.addEventListener("load", () => {
-      let fileContent = atob(reader.result.split('base64,')[1]);
-      this.rawFileContent = fileContent;
-      fileContent = fileContent.split('\n').map((line, index) => (index < 10 ? ' ' + index : index) + ' > ' + line).join('\n');
-      this.setState({ fileContent });
+      let dropZoneContent = atob(reader.result.split('base64,')[1]);
+      this.rawFileContent = dropZoneContent;
+      dropZoneContent = dropZoneContent.split('\n').map((line, index) => (index < 10 ? ' ' + index : index) + ' > ' + line).join('\n');
+      this.setState({ dropZoneContent });
     }, false);
     if (file) {
       reader.readAsDataURL(file);
@@ -155,59 +154,111 @@ export default class ImportExportScreen extends React.Component {
   }
 
   run = () => {
+    // Prepare input
+    const currentFileType = this.state.fileList[this.state.currentEditingFileIndex].type;
+    const currentFileTypeInfo = fileTypes[currentFileType];
+    const inputFileType = currentFileTypeInfo.inputs[0];
+    const outputFileType = currentFileTypeInfo.outputs === undefined ? null : 'JSON';  // hack
+    const inputFileName = this.state.objectEditorRunValues.inputFile;
+    let inputFileContent = this.state.fileList.filter(f => f.name === inputFileName)[0].content;
+    if (inputFileType === 'JSON') {
+      let reviver = (k, v) => {
+        return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z/.test(v) ? new Date(v) :
+          v._class === 'monum' ? global.Monum.fromObject(v) :
+            v;
+      };
+      inputFileContent = JSON.parse(inputFileContent, reviver);
+    }
+
+    if (currentFileType === 'Commit Transactions') {
+      try {
+        global.transactionManager.createTransaction(inputFileContent);
+
+      } catch (error) {
+        alert(error);
+        console.error(error);
+      }
+
+      return;
+    }
+
     // Prepare arguments
     const accounts = Object.keys(global.accountManager._accountNodes).map(id => ({ id, ...(global.accountManager._accountNodes[id]) }));
     const accountsMap = {};
     accounts.filter(account => account.isFolder === false).forEach(account => accountsMap[account.name] = account.id);
-    const args = [this.rawFileContent, global.Monum, accountsMap, console];
-    console.log('Arguments: ', args);
+
+
+    const args = [[inputFileContent], {
+      Monum: global.Monum,
+      accountNameToId: accountsMap,
+      console,
+      $DR: '$DR', $CR: '$CR',
+      bmoDebitCodeToReadableType,
+    }];
+    console.log('Arguments: ', args[0], args[1]);
 
     // Preprocess code
-    let lines = this.state.code.split('\n');
+    const lines = this.state.currentEditorContent.split('\n');
     let start, end;
     lines.forEach((line, index) => {
       if (line.includes('==== start')) start = index;
       if (line.includes('==== end')) end = index;
     });
 
-    let codeOfInterest = lines.slice(start + 1, end).join('\n');
+    const codeOfInterest = lines.slice(start + 1, end).join('\n');
 
-
-    // (function (eval_js, load_js) {
-    //   try {
-    //     eval(eval_js);
-    //   } catch (e) {
-    //     (function addCode(js) {
-    //       var e = document.createElement('script');
-    //       e.type = 'text/javascript';
-    //       e.src = 'data:text/javascript;charset=utf-8,' + escape(js);
-    //       document.body.appendChild(e);
-    //       console.warn("Inserted Script for ", js);
-    //     })(load_js.replace(/;/g, ";\n"));
-    //     codeOfInterest = "";
-    //     return false;
-    //   }
-    //   return false;
-    // })("new Function('event', handlerCode)", codeOfInterest);
-
-    // Run the code
-    let result;
+    // Compile
+    let functionToRun;
     try {
-      // eslint-disable-next-line no-new-func
-      const functionToRun = new Function('file', 'Monum', 'accountsNameToId', 'console', codeOfInterest);
-      result = functionToRun(...args);
+      functionToRun = new Function('inputs', 'utils', codeOfInterest);  // eslint-disable-line no-new-func
     } catch (error) {
-      alert(error);
+      alert('Compile Error: ' + error);
       console.error(error);
       return;
     }
-    console.log(result);
 
-    try {
-      global.transactionManager.createTransaction(result);
-    } catch (error) {
-      alert(error);
-      console.error(error);
+    // Run
+    let result;
+
+    if (currentFileTypeInfo.iterative) {
+      if (!(inputFileContent instanceof Array)) return alert('Input file is not an array.');
+      result = [];
+      const [arg1, ...rest] = args;
+      try {
+        inputFileContent.forEach((inputFilePiece, index) => {
+          try {
+            result.push(functionToRun(inputFilePiece, ...rest));
+          } catch (error) {
+            alert(`Encountered error at ${index} element: ` + error);
+            console.error(error);
+            throw new Error('ABORTED');
+          }
+        });
+      } catch (error) {
+        if (error.message === 'ABORTED') return;
+        alert('Unexpected error: ' + error);
+        console.error(error);
+      }
+
+    } else {
+      try {
+        result = functionToRun(...args);
+      } catch (error) {
+        alert('Run Time Error: ' + error);
+        console.error(error);
+        return;
+      }
+    }
+
+    // Process and store result
+    if (outputFileType === 'JSON' && result instanceof Object) {
+      this.createNewFile({
+        name: 'Result ' + getTimeAsString(),
+        content: JSON.stringify(result, null, 4),
+        type: 'JSON',
+      });
+    } else {
+      console.warn('Ignoring output: ', outputFileType, result);
     }
   }
 
@@ -226,6 +277,8 @@ export default class ImportExportScreen extends React.Component {
   }
 
   render() {
+    const currentFile = this.state.currentEditingFileIndex === null ? null : this.state.fileList[this.state.currentEditingFileIndex];
+    const currentFileTypeInfo = currentFile === null ? null : fileTypes[currentFile.type];
     return (
       <div>
 
@@ -260,7 +313,7 @@ export default class ImportExportScreen extends React.Component {
 
         {/* File Actions */}
         {
-          this.state.currentEditingFileIndex === null ? null :
+          currentFile === null ? null :
             <div>
               <ButtonGroup style={{ margin: 5 }}>
                 {/* <Button variant='outlined' color='primary' onClick={this.resetCode}>Reset</Button>
@@ -268,10 +321,13 @@ export default class ImportExportScreen extends React.Component {
                 <Button variant='contained' color='primary' onClick={this.onFileEditSave}>Save</Button>
               </ButtonGroup>
               {
-                !fileTypes[this.state.fileList[this.state.currentEditingFileIndex].type].executable ? null :
-                  <ButtonGroup style={{ margin: 5 }}>
-                    <Button variant='contained' color='primary' onClick={this.run}>Run</Button>
-                  </ButtonGroup>
+                !currentFileTypeInfo.executable ? null :
+                  <ObjectEditor
+                    format={RunScriptFormat(fileTypes[currentFile.type].inputs[0], this.state.fileList)}
+                    values={this.state.objectEditorRunValues}
+                    onChange={(objectEditorRunValues) => this.setState({ objectEditorRunValues })}
+                    onSave={this.run}
+                  />
               }
             </div>
         }
@@ -299,7 +355,7 @@ export default class ImportExportScreen extends React.Component {
           <div style={{ width: 200 }}>
             <DropzoneArea acceptedFiles={['text/*']} dropzoneText='' onChange={this.loadFile} />
           </div>
-          <textarea style={{ fontFamily: 'monospace', height: 300, flex: 1 }} value={this.state.fileContent}></textarea>
+          <textarea style={{ fontFamily: 'monospace', height: 300, flex: 1 }} value={this.state.dropZoneContent}></textarea>
         </div>
 
       </div>
@@ -320,5 +376,28 @@ function getTimeAsString() {
 }
 
 function getNewFileContent(type) {
-  return '\n// ' + type + '\n\n\n\n\n\n';
+  if (['Commit Transactions', 'JSON', 'Plain Text'].includes(type)) {
+    return '\n// ' + type + '\n\n\n\n\n\n';
+  }
+
+  const table = {
+    'Transform Statement': ['TransformStatement', 'originalStatement'],
+    'Generate Transactions': ['GenerateTransactions', 'transformedStatementItem'],
+    'Post-Process Transactions': ['PostProcessTransactions', 'transactionItem'],
+  }
+  let names = table[type];
+
+  return (
+    `\n` +
+    `// ${type} \n` +
+    `// Created on ${getTimeAsString()} \n` +
+    `\n` +
+    `function ${names[0]}(inputs, utils) { // ==== start ====\n` +
+    `  const [ ${names[1]} ] = inputs;\n` +
+    `  const { console, Monum, accountNameToId, $DR, $CR } = utils;\n` +
+    `\n` +
+    `\n` +
+    `} // ==== end ====\n` +
+    `\n\n\n\n`
+  );
 }

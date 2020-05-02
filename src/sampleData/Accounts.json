@@ -57,7 +57,7 @@
         "108": {
             "parentId": 107,
             "isFolder": false,
-            "name": "BMO Chequeing",
+            "name": "BMO Chequing",
             "accountType": "debit",
             "description": ""
         },
@@ -112,7 +112,7 @@
         },
         "117": {
             "parentId": 30,
-            "isFolder": true,
+            "isFolder": false,
             "name": "Gain/Loss",
             "accountType": "credit",
             "description": "Accounts that are subjected to fluctuate"
@@ -144,7 +144,19 @@
             "name": "Food Expense",
             "accountType": "credit",
             "description": "Supermarket shopping, eating out, etc"
+        },
+        "122": {
+            "accountType": "credit",
+            "name": "Uncategorized Expense/Income",
+            "parentId": "30",
+            "isFolder": false
+        },
+        "123": {
+            "name": "Banking Fee Expense",
+            "parentId": "113",
+            "isFolder": false,
+            "accountType": "credit"
         }
     },
-    "_greatestIdUsed": 121
+    "_greatestIdUsed": 123
 }

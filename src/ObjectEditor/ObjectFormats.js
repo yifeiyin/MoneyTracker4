@@ -47,3 +47,14 @@ export const FileItemCreateFormat = (fileTypes) => ({
         { id: 'type', type: 'select', choices: Object.keys(fileTypes) },
     ]
 });
+
+export const RunScriptFormat = (type, files) => {
+    let choices = files.filter(f => f.type === type).map(f => f.name);
+    return {
+        disableCustomProperties: true,
+        saveButtonText: 'Run',
+        fields: [
+            { id: 'inputFile', label: `Input File (${type})`, type: 'select', choices },
+        ]
+    };
+};
