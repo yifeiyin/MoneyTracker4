@@ -1,12 +1,6 @@
 import React from 'react';
 import { Button } from '@material-ui/core';
 
-
-// import { TreeView, TreeItem } from '@material-ui/lab';
-// import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-// import ChevronRightIcon from '@material-ui/icons/ChevronRight';
-// import EditIcon from '@material-ui/icons/Edit';
-
 import ObjectEditor from '../ObjectEditor/index';
 import { AccountTreeView, Modal } from '../components';
 import { withSnackbar } from 'notistack';
@@ -70,14 +64,16 @@ class AccountsScreen extends React.Component {
   render() {
     return (
       <>
-        <AccountTreeView
-          style={{ width: 300, float: 'left' }}
-          treeData={this.state.treeData}
-          onEdit={this.onEdit}
-          onSave={this.onSave}
-        />
-        <Button color='primary' variant='outlined' onClick={this.reloadAccountTree}>Reload Account Tree</Button>
-        <Button color='primary' variant='outlined' onClick={() => this.setState({ creatingNewAccount: true })}>Creating New Account</Button>
+        <div style={{ width: 300, float: 'left' }}>
+          <Button color='primary' variant='outlined' onClick={this.reloadAccountTree}>Reload</Button>
+          <Button color='primary' variant='outlined' onClick={() => this.setState({ creatingNewAccount: true })}>New</Button>
+          <Button color='primary' variant='outlined' onClick={() => this.setState({ creatingNewAccount: true })}>Overview</Button>
+          <AccountTreeView
+            treeData={this.state.treeData}
+            onEdit={this.onEdit}
+            onSave={this.onSave}
+          />
+        </div>
         <ObjectEditor
           format={AccountEditFormat}
           values={this.state.accountValue}

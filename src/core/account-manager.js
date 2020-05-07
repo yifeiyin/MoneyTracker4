@@ -239,6 +239,7 @@ class AccountManager {
         return {
             id: '' + startsFrom,
             name: this.fromIdToName(startsFrom),
+            isFolder: this._accountNodes[startsFrom].isFolder,
             children: this._accountNodeHierarchy[startsFrom].children.map(c => this.getTreeData(c))
         }
     }
