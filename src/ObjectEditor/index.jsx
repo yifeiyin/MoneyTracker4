@@ -122,12 +122,22 @@ export default class ObjectEditor extends React.Component {
             onDoubleClick={(id) => this.closeAccountModal(id)}
           />
         </Modal>
-
-        <Button
-          variant='contained' color='primary'
-          onClick={() => onSave ? onSave() : console.error('onSave is not defined.')}
-          style={{ margin: 15 }}
-        >{format.saveButtonText || 'Save'}</Button>
+        {
+          format.actions === undefined ?
+            <Button
+              variant='contained' color='primary'
+              onClick={() => onSave && onSave()}
+              style={{ margin: 15 }}
+            >{format.saveButtonText || 'Save'}</Button> :
+            format.actions.map(({ text, callback, type }) =>
+              <Button
+                key={text}
+                variant='contained' color={type === 'delete' ? 'secondary' : 'primary'}
+                onClick={() => { if (this.props[callback]) this.props[callback](); else console.error(`this.props.${callback} is not callable.`); }}
+                style={{ margin: 15 }}
+              >{text}</Button>
+            )
+        }
       </div>
     );
   }

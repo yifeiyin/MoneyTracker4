@@ -17,7 +17,7 @@ import { TransactionCreateFormat, TransactionEditFormat } from '../ObjectEditor/
  *  - closeModal
  *
  * Props
- *  - viewOnly: boolean
+ *  - viewOnly: boolean  TODO
  *  - onCreateSave: (newTransactionValues) => shouldModalClose
  *  - onEditSave: (targetId, newTransactionValues) => shouldModalClose
  *  - onRemove: (targetId) => undefined

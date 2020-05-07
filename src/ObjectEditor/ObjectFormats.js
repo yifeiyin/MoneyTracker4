@@ -7,7 +7,11 @@ export const AccountEditFormat = {
         { id: 'isFolder', type: 'boolean', propertyType: 'immutable' },
         { id: 'accountType', type: 'select', choices: ['debit', 'credit'], propertyType: 'immutable' },
         { id: 'description', type: 'multiline' },
-    ]
+    ],
+    actions: [
+      { text: 'Save', callback: 'onSave', type: 'save' },
+      { text: 'Delete', callback: 'onRemove', type: 'delete' },
+    ],
 }
 
 export const AccountCreateFormat = {

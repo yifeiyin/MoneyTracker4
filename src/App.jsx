@@ -48,9 +48,8 @@ const AppBarWrapper = (props) => {
       <Toolbar>
         {
           routes.map(([path, component, name]) =>
-            <Link style={{ textDecoration: 'none', color: 'unset' }} to={path}>
+            <Link style={{ textDecoration: 'none', color: 'unset' }} key={path} to={path}>
               <Button
-                key={path}
                 color="inherit"
                 style={{ border: path !== props.path ? '1px solid transparent' : '1px solid white' }}
               >{name}</Button>

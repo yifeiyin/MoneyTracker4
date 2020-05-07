@@ -38,16 +38,17 @@ const renderTree = (nodes, onEdit, onClick, onDoubleClick) => (
         <div
           style={{
             fontSize: 18, padding: 5, display: 'flex', alignItems: 'center',
-            fontWeight: nodes.isFolder ? 'bold' : 'normal'
+            fontWeight: nodes.isFolder ? 'bold' : 'normal',
           }}
           onDoubleClick={(e) => { e.stopPropagation(); onDoubleClick && onDoubleClick(nodes.id); }}
-          onClick={() => { onClick && onClick(nodes.id); }}
+          onClick={(e) => { e.target === e.currentTarget && onClick && onClick(nodes.id); }}
         >
           {nodes.name}
           {
             !onEdit ? null :
               <IconButton
-                style={{ alignSelf: 'flex-end', marginLeft: 'auto' }}
+                size='small'
+                style={{ alignSelf: 'flex-end', margin: 'auto', marginRight: 5 }}
                 onClick={(e) => { e.stopPropagation(); onEdit(nodes.id); }}
               >
                 <EditIcon color="inherit" />
@@ -56,6 +57,6 @@ const renderTree = (nodes, onEdit, onClick, onDoubleClick) => (
         </div>
       }
     >
-      {Array.isArray(nodes.children) ? nodes.children.map((node) => renderTree(node, onEdit, onDoubleClick)) : null}
+      {Array.isArray(nodes.children) ? nodes.children.map((node) => renderTree(node, onEdit, onClick, onDoubleClick)) : null}
     </TreeItem>
 );
