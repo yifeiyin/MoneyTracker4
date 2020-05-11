@@ -17,9 +17,11 @@ import {
 import ImportExportScreen from './screens/ImportExportScreen';
 import AccountsScreen from './screens/AccountsScreen';
 import TransactionsScreen from './screens/TransactionsScreen';
+import DataManagementScreen from './screens/DataManagementScreen';
 
 const routes = [
   ['/accounts', AccountsScreen, 'Accounts'],
+  ['/data-management', DataManagementScreen, 'Data Management'],
   ['/import-export', ImportExportScreen, 'Import/Export'],
   ['/transactions', TransactionsScreen, 'Transactions'],
 ];
