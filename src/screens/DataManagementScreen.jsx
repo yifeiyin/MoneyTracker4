@@ -52,7 +52,7 @@ class DataManagementScreen extends React.Component {
 
     const currentDataSet = {
       title: '(current)',
-      lastChanged: '(current)',
+      createdAt: '(current)',
       data: currentData,
     };
 
@@ -74,10 +74,6 @@ class DataManagementScreen extends React.Component {
     }
   }
 
-  addNewItem = (data) => {
-
-  }
-
   updateDataSet = (exec) => {
     const result = exec(this.savedDataSets);
     if (result !== undefined && result !== null) {
@@ -86,11 +82,28 @@ class DataManagementScreen extends React.Component {
     }
   }
 
+
+  //
+  // for list view master
+  //
+
+  downloadAll = () => {
+
+  }
+
+  resetAllUsingPasteBoard = () => {
+
+  }
+
+  //
+  // for list view
+  //
+
   createEmptyDataSet = () => {
     this.updateDataSet((ds) => {
       ds.push({
         title: 'New Empty Dataset ' + this.state.allDataSet.length,
-        lastChanged: getTimeAsString(),
+        createdAt: getTimeAsString(),
         data: {},
       });
       return ds;
@@ -123,25 +136,55 @@ class DataManagementScreen extends React.Component {
     });
   };
 
-  downloadAll = () => {
-  }
-
-  resetAllUsingPasteBoard = () => {
-
-  }
-
-  onCopyDataItem = ([key, value], appending = false) => {
-
-  }
-
-  onDeleteDataItem = (key) => {
-
-  }
-
   onDuplicateFile = (index) => {
     // navigator.clipboard.readText().then(console.log)
   }
 
+  //
+  // for details view
+  //
+
+  onCopyDataItem = async (key, appending = false) => {
+    const value = this.state.dataSet.data[key];
+    console.log(this.state.dataSet);
+    let existingData = await getClipboardContent();
+    if (appending && existingData !== null) {
+      existingData[key] = value;
+    } else {
+      existingData = { [key]: value };
+    }
+    await setClipboardContent(existingData);
+    const keyCount = Object.keys(existingData).length;
+    const message = 'Data added to clipboard.' + (
+      keyCount === 1 ? '' : ` (${keyCount} items)`
+    );
+    this.props.enqueueSnackbar(message, { variant: 'success' });
+  }
+
+  onDeleteDataItem = (key) => {
+    const index = this.state.selectedIndex - 1;
+    delete this.state.dataSet.data[key];
+    this.updateDataSet((ds) => {
+      delete ds[index].data[key];
+      return ds;
+    });
+    this.props.enqueueSnackbar('Deleted.', { variant: 'success' });
+  }
+
+  onPasteOverride = async () => {
+    const content = await getClipboardContent();
+    if (content === null) {
+      this.props.enqueueSnackbar('Unrecognized clipboard content.', { variant: 'error' });
+      return;
+    }
+    const index = this.state.selectedIndex - 1;
+    Object.assign(this.state.dataSet.data, content);
+    this.updateDataSet((ds) => {
+      Object.assign(ds[index].data, content);
+      return ds;
+    });
+    this.props.enqueueSnackbar('Updated.', { variant: 'success' });
+  }
 
   render() {
     return (
@@ -159,7 +202,7 @@ class DataManagementScreen extends React.Component {
               isTheCurrentOne={index === 0}
               key={data.title}
               title={data.title}
-              lastChanged={data.lastChanged}
+              createdAt={data.createdAt}
               onClick={() => this.setSelected(index)}
               onDeleteFile={() => this.onDeleteFile(index - 1)}
               onUseThisFile={() => 1}
@@ -173,12 +216,14 @@ class DataManagementScreen extends React.Component {
             this.state.dataSet &&
             <DataSetDetails
               {...this.state.dataSet}
+              isTheCurrentOne={this.state.selectedIndex === 0}
               onCopyDataItem={this.onCopyDataItem}
               onDeleteDataItem={this.onDeleteDataItem}
+              onPasteOverride={this.onPasteOverride}
             />
           }
         </div>
-      </div >
+      </div>
     );
   }
 }
@@ -194,7 +239,7 @@ function DataSetCard({
   onUseThisFile,
   onDuplicateFile,
   onDeleteFile,
-  lastChanged,
+  createdAt,
 }) {
   if (isTheCurrentOne)
     return (
@@ -213,10 +258,10 @@ function DataSetCard({
       <Card style={{ margin: 15 }} elevation={isSelected ? '6' : '1'} onClick={onClick}>
         <CardContent>
           <Typography variant='subtitle1' onDoubleClick={onRenameFile}>{title}</Typography>
-          <Typography variant='subtitle2'>{lastChanged}</Typography>
+          <Typography variant='subtitle2'>{createdAt}</Typography>
         </CardContent>
         <CardActions disableSpacing={true}>
-          <Button size='small' startIcon={<GavelIcon />} onClick={onUseThisFile}>Override</Button>
+          <Button size='small' startIcon={<GavelIcon />} onClick={onUseThisFile}>Use</Button>
           <div style={{ flex: 1 }}></div>
           <IconButton size='small' onClick={onDuplicateFile}><FileCopyIcon /></IconButton>
           <IconButton size='small' onClick={onDeleteFile}><DeleteIcon /></IconButton>
@@ -226,11 +271,13 @@ function DataSetCard({
 }
 
 function DataSetDetails({
+  isTheCurrentOne,
   title,
-  lastChanged,
+  createdAt,
   data,
   onCopyDataItem,
   onDeleteDataItem,
+  onPasteOverride,
 }) {
 
   const dataTable = [];
@@ -245,22 +292,27 @@ function DataSetDetails({
       case 'fileList': row = ['Files', value.length]; break;
       default: row = ['Unknown type: ' + key, JSON.stringify(value).substr(0, 30)];
     }
-    dataTable.push(row);
+    dataTable.push([...row, key]);
   }
+
+  dataTable.sort();
 
   return (
     <div>
+      <Button color='primary' variant='outlined' startIcon={<AssignmentReturnedIcon />} onClick={onPasteOverride}>{'Paste & Override'}</Button>
       <Table>
         <TableBody>
           {
-            dataTable.map(([key, value]) =>
-              <TableRow>
-                <TableCell align='right'>{key}</TableCell>
-                <TableCell align='left'>{value}</TableCell>
-                <TableCell align='left'>
-                  <IconButton size='medium' onClick={() => onCopyDataItem([key, value])}><FileCopyIcon /></IconButton>
-                  <IconButton size='medium' onClick={() => onCopyDataItem([key, value], true)}><PlusOneIcon /></IconButton>
-                  <IconButton size='medium' onClick={() => onDeleteDataItem(key)}><DeleteIcon /></IconButton>
+            dataTable.map(([displayKey, displayValue, rawKey]) =>
+              <TableRow key={rawKey} style={{ display: 'flex' }}>
+                <TableCell style={{ flex: 1 }} align='right'>{displayKey}</TableCell>
+                <TableCell style={{ flex: 2 }} align='left'>{displayValue}</TableCell>
+                <TableCell style={{ flex: 1 }} align='left'>
+                  <IconButton size='medium' onClick={() => onCopyDataItem(rawKey)}><FileCopyIcon /></IconButton>
+                  <IconButton size='medium' onClick={() => onCopyDataItem(rawKey, true)}><PlusOneIcon /></IconButton>
+                  {!isTheCurrentOne &&
+                    <IconButton size='medium' onClick={() => onDeleteDataItem(rawKey)}><DeleteIcon /></IconButton>
+                  }
                 </TableCell>
               </TableRow>
             )
@@ -276,4 +328,26 @@ function DataSetDetails({
 
 function getTimeAsString() {
   return (new Date()).toLocaleString();
+}
+
+async function getClipboardContent() {
+  const text = await navigator.clipboard.readText();
+  try {
+    const content = JSON.parse(text);
+    if (typeof (content) === 'object' && content.__fromMT === true) {
+      return content.__content;
+    } else {
+      return null;
+    }
+  } catch (error) {
+    return null;
+  }
+}
+
+async function setClipboardContent(content) {
+  const contentToSave = {
+    __fromMT: true,
+    __content: content,
+  }
+  return navigator.clipboard.writeText(JSON.stringify(contentToSave));
 }
