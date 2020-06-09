@@ -4,6 +4,7 @@ import {
   Switch,
   Route,
   Link,
+  Redirect,
 } from "react-router-dom";
 
 import {
@@ -30,6 +31,9 @@ function App() {
   return (
     <Router>
       <Switch>
+        <Route exact path='/'>
+          <Redirect to='/data-management' />
+        </Route>
         {
           routes.map(([path, Component, name]) =>
             <Route key={path} path={path}>
