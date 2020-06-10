@@ -110,8 +110,22 @@ class DataManagementScreen extends React.Component {
     });
   }
 
-  pasteDataSet = () => {
-
+  pasteDataSet = async () => {
+    const content = await getClipboardContent();
+    if (content === null) {
+      this.props.enqueueSnackbar('Unrecognized clipboard content.', { variant: 'error' });
+      return;
+    }
+    const dataSet = {
+      title: 'Imported Data ' + this.state.allDataSet.length,
+      createdAt: getTimeAsString(),
+      data: content,
+    };
+    this.updateDataSet((ds) => {
+      ds.push(dataSet);
+      return ds;
+    });
+    this.props.enqueueSnackbar(Object.keys(content).length + 'item(s) imported.', { variant: 'success' });
   }
 
   onDeleteFile = (index) => {
@@ -119,9 +133,11 @@ class DataManagementScreen extends React.Component {
       ds.splice(index, 1);
       return ds;
     });
-    if (index === this.state.selectedIndex) {
+    if (index === this.state.selectedIndex - 1) {
       console.assert(index !== 0);
       this.setSelected(null);
+    } else if (index < this.state.selectedIndex - 1) {
+      this.setSelected(this.state.selectedIndex - 1);
     }
   }
 
@@ -137,7 +153,17 @@ class DataManagementScreen extends React.Component {
   };
 
   onDuplicateFile = (index) => {
-    // navigator.clipboard.readText().then(console.log)
+    const data = JSON.parse(JSON.stringify(this.state.allDataSet[index].data));
+    const newDataSet = {
+      title: 'New Saved Data Set ' + this.state.allDataSet.length,
+      createdAt: getTimeAsString(),
+      data,
+    };
+    this.updateDataSet((ds) => {
+      ds.splice(index, 0, newDataSet);
+      return ds;
+    });
+    this.props.enqueueSnackbar('Duplicated.', { variant: 'success' });
   }
 
   //
@@ -146,7 +172,6 @@ class DataManagementScreen extends React.Component {
 
   onCopyDataItem = async (key, appending = false) => {
     const value = this.state.dataSet.data[key];
-    console.log(this.state.dataSet);
     let existingData = await getClipboardContent();
     if (appending && existingData !== null) {
       existingData[key] = value;
