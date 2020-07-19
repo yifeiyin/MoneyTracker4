@@ -10,7 +10,7 @@ class TransactionContainer {
     fromJSON(json) {
         let reviver = (k, v) => {
             return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z/.test(v) ? new Date(v) :
-                v._class == 'monum' ? Monum.fromObject(v) : v;
+                typeof (v) === 'object' && v !== null && v._class === 'monum' ? Monum.fromObject(v) : v;
         };
         const parsedObject = JSON.parse(json, reviver);
         this._transactions = parsedObject._transactions;

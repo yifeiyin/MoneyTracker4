@@ -164,8 +164,7 @@ export default class ImportExportScreen extends React.Component {
     if (inputFileType === 'JSON') {
       let reviver = (k, v) => {
         return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z/.test(v) ? new Date(v) :
-          v._class === 'monum' ? global.Monum.fromObject(v) :
-            v;
+          typeof (v) === 'object' && v !== null && v._class === 'monum' ? global.Monum.fromObject(v) : v;
       };
       inputFileContent = JSON.parse(inputFileContent, reviver);
     }
