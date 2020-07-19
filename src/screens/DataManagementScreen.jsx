@@ -183,7 +183,7 @@ class DataManagementScreen extends React.Component {
     const message = 'Data added to clipboard.' + (
       keyCount === 1 ? '' : ` (${keyCount} items)`
     );
-    this.props.enqueueSnackbar(message, { variant: 'success' });
+    this.props.enqueueSnackbar(message, { variant: 'info' });
   }
 
   onDeleteDataItem = (key) => {
@@ -203,6 +203,12 @@ class DataManagementScreen extends React.Component {
       return;
     }
     const index = this.state.selectedIndex - 1;
+    if (index === -1) {
+      // Overriding "current", trigger customized logic
+      this.overrideCurrentData(content);
+      return;
+    }
+
     Object.assign(this.state.dataSet.data, content);
     this.updateDataSet((ds) => {
       Object.assign(ds[index].data, content);
@@ -210,6 +216,52 @@ class DataManagementScreen extends React.Component {
     });
     this.props.enqueueSnackbar('Updated.', { variant: 'success' });
   }
+
+  onUseDataSet = (index) => {
+    if (index === 0) throw new Error('ERROR: unexpected index === 0');
+    const dataSet = this.state.allDataSet[index];
+    this.overrideCurrentData(dataSet.data);
+  };
+
+  overrideCurrentData = (newData) => {
+    let successCount = 0, errorCount = 0;
+    if (typeof (newData) !== 'object') newData = {};
+    for (let key in newData) {
+      try {
+        switch (key) {
+          case 'a':
+            global.accountManager.fromJSON(JSON.stringify(newData[key]));
+            break;
+          case 'm':
+            // TODO: Updating money setup is not supported.
+            break;
+          case 's':
+            // TODO: Updating schedule setup is not supported.
+            break;
+          case 't':
+            global.transactionContainer.fromJSON(JSON.stringify(newData[key]));
+            break;
+          case 'fileList':
+            // Do nothing. file List is read from localStorage directly
+            break;
+          default:
+            throw new Error('Unexpected key: ' + key);
+        }
+        localStorage.setItem(key, JSON.stringify(newData[key]));
+
+        successCount++;
+
+      } catch (error) {
+        console.error('Unexpected error: ', error);
+        errorCount++;
+      }
+    }
+
+    if (successCount > 0) this.props.enqueueSnackbar(`Successfully updated ${successCount} items.`, { variant: 'success' });
+    if (errorCount > 0) this.props.enqueueSnackbar(`${errorCount} items cannot be recognized.`, { variant: 'error' });
+    if (successCount + errorCount === 0) this.props.enqueueSnackbar('Nothing updated.', { variant: 'warning' });
+    this.refresh();
+  };
 
   render() {
     return (
@@ -230,7 +282,7 @@ class DataManagementScreen extends React.Component {
               createdAt={data.createdAt}
               onClick={() => this.setSelected(index)}
               onDeleteFile={() => this.onDeleteFile(index - 1)}
-              onUseThisFile={() => 1}
+              onUseThisFile={() => this.onUseDataSet(index)}
               onRenameFile={() => this.renameFile(index - 1)}
               onDuplicateFile={() => this.onDuplicateFile(index)}
             />
