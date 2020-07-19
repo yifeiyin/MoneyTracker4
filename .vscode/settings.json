@@ -1,8 +1,9 @@
 {
-    "cSpell.words": [
-        "Dropzone",
-        "clike",
-        "mastercard",
-        "prismjs"
-    ]
+  "editor.formatOnSave": true,
+  "cSpell.words": [
+    "Dropzone",
+    "clike",
+    "mastercard",
+    "prismjs"
+  ]
 }

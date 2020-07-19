@@ -268,7 +268,7 @@ function DataSetCard({
 }) {
   if (isTheCurrentOne)
     return (
-      <Card style={{ margin: 15 }} elevation={isSelected ? '6' : '1'} onClick={onClick}>
+      <Card style={{ margin: 15 }} elevation={isSelected ? 6 : 1} onClick={onClick}>
         <CardContent>
           <Typography variant='subtitle1'>{title}</Typography>
         </CardContent>
@@ -280,7 +280,7 @@ function DataSetCard({
     );
   else
     return (
-      <Card style={{ margin: 15 }} elevation={isSelected ? '6' : '1'} onClick={onClick}>
+      <Card style={{ margin: 15 }} elevation={isSelected ? 6 : 1} onClick={onClick}>
         <CardContent>
           <Typography variant='subtitle1' onDoubleClick={onRenameFile}>{title}</Typography>
           <Typography variant='subtitle2'>{createdAt}</Typography>

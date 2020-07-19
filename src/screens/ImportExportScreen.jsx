@@ -286,7 +286,7 @@ export default class ImportExportScreen extends React.Component {
         <div>
           {
             this.state.fileList.map((file, index) =>
-              <Card style={{ display: 'inline-block', margin: 5 }} elevation={index === this.state.currentEditingFileIndex ? '6' : '1'}>
+              <Card key={String(index)} style={{ display: 'inline-block', margin: 5 }} elevation={index === this.state.currentEditingFileIndex ? 6 : 1}>
                 <CardContent>
                   <Typography variant='subtitle1' onDoubleClick={() => this.onRenameFile(index)}>{file.name}</Typography>
                   <Typography variant='subtitle2'>{file.type}</Typography>
