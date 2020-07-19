@@ -290,7 +290,7 @@ export default class ImportExportScreen extends React.Component {
                 <CardContent>
                   <Typography variant='subtitle1' onDoubleClick={() => this.onRenameFile(index)}>{file.name}</Typography>
                   <Typography variant='subtitle2'>{file.type}</Typography>
-                  <Typography variant='body'>{file.lastChanged}</Typography>
+                  <Typography variant='body2'>{file.lastChanged}</Typography>
                 </CardContent>
                 <CardActions disableSpacing={true}>
                   <Button size='small' startIcon={<EditIcon />} onClick={() => this.startEditFile(index)}>Edit</Button>

@@ -99,7 +99,7 @@ class AccountsScreen extends React.Component {
       <div style={{ display: 'flex' }}>
         <div style={{ flex: 1 }}>
           <Button color='primary' variant='outlined' onClick={this.reloadAccountTree}>Reload</Button>
-          <Button color='primary' variant='outlined' onClick={() => this.setState({ creatingNewAccount: true })}>New</Button>
+          <Button color='primary' variant='outlined' onClick={() => this.setState({ currentAccountId: 'new' })}>New</Button>
           <Button color='primary' variant='outlined' onClick={() => this.onSelectAccount()}>Overview</Button>
           <AccountTreeView
             treeData={this.state.treeData}
