@@ -1,9 +1,6 @@
-[React Router](https://reacttraining.com/react-router/web/api/BrowserRouter)
-[Material UI Home Page](https://material-ui.com)
-[Material Icons](https://material-ui.com/components/material-icons/)
-
-Welcome PR for:
-[Set up Configure Babel properly](https://material-ui.com/guides/minimizing-bundle-size/#option-2)
+- [React Router](https://reacttraining.com/react-router/web/api/BrowserRouter)
+- [Material UI Home Page](https://material-ui.com)
+- [Material Icons](https://material-ui.com/components/material-icons/)
 
 <!--
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
