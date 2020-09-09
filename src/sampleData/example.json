@@ -1,0 +1,146 @@
+{
+  "__fromMT": true,
+  "__content": {
+    "m": {
+      "acceptableCurrencies": [
+        "CAD",
+        "CNY",
+        "USD"
+      ],
+      "defaultCurrency": "CAD"
+    },
+    "a": {
+      "_accountNodes": {
+        "0": {
+          "isFolder": true,
+          "name": "Root",
+          "parentId": null,
+          "_CREATING_ROOT": true,
+          "_ID": 0,
+          "accountType": "debit"
+        },
+        "10": {
+          "isFolder": true,
+          "name": "Asset",
+          "parentId": 0,
+          "accountType": "debit"
+        },
+        "20": {
+          "isFolder": true,
+          "name": "Liability",
+          "parentId": 0,
+          "accountType": "credit"
+        },
+        "30": {
+          "isFolder": true,
+          "name": "Equity",
+          "parentId": 0,
+          "accountType": "credit"
+        },
+        "103": {
+          "parentId": 10,
+          "isFolder": true,
+          "name": "Cash",
+          "accountType": "debit",
+          "description": ""
+        },
+        "105": {
+          "parentId": 103,
+          "isFolder": false,
+          "name": "Cash",
+          "accountType": "debit",
+          "description": ""
+        },
+        "107": {
+          "parentId": 10,
+          "isFolder": true,
+          "name": "Banking",
+          "accountType": "debit",
+          "description": ""
+        },
+        "108": {
+          "parentId": 107,
+          "isFolder": false,
+          "name": "BMO Chequing",
+          "accountType": "debit",
+          "description": ""
+        },
+        "112": {
+          "parentId": 20,
+          "isFolder": false,
+          "name": "Credit Card",
+          "accountType": "credit",
+          "description": ""
+        },
+        "113": {
+          "parentId": 30,
+          "isFolder": true,
+          "name": "Fixed Expense",
+          "accountType": "credit",
+          "description": ""
+        },
+        "114": {
+          "parentId": 30,
+          "isFolder": true,
+          "name": "Flexible Expense",
+          "accountType": "credit",
+          "description": ""
+        },
+        "116": {
+          "parentId": 30,
+          "isFolder": true,
+          "name": "Income",
+          "accountType": "credit"
+        },
+        "117": {
+          "parentId": 30,
+          "isFolder": false,
+          "name": "Gain/Loss",
+          "accountType": "credit",
+          "description": "Accounts that are subjected to fluctuate"
+        },
+        "122": {
+          "accountType": "credit",
+          "name": "Uncategorized Expense/Income",
+          "parentId": "30",
+          "isFolder": false
+        }
+      },
+      "_greatestIdUsed": 123
+    },
+    "fileList": [
+      {
+        "name": "(1) Transform",
+        "type": "Transform Statement",
+        "lastChanged": "5/2/2020, 4:44:25 PM",
+        "content": "\n// Transform Statement \n// Created on 5/1/2020, 8:56:22 PM \n\nfunction TransformStatement(inputs, utils) { // ==== start ====\n  const [ originalStatement ] = inputs;\n  const { console, Monum, accountNameToId, $DR, $CR } = utils;\n\n  const lines = originalStatement.split('\\n');\n  const importBatch = lines[6].match(/\\d+/)[0];\n    \n  let result = [];\n  for (let line of lines.splice(12)) {\n    if (line.trim() === '') continue;\n\n    const [accountNo, crDr, date, amount0, desc] = line.split(',');\n    if (!accountNo.includes('0000000')) console.warn('Card number is different');\n\n    const type = crDr === 'DEBIT' ? $CR : $DR;  // Reversed\n    const $time = new Date(date.substr(0, 4), date.substr(4, 2), date.substr(6, 2));\n    const amount = amount0.replace(/-/, '');\n    const rawDesc = desc;\n    \n    result.push({\n      type, $time, amount, rawDesc,\n    });\n  }\n  return result;\n  \n} // ==== end ====\n\n\n\n\n"
+      },
+      {
+        "type": "Generate Transactions",
+        "name": "(2) Generate Trans",
+        "content": "\n// Generate Transactions \n// Created on 5/1/2020, 10:45:42 PM \n\nfunction GenerateTransactions(inputs, utils) { // ==== start ====\n  const { type, $time, amount, rawDesc } = inputs;\n  const { console, Monum, accountNameToId, $DR, $CR, bmoDebitCodeToReadableType } = utils;\n\n  const result = { $time, amount, type };\n  let $title, thisSide, otherSide;\n  thisSide = 'BMO Chequing';\n\n  let code = rawDesc.substr(1, 2);\n  result._bmoTransType = bmoDebitCodeToReadableType[code] + ' (' + code + ')';\n  const desc = rawDesc.substr(4);\n  \n  switch (code) {\n  case 'CW':\n    if (desc.includes('INTERAC ETRNSFR')) {\n      const emtParty = desc.substr(25, 25).trim();\n      result._emtOtherParty = emtParty;\n      result._emtRefNumber = desc.substr(50, 17);\n      if (desc.includes('SENT')) {\n        $title = 'eTransfer to ' + emtParty;\n        console.assert(type === $CR);\n  \n      } else {\n        $title = 'eTransfer received from ' + emtParty;\n        console.assert(type === $DR);\n      }\n\n    } else if (rawDesc.includes(' TF ')) {\n      let toFrom = desc.substr(4).trim();\n      if (toFrom.includes('0000')) {\n        toFrom = 'credit card';\n        otherSide = 'BMO MasterCard';\n      } else if (toFrom.includes('0000x0000')) {\n        toFrom = 'saving';\n        otherSide = 'BMO Saving';\n      }\n      $title = 'Bank Transfer ' + (type === $DR ? 'from' : 'to') + ' ' + toFrom;\n    }\n    \n    break;\n    \n  case 'PR':\n    $title = 'Purchase at ' + desc;\n    break;\n\n  case 'SC':\n    otherSide = 'Banking Fee Expense';\n    \n    if (desc.includes('XXXX XXXX')) {\n      $title = 'Premium Plan Banking Fee';\n    \n    } else if (desc.includes('XXXX XXXX XXXX')) {\n      $title = 'Premium Plan Banking Fee Refund';\n    }\n  \n    break;\n    \n  default:\n\n  }\n  $title = $title || 'Untitled';\n  \n  Object.assign(result, { thisSide, otherSide, $title });\n  \n  return result;\n\n} // ==== end ====\n\n\n\n\n",
+        "lastChanged": "5/2/2020, 4:32:49 PM"
+      },
+      {
+        "name": "(3) Post Process",
+        "type": "Post-Process Transactions",
+        "content": "\n// Post-Process Transactions \n// Created on 5/2/2020, 3:43:27 PM \n\nfunction PostProcessTransactions(inputs, utils) { // ==== start ====\n  const raw = inputs;\n  const { console, Monum, accountNameToId, $DR, $CR } = utils;\n\n  let { type, thisSide, otherSide, amount } = raw;\n  \n  if (otherSide === undefined) {\n    otherSide = 'Uncategorized Expense/Income';\n  }\n  \n  const thisSideAcc = accountNameToId[thisSide];\n  const otherSideAcc = accountNameToId[otherSide];\n  console.assert(thisSideAcc !== undefined, accountNameToId, thisSide);\n  console.assert(otherSideAcc !== undefined, accountNameToId, otherSide);\n  const thisSideCrDr = [[thisSideAcc, new Monum('CAD', amount)]];\n  const otherSideCrDr = [[otherSideAcc, new Monum('CAD', amount)]];\n  if (type === $CR) {\n    raw.$credits = thisSideCrDr;\n    raw.$debits = otherSideCrDr;\n  \n  } else if (type === $DR) {\n    raw.$debits = thisSideCrDr;\n    raw.$credits = otherSideCrDr;\n  \n  } else {\n    console.error('Unexpected value for type: ' + type);\n  }\n\n  // Remove properties that starts with $\n  for (key in raw) {\n    if (key.startsWith('$')) {\n      // Must be a valid mandatory field\n      const newKey = key.substr(1);\n      console.assert(['amount', 'time', 'debits', 'credits', 'title'].includes(newKey));\n      raw[newKey] = raw[key];\n      delete raw[key];\n\n    } else if (key.startsWith('_')) {\n      // Keep them as custom fields\n      const newKey = key.substr(1);\n      raw[newKey] = raw[key];\n      delete raw[key];\n    \n    } else {\n      // If the field does not starts with $ or _, remove it\n      delete raw[key];\n    }\n  }\n\n  return raw;\n} // ==== end ====\n\n\n\n\n",
+        "lastChanged": "5/2/2020, 4:37:19 PM"
+      },
+      {
+        "type": "Commit Transactions",
+        "name": "Commit",
+        "content": "\n// Commit Transactions\n\n\n\n\n\n",
+        "lastChanged": "5/2/2020, 4:37:51 PM"
+      }
+    ],
+    "s": {
+      "_greatestIdUsed": 800000,
+      "_schedules": {}
+    },
+    "t": {
+      "_transactions": {},
+      "_greatestIdUsed": 100036
+    }
+  }
+}
