@@ -1,18 +1,18 @@
 # Money Tracker
 
 - Takes over [yifeiyin/MoneyTracker](https://github.com/yifeiyin/MoneyTracker)
-- Integrates with [yifeiyin/MasterCard-Cache-Server](https://github.com/yifeiyin/MasterCard-Cache-Server)
+- Integrates with [yifeiyin/MasterCard-API-Cache-Server](https://github.com/yifeiyin/MasterCard-API-Cache-Server)
 
 ## Features
 
-- Multi-currency support
-    - `0.1 CAD + 0.2 CAD === 0.3 CAD`
-    - `42 USD + 10.01 CAD + 0.01 USD === 42.01 USD + 10.01 CAD`
-- Merchant location, merchant type and other information are fetched using MaterCard API
-- Supports import transactions from any machine-readable data source (eg. online banking systems)
-- In-browser code editor enables 100% customization on data import/processing
-- Mini file system to store code and data
-- Use drag-and-drop instead of coding (planned, Blockly)
+- 💵 Multi-currency support
+    - `0.1 CAD + 0.2 CAD === 0.3 CAD` ✅
+    - `42 USD + 10.01 CAD + 0.01 USD === 42.01 USD + 10.01 CAD` ✅
+- 🏬 Merchant location, merchant type are fetched using MaterCard API
+- 💳 Supports import transactions from any machine-readable data source (eg. online banking systems)
+- ⚙️ In-browser code editor enables 100% customization on data import/processing
+- 📁 Mini file system to store code and data
+- 📝 Use drag-and-drop instead of coding (planned, Blockly)
 
 
 ## Screenshots
