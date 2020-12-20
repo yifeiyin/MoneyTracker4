@@ -1,14 +1,15 @@
-import { MonumCurrencySchema, MonumValueSchema, MonumSchema, AccountIdSchema, TransactionIdSchema } from './schema';
+import { MonumCurrencySchema, MonumValueSchema, MonumSchema } from './schema';
+
 
 const ITEM_SEPARATOR = '+';
 const SPACE = ' ';
 const BOUNDARY = '|'; // NOTES: Hard coded in some regex
-
+const PRECISION = 5;
 export default class Monum {
   static fromJSON(input) {
     const inside = input.match(/^\|(.+)\|$/);
     if (inside === null) throw new Error(`Invalid monum: expected to be surrounded with ${BOUNDARY}`);
-    const currencyAndValues = inside.split(ITEM_SEPARATOR);
+    const currencyAndValues = inside[1].split(ITEM_SEPARATOR).map(item => item.split(SPACE));
     let result = new Monum();
     for (let [cur, val] of currencyAndValues) {
       result = result.add(new Monum(cur, val));
@@ -25,8 +26,9 @@ export default class Monum {
     return true;
   }
 
-  constructor(currency, value) {
+  static combine(...args) { return new Monum().add(...args); }
 
+  constructor(currency, value) {
     if (currency === undefined && value === undefined)
       return this;
 
@@ -39,8 +41,36 @@ export default class Monum {
   }
 
   toString() {
-    return Object.entries(this).map(([k, v]) => k + SPACE + v).join(ITEM_SEPARATOR);
+    return BOUNDARY + Object.entries(this).map(([k, v]) => k + SPACE + v).join(ITEM_SEPARATOR) + BOUNDARY;
   }
+  toJSON() { return this.toString(); }
+  copy() { return Object.assign(new Monum(), this); }
+
+  _add(other) {
+    other = MonumSchema.validateSync(other);
+    if (!(other instanceof Monum)) throw new Error('Not of instance Monum?!');
+
+    let result = this.copy();
+    for (let key in other) {
+      result[key] = result[key] === undefined ? other[key] : addTwoStringNumber(result[key], other[key]);
+      if (Number(result[key]) === 0.0) delete result[key];
+    }
+    return result;
+  }
+
+  add(...others) {
+    let result = this.copy();
+    for (let other of others) result = result._add(other);
+    return result;
+  }
+
+  neg() {
+    let result = this.copy();
+    for (let key in result) result[key] = negateStringNumber(result[key]);
+    return result;
+  }
+
+  sub(...others) { return new Monum().add(...others).neg().add(this); }
 
   isZero() {
     for (let key in this)
@@ -50,9 +80,12 @@ export default class Monum {
   }
 
   isNotZero() { return !this.isZero(); }
+}
 
-  toJSON() {
-    return this;
-  }
+function negateStringNumber(a) {
+  return (-Number(a)).toFixed(PRECISION).replace(/\.?0+$/, '');
+}
 
+function addTwoStringNumber(a, b) {
+  return (Number(a) + Number(b)).toFixed(PRECISION).replace(/\.?0+$/, '');
 }

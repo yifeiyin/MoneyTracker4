@@ -28,7 +28,7 @@ export const AccountSchema = yup.object({
   description: yup.string().notRequired(),
 }).strict().noUnknown()
 
-export const AccountAndAmount = yup.object({
+export const AccountAndAmountSchema = yup.object({
   acc: AccountIdSchema,
   amt: MonumSchema,
 }).strict().noUnknown()
@@ -39,8 +39,8 @@ export const TransactionSchema = yup.object({
   title: yup.string().required().min(1),
   DRFrom: yup.string().required(),
   CRFrom: yup.string().required(),
-  debits: yup.array(AccountAndAmount).ensure(),
-  credits: yup.array(AccountAndAmount).ensure(),
+  debits: yup.array(AccountAndAmountSchema).ensure(),
+  credits: yup.array(AccountAndAmountSchema).ensure(),
   description: yup.string().notRequired(),
 }).strict().noUnknown()
 
