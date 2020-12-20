@@ -1,4 +1,5 @@
 import { MonumCurrencySchema, MonumValueSchema, MonumSchema, AccountIdSchema, TransactionIdSchema } from './schema';
+let count = 1;
 
 /**
  * MonumCurrencySchema
@@ -58,48 +59,22 @@ testSchema(TransactionIdSchema, 100000, false);
 testSchema(TransactionIdSchema, 100001, true);
 testSchema(TransactionIdSchema, 458274, true);
 
-
 /**
  * Helper
  */
 function testSchema(schema, input, expectedState) {
-  expect(schema.validateSync(input)).toThrow();
-  expect(schema.validateSync(input)).toBeDefined();
-  expect(schema.validateSync(input)).toBeDefined();
-  // let result, error = null;
-  // try {
-  //   result = schema.validateSync(input)
-  // } catch (err) {
-  //   error = err;
-  // }
+  test(`Test #${count++} (${typeof (input)}) ${input} -> (${typeof (expectedState)}) ${expectedState}`, () => {
+    if (expectedState === undefined) {
+      expect(schema.validateSync(input)).toBeDefined();
 
-  /**
-   * undefined: warn result
-   * true: expected to pass
-   * false: expected to fail
-   * others: expected to pass and match the result
-   */
-  if (expectedState === undefined) {
-    if (error === null) console.warn('RESULT:', result);
-    else throw error;
+    } else if (expectedState === true) {
+      expect(schema.validateSync(input)).toBeDefined();
 
-  } else if (expectedState === true) {
-    if (error === null) console.log('Passed:', result);
-    else throw error;
+    } else if (expectedState === false) {
+      expect(() => schema.validateSync(input)).toThrow();
 
-  } else if (expectedState === false) {
-    if (error === null) {
-      console.warn(`(${typeof (result)})`, result)
-      throw new Error('Expected to fail, but got above result');
+    } else {
+      expect(schema.validateSync(input)).toBe(expectedState);
     }
-    else console.log('Passed:', error.message);
-
-  } else {
-    if (!error && expectedState === result) console.log('Passed: matched expected result');
-    else {
-      console.warn('Expecting:', expectedState);
-      console.warn('But got:', result);
-      throw new Error('Did not match expected result');
-    }
-  }
+  })
 }
