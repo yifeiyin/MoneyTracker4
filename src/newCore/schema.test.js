@@ -27,14 +27,13 @@ for (let i = 0; i < tests.v.length; i++) {
 /**
  * MonumSchema
  */
-testSchema(MonumSchema, { _class: 'monum' }, true);
-testSchema(MonumSchema, { _class: 'monum', CAD: '1' }, true);
-testSchema(MonumSchema, { _class: 'monum', CAD: '1.2' }, true);
-testSchema(MonumSchema, { _class: 'monum', CAD: '-1.2' }, true);
-testSchema(MonumSchema, {}, false);
+testSchema(MonumSchema, { CAD: '1' }, true);
+testSchema(MonumSchema, { CAD: '1.2' }, true);
+testSchema(MonumSchema, { CAD: '-1.2' }, true);
+testSchema(MonumSchema, {}, true);
 testSchema(MonumSchema, { CAD: -1.2 }, false);
-testSchema(MonumSchema, { _class: 'monum', CA1D: '-1.2' }, false);
-testSchema(MonumSchema, { _class: 'monum', CAD: -1.2 }, false);
+testSchema(MonumSchema, { CA1D: '-1.2' }, false);
+testSchema(MonumSchema, { CAD: -1.2 }, false);
 
 
 /**
@@ -64,12 +63,15 @@ testSchema(TransactionIdSchema, 458274, true);
  * Helper
  */
 function testSchema(schema, input, expectedState) {
-  let result, error = null;
-  try {
-    result = schema.validateSync(input)
-  } catch (err) {
-    error = err;
-  }
+  expect(schema.validateSync(input)).toThrow();
+  expect(schema.validateSync(input)).toBeDefined();
+  expect(schema.validateSync(input)).toBeDefined();
+  // let result, error = null;
+  // try {
+  //   result = schema.validateSync(input)
+  // } catch (err) {
+  //   error = err;
+  // }
 
   /**
    * undefined: warn result

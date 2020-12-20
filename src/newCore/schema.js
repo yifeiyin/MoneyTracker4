@@ -8,16 +8,15 @@ export const MonumSetupSchema = yup.object({
   acceptableCurrencies: yup.array(MonumCurrencySchema).required(),
 }).strict().noUnknown()
 
-export const MonumSchema = yup.object({
-  _class: yup.string().oneOf(['monum']).required(),
-}).test('test monum key and values', (obj) => {
-  for (let [k, v] of Object.entries(obj)) {
-    if (k === '_class') continue;
-    MonumCurrencySchema.strict().validateSync(k)
-    MonumValueSchema.strict().validateSync(v)
-  }
-  return true;
-})
+export const MonumSchema = yup.object({})
+  .test('test monum key and values', (obj) => {
+    for (let [k, v] of Object.entries(obj)) {
+      if (k === '_class') continue;
+      MonumCurrencySchema.strict().validateSync(k)
+      MonumValueSchema.strict().validateSync(v)
+    }
+    return true;
+  })
 
 export const AccountIdSchema = yup.number().min(100).max(999).required().strict();
 export const TransactionIdSchema = yup.number().min(100001).required().strict();

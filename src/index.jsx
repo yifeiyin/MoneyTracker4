@@ -16,7 +16,7 @@ import { TransactionContainer } from './core/transaction-container';
 import { TransactionManager } from './core/transaction-manager';
 
 
-import './newCore/schemaTests'
+import './newCore/schema.test'
 // import Dexie from "dexie";
 
 // const db = new Dexie('MyDatabase');
