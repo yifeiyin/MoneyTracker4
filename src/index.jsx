@@ -5,10 +5,9 @@ import App from './App';
 import * as serviceWorker from './serviceWorker';
 import CssBaseline from '@material-ui/core/CssBaseline';
 
-// import { Provider } from 'react-redux'
-// import store from './store'
-
 import { SnackbarProvider } from 'notistack';
+import DateFnsUtils from '@date-io/date-fns';
+import { MuiPickersUtilsProvider } from '@material-ui/pickers';
 
 import { AccountManager } from './core/account-manager';
 import { Monum } from './core/monum';
@@ -16,8 +15,28 @@ import { ScheduleContainer } from './core/schedule-container';
 import { TransactionContainer } from './core/transaction-container';
 import { TransactionManager } from './core/transaction-manager';
 
-import DateFnsUtils from '@date-io/date-fns';
-import { MuiPickersUtilsProvider } from '@material-ui/pickers';
+
+import './newCore/schemaTests'
+// import Dexie from "dexie";
+
+// const db = new Dexie('MyDatabase');
+// db.version(1).stores({
+//   accounts: '&id, name',  // isFolder, parentId, description
+//   transactions: '++id, time, title, debitsFrom, creditsFrom', // debits, credits, description, tags
+// });
+
+// db.accounts.put({
+//   id: 1000,
+//   name: 'Under the Dome',
+//   author: 'Stephen King',
+//   categories: ['sci-fi', 'thriller']
+// });
+
+// db.accounts.put({
+//   name: 'Under the Dome',
+//   author: 'Stephen King',
+//   categories: ['sci-fi', 'thriller']
+// });
 
 if (global.deepCopyReviver) console.error('deepCopyReviver is already defined.');
 global.deepCopyReviver = (k, v) => {
@@ -90,7 +109,6 @@ ReactDOM.render(
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
     <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width" />
     <CssBaseline />
-    {/* <Provider store={store}> */}
     <SnackbarProvider maxSnack={5} autoHideDuration={2500} anchorOrigin={{
       vertical: 'bottom',
       horizontal: 'center',
@@ -99,7 +117,6 @@ ReactDOM.render(
         <App />
       </MuiPickersUtilsProvider>
     </SnackbarProvider>
-    {/* </Provider> */}
   </React.StrictMode>,
   document.getElementById('root')
 );
