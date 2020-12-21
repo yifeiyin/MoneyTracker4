@@ -20,13 +20,19 @@ import AccountManager from './newCore/accounts';
 
 const db = new Dexie('MyDatabase');
 db.version(1).stores({
-  accounts: '++id, name',  // isFolder, parentId, description
+  accounts: '++id, name, parentId',  // isFolder, parentId, description
   transactions: '++id, time, title, debitsFrom, creditsFrom', // debits, credits, description, tags
 });
 
-const acc = new AccountManager(db.accounts);
-for (let a of AccountManager.getInitialSetupData())
-  acc.createAccount(a)
+
+
+const accountManager = new AccountManager(db.accounts, db);
+// for (let a of AccountManager.getInitialSetupData())
+//   accountManager.createAccount(a)
+
+global.accountManager = accountManager;
+
+accountManager.exportData().then(console.log)
 
 // db.accounts.put({
 //   id: 1000,

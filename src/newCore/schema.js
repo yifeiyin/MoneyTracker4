@@ -50,3 +50,5 @@ export const DefaultMonumSetup = {
   defaultCurrency: 'CAD',
   acceptableCurrencies: ['CAD', 'CNY', 'USD'],
 }
+
+export const AccountDatabaseSchema = yup.array(AccountSchema)

@@ -10,7 +10,7 @@ import { AccountEditFormat, AccountCreateFormat } from '../ObjectEditor/ObjectFo
 
 class AccountsScreen extends React.Component {
   state = {
-    treeData: global.accountManager.getTreeData(),
+    treeData: null,
     currentAccountValue: {},
     currentAccountId: null,
 
@@ -19,11 +19,12 @@ class AccountsScreen extends React.Component {
   }
 
   componentDidMount() {
-    this.onSelectAccount();
+    this.reloadAccountTree();
+    // this.onSelectAccount();
   }
 
-  reloadAccountTree = () => {
-    this.setState({ treeData: global.accountManager.getTreeData() });
+  reloadAccountTree = async () => {
+    this.setState({ treeData: await global.accountManager.getTreeData() });
   }
 
   resetModal = () => {
@@ -33,23 +34,21 @@ class AccountsScreen extends React.Component {
     });
   }
 
-  onSave = (aborting) => {
+  onSave = async (aborting) => {
     if (aborting) return this.resetModal();
 
     if (this.state.currentAccountId === 'new') {
       try {
-        global.accountManager.createAccountNode(this.state.currentAccountValue);
-
+        await global.accountManager.createAccount(this.state.currentAccountValue);
       } catch (error) { return alert(error); }
 
     } else {
-
       let newValue = Object.assign({}, this.state.currentAccountValue);
       const targetId = this.state.currentAccountId;
       delete newValue.id; delete newValue.isFolder; delete newValue.accountType;
 
       try {
-        global.accountManager.changeAccountNodeProperty(targetId, newValue);
+        await global.accountManager.updateAccount(targetId, newValue);
       } catch (error) { return alert(error); }
     }
     this.props.enqueueSnackbar('Success!', { variant: 'success' });
@@ -57,17 +56,16 @@ class AccountsScreen extends React.Component {
     this.resetModal();
   }
 
-  onStartEdit = (id) => {
-    const account = global.accountManager._accountNodes[id];
+  onStartEdit = async (id) => {
+    const account = await global.accountManager.get(id);
     const accountValue = Object.assign({}, account);
-    accountValue.id = id;
     this.setState({ currentAccountValue: accountValue, currentAccountId: id });
   }
 
-  onRemove = () => {
+  onRemove = async () => {
     const targetId = this.state.currentAccountId;
     try {
-      global.accountManager.removeAccountNode(targetId);
+      await global.accountManager.removeAccount(targetId);
     } catch (error) { return alert(error); }
 
     this.props.enqueueSnackbar('Removed!', { variant: 'success' });
@@ -75,24 +73,23 @@ class AccountsScreen extends React.Component {
     this.resetModal();
   }
 
-  onSelectAccount = (id) => {
-    let name;
-    if (!id) {
-      id = String(global.accountManager._rootAccount);
-      name = 'Overview';
-    } else {
-      name = global.accountManager.fromIdToName(id);
-    }
+  //  onSelectAccount = async (id) => {
+  //   let name;
+  //   if (!id) {
+  //     id = 100;
+  //     name = 'Overview';
+  //   } else {
+  //     name = global.accountManager.fromIdToName(id);
+  //   }
 
-    const targetAccountType = global.accountManager._accountNodes[id].accountType;
-    console.assert(['debit', 'credit'].includes(targetAccountType), 'Unexpected value: ' + targetAccountType);
-    const [transactionsForThisAccount, accountsIncluded] = getTransactionsForAccount(id);
-    this.TransactionView.setData(transactionsForThisAccount);
-    const selectedTransactionsSummary = getTransactionsSummary(transactionsForThisAccount, accountsIncluded, targetAccountType);
+  //   const targetAccountType = global.accountManager._accountNodes[id].accountType;
+  //   console.assert(['debit', 'credit'].includes(targetAccountType), 'Unexpected value: ' + targetAccountType);
+  //   const [transactionsForThisAccount, accountsIncluded] = getTransactionsForAccount(id);
+  //   this.TransactionView.setData(transactionsForThisAccount);
+  //   const selectedTransactionsSummary = getTransactionsSummary(transactionsForThisAccount, accountsIncluded, targetAccountType);
 
-    this.setState({ selectedAccountName: name, selectedTransactionsSummary });
-
-  }
+  //   this.setState({ selectedAccountName: name, selectedTransactionsSummary });
+  // }
 
   render() {
     return (
@@ -101,11 +98,14 @@ class AccountsScreen extends React.Component {
           <Button color='primary' variant='outlined' onClick={this.reloadAccountTree}>Reload</Button>
           <Button color='primary' variant='outlined' onClick={() => this.setState({ currentAccountId: 'new' })}>New</Button>
           <Button color='primary' variant='outlined' onClick={() => this.onSelectAccount()}>Overview</Button>
-          <AccountTreeView
-            treeData={this.state.treeData}
-            onEdit={this.onStartEdit}
-            onClick={this.onSelectAccount}
-          />
+          {
+            this.state.treeData &&
+            <AccountTreeView
+              treeData={this.state.treeData}
+              onEdit={this.onStartEdit}
+              onClick={this.onSelectAccount}
+            />
+          }
         </div>
 
         <Modal open={this.state.currentAccountId !== null} onModalRequestClose={() => this.onSave(true)}>

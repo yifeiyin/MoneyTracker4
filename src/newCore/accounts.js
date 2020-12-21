@@ -1,5 +1,4 @@
-import { AccountIdSchema, AccountSchema } from './schema'
-import Dexie from "dexie";
+import { AccountDatabaseSchema, AccountSchema } from './schema'
 
 export default class AccountManager {
   static getInitialSetupData() {
@@ -34,15 +33,22 @@ export default class AccountManager {
     return [root, asset, liability, equity];
   }
 
-  constructor(table) {
+  constructor(table, db) {
     this.table = table;
+    this.db = db;
   }
 
   async exportData() {
     return await this.table.toArray();
   }
 
-  async importData(data) { }
+  async importData(data) {
+    AccountDatabaseSchema.validateSync(data);
+    return await this.db.transaction('rw', this.table, async () => {
+      await this.table.clear();
+      await this.table.bulkAdd(data);
+    });
+  }
 
   async createAccount(newAccount) {
     if (!newAccount.id) {
@@ -54,23 +60,36 @@ export default class AccountManager {
     await this.table.add(newAccount);
   }
 
-  async removeAccount() {
-
+  async removeAccount(id) {
+    await this.table.delete(id);
   }
 
-  updateAccount() {
-
+  async updateAccount(id, changes) {
+    await this.table.update(id, changes);
   }
 
-  fromIdToName(id) {
+  async fromIdToName(id) {
     return 'TODO ' + id;
   }
 
-  isValidId(id) {
-
+  async get(id) {
+    const result = await this.table.get(id);
+    if (result === undefined) throw new Error('Account not found')
+    return result;
   }
 
-  getTreeData() {
-    return []
+  async isValidId(id) {
+    return undefined === await this.table.get(id);
+  }
+
+  async getTreeData(startsFrom = 100) {
+    const children = await this.table.where('parentId').equals(startsFrom).toArray();
+    const self = await this.table.get(startsFrom);
+    return {
+      id: startsFrom,
+      name: self.name,
+      isFolder: self.isFolder,
+      children: await Promise.all(children.map(child => this.getTreeData(child.id))),
+    }
   }
 }

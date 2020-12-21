@@ -21,9 +21,15 @@ import {
 export default class ObjectEditor extends React.Component {
   state = {
     showingAccountModal: false,
+    accountTreeData: null,
   }
 
   accountModalCallBack = null;
+
+  async componentDidMount() {
+    const accountTreeData = await global.accountManager.getTreeData()
+    this.setState({ accountTreeData })
+  }
 
   onChange = (key, newValue) => {
     if (newValue === undefined)
@@ -118,7 +124,7 @@ export default class ObjectEditor extends React.Component {
 
         <Modal open={this.state.showingAccountModal} onModalRequestClose={() => this.closeAccountModal(null)}>
           <AccountTreeView
-            treeData={global.accountManager.getTreeData()}
+            treeData={this.state.accountTreeData}
             onDoubleClick={(id) => this.closeAccountModal(id)}
           />
         </Modal>

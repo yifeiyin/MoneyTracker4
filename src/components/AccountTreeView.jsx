@@ -23,7 +23,6 @@ export default function AccountTreeView(props) {
     >
       {renderTree(treeData, onEdit, onClick, onDoubleClick)}
     </TreeView>
-
   );
 }
 
@@ -33,7 +32,7 @@ const renderTree = (nodes, onEdit, onClick, onDoubleClick) => (
     :
     <TreeItem
       key={nodes.id}
-      nodeId={nodes.id}
+      nodeId={String(nodes.id)}
       label={
         <div
           style={{
