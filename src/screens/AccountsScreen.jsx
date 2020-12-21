@@ -60,7 +60,7 @@ class AccountsScreen extends React.Component {
   onStartCreate = async () => {
     const currentAccountValue = {};
 
-    if (this.state.selectedAccountId !== 100) {
+    if (this.state.selectedAccountId !== null && this.state.selectedAccountId !== 100) {
       const parent = await global.accountManager.get(this.state.selectedAccountId);
       currentAccountValue.accountType = parent.accountType;
       currentAccountValue.parentId = parent.id;
