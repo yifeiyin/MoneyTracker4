@@ -11,7 +11,8 @@ export function reviver(k, v) {
   }
 };
 
-export function deepCopy(obj) { return JSON.parse(JSON.stringify(obj), reviver); }
+export function parse(str) { return JSON.parse(str, reviver); }
+export function deepCopy(obj) { return parse(JSON.stringify(obj)); }
 
 export function debitsMinusCredits(debits, credits) {
   return sumOfAccountAndAmountList(debits).sub(sumOfAccountAndAmountList(credits));

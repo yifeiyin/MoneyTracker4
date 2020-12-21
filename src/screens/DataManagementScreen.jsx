@@ -24,6 +24,8 @@ import {
   Gavel as GavelIcon,
 } from '@material-ui/icons';
 
+import { parse, deepCopy } from "../newCore/helpers";
+
 
 class DataManagementScreen extends React.Component {
 
@@ -37,16 +39,16 @@ class DataManagementScreen extends React.Component {
     this.refresh();
   }
 
-  refresh = () => {
-    // this.setState({ allDataSet: this.getAllDataSet() });
+  refresh = async () => {
+    const allDataSet = await this.getAllDataSet();
+    this.setState({ allDataSet });
   }
 
-  getAllDataSet() {
-    const currentData = global.deepCopy(localStorage);
-    for (const key in currentData) {
-      if (!['a', 's', 'm', 't', 'fileList'].includes(key)) delete currentData[key];
-      else currentData[key] = JSON.parse(currentData[key]);
-    }
+  getAllDataSet = async () => {
+    const currentData = {};
+    currentData.fileList = parse(localStorage.fileList);
+    currentData.a = await global.accountManager.exportData();
+    currentData.t = await global.transactionManager.exportData();
 
     const currentDataSet = {
       title: '(current)',
@@ -55,13 +57,12 @@ class DataManagementScreen extends React.Component {
     };
 
     const savedDataSets = this.savedDataSets;
-    console.count('load');
     return [currentDataSet, ...savedDataSets];
   }
 
   get savedDataSets() {
     const a = localStorage.getItem('savedDataSets');
-    return a ? JSON.parse(a, global.deepCopyReviver) : [];
+    return a ? parse(a) : [];
   }
 
   setSelected = (index) => {
@@ -85,13 +86,8 @@ class DataManagementScreen extends React.Component {
   // for list view master
   //
 
-  downloadAll = () => {
-
-  }
-
-  resetAllUsingPasteBoard = () => {
-
-  }
+  downloadAll = () => { }
+  resetAllUsingPasteBoard = () => { }
 
   //
   // for list view
@@ -221,31 +217,27 @@ class DataManagementScreen extends React.Component {
     this.overrideCurrentData(dataSet.data);
   };
 
-  overrideCurrentData = (newData) => {
+  overrideCurrentData = async (newData) => {
     let successCount = 0, errorCount = 0;
     if (typeof (newData) !== 'object') newData = {};
     for (let key in newData) {
       try {
         switch (key) {
           case 'a':
-            global.accountManager.fromJSON(JSON.stringify(newData[key]));
-            break;
-          case 'm':
-            // TODO: Updating money setup is not supported.
-            break;
-          case 's':
-            // TODO: Updating schedule setup is not supported.
+            await global.accountManager.importData(deepCopy(newData.a));
             break;
           case 't':
-            global.transactionContainer.fromJSON(JSON.stringify(newData[key]));
+            await global.transactionManager.importData(deepCopy(newData.t));
             break;
           case 'fileList':
-            // Do nothing. file List is read from localStorage directly
+            localStorage.setItem('fileList', JSON.stringify(newData.fileList));
             break;
+
+          case 'm': case 's':
+            throw new Error('TODO: Unsupported action')
           default:
             throw new Error('Unexpected key: ' + key);
         }
-        localStorage.setItem(key, JSON.stringify(newData[key]));
 
         successCount++;
 
@@ -360,10 +352,10 @@ function DataSetDetails({
     const value = data[key];
     let row;
     switch (key) {
-      case 't': row = ['Transactions', Object.values(value._transactions).length]; break;
-      case 's': row = ['Schedules', Object.values(value._schedules).length]; break;
-      case 'a': row = ['Accounts', Object.values(value._accountNodes).length]; break;
-      case 'm': row = ['Accepted Currencies', Object.values(value.acceptableCurrencies).join(', ')]; break;
+      case 't': row = ['Transactions', value.length]; break;
+      // case 's': row = ['Schedules', Object.values(value._schedules).length]; break;
+      case 'a': row = ['Accounts', value.length]; break;
+      // case 'm': row = ['Accepted Currencies', Object.values(value.acceptableCurrencies).join(', ')]; break;
       case 'fileList': row = ['Files', value.length]; break;
       default: row = ['Unknown type: ' + key, JSON.stringify(value).substr(0, 30)];
     }
