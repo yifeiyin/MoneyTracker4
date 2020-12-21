@@ -19,8 +19,8 @@ export const MonumSchema = yup.object({})
     return true;
   })
 
-export const AccountIdSchema = yup.number().min(100).max(999).required().strict();
-export const AccountIdNullableSchema = AccountIdSchema.notRequired().defined().nullable(true);
+export const AccountIdSchema = yup.number().min(100).max(999).required('account id is required').strict();
+export const AccountIdNullableSchema = AccountIdSchema.notRequired().defined('parent id must be defined').nullable(true);
 export const TransactionIdSchema = yup.number().min(100001).required().strict();
 
 export const AccountSchema = yup.object({
@@ -30,8 +30,8 @@ export const AccountSchema = yup.object({
   accountType: yup.string().oneOf(['debit', 'credit']).required(),
   isFolder: yup.bool(),
   description: yup.string().notRequired(),
-}).strict().noUnknown().test('parentId can only be null for root', (obj) => {
-  return obj.id === 100 || AccountIdSchema.validateSync(obj.parentId)
+}).strict().noUnknown().test('valid parentId', 'parentId can only be null for root', (obj) => {
+  return obj.id === 100 || AccountIdSchema.isValidSync(obj.parentId)
 })
 
 export const AccountAndAmountSchema = yup.object({
