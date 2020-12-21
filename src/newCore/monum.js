@@ -7,9 +7,11 @@ const BOUNDARY = '|'; // NOTES: Hard coded in some regex
 const PRECISION = 5;
 export default class Monum {
   static fromJSON(input) {
-    const inside = input.match(/^\|(.+)\|$/);
-    if (inside === null) throw new Error(`Invalid monum: expected to be surrounded with ${BOUNDARY}`);
-    const currencyAndValues = inside[1].split(ITEM_SEPARATOR).map(item => item.split(SPACE));
+    const match = input.match(/^\|(.*)\|$/);
+    if (match === null) throw new Error(`Invalid monum: expected to be surrounded with ${BOUNDARY}`);
+    const inside = match[1];
+    if (inside.length === 0) return new Monum();
+    const currencyAndValues = inside.split(ITEM_SEPARATOR).map(item => item.split(SPACE));
     let result = new Monum();
     for (let [cur, val] of currencyAndValues) {
       result = result.add(new Monum(cur, val));

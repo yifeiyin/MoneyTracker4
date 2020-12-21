@@ -38,6 +38,7 @@ test('isZero isNotZero', () => {
 })
 
 test('fromJSON toJSON', () => {
+  expect(Monum.fromJSON('||')).toMatchObject(new Monum())
   expect(Monum.fromJSON('|CAD 1|')).toMatchObject(new Monum('CAD', '1'))
   expect(Monum.fromJSON(cad1.toJSON())).toMatchObject(cad1)
 })
