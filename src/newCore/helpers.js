@@ -11,7 +11,7 @@ export function reviver(k, v) {
   }
 };
 
-export function deepCopy(obj) { return this.JSON.parse(JSON.stringify(obj), reviver); }
+export function deepCopy(obj) { return JSON.parse(JSON.stringify(obj), reviver); }
 
 export function debitsMinusCredits(debits, credits) {
   return sumOfAccountAndAmountList(debits).sub(sumOfAccountAndAmountList(credits));
@@ -29,4 +29,20 @@ export function getTodaysDateAt0000() {
   result.setSeconds(0);
   result.setMilliseconds(0);
   return result;
+}
+
+export function formatDate(date, withTimezone = true) {
+  return (
+    date.getFullYear() + '-' +
+    TwoDigitPad(date.getMonth() + 1) + '-' +
+    TwoDigitPad(date.getDate()) + ' ' +
+    TwoDigitPad(date.getHours()) + ':' +
+    TwoDigitPad(date.getMinutes()) +
+    (date.getSeconds() === 0 ? '' : (':' + TwoDigitPad(date.getSeconds()))) +
+    (withTimezone ? date.toString().substr(date.toString().indexOf('GMT')) : '')
+  )
+
+  function TwoDigitPad(s) {
+    return s < 10 ? '0' + s : s;
+  }
 }

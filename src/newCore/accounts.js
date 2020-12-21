@@ -43,7 +43,7 @@ export default class AccountManager {
   }
 
   async importData(data) {
-    AccountDatabaseSchema.validateSync(data);
+    data = AccountDatabaseSchema.validateSync(data);
     return await this.db.transaction('rw', this.table, async () => {
       await this.table.clear();
       await this.table.bulkAdd(data);

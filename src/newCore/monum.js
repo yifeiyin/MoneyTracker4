@@ -43,7 +43,7 @@ export default class Monum {
   toString() { return BOUNDARY + Object.entries(this).map(([k, v]) => k + SPACE + v).join(ITEM_SEPARATOR) + BOUNDARY; }
   toJSON() { return this.toString(); }
   copy() { return Object.assign(new Monum(), this); }
-  toReadable() { return Object.entries(this).map(([k, v]) => k + ' ' + v).join('+') }
+  toReadable() { return Object.entries(this).map(([k, v]) => k + ' ' + v).join('+') || '0'; }
 
   _add(other) {
     other = MonumSchema.validateSync(other);

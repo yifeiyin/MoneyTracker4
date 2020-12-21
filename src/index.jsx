@@ -23,7 +23,8 @@ import { config } from './overmind'
 
 import Dexie from "dexie";
 import AccountManager from './newCore/accounts';
-import TransactionContainer from './newCore/transactions';
+import Monum from './newCore/monum';
+import TransactionManager from './newCore/transactions';
 
 const db = new Dexie('MyDatabase');
 db.version(1).stores({
@@ -31,7 +32,29 @@ db.version(1).stores({
   transactions: '++id, time, title, debitsFrom, creditsFrom', // debits, credits, description, tags
 });
 
+// db.transactions.defineClass({
+//   id: Number,
+//   time: Date,
+//   title: String,
+//   debits: [{ acc: Number, amt: Monum }],
+//   credits: [{ acc: Number, amt: Monum }],
+// })
+// class Transaction {
+//   constructor() {
+//     console.log(2)
+//     console.log(this)
+//     this.debits.forEach(side => Object.assign(Object.create(Monum), side.amt))
+//     this.credits.forEach(side => Object.assign(Object.create(Monum), side.amt))
+//   }
+// }
 
+// db.transactions.mapToClass(Transaction)
+
+db.transactions.hook('reading', function (obj) {
+  obj.debits.forEach(side => Object.setPrototypeOf(side.amt, new Monum()));
+  obj.credits.forEach(side => Object.setPrototypeOf(side.amt, new Monum()));
+  return obj;
+})
 
 const accountManager = new AccountManager(db.accounts, db);
 // for (let a of AccountManager.getInitialSetupData())
@@ -39,7 +62,7 @@ const accountManager = new AccountManager(db.accounts, db);
 
 global.accountManager = accountManager;
 
-global.transactionContainer = new TransactionContainer(db.transactions, db);
+global.transactionManager = new TransactionManager(db.transactions, db);
 // db.accounts.put({
 //   id: 1000,
 //   name: 'Under the Dome',

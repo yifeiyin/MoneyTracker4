@@ -11,7 +11,7 @@ export default class TransactionManager {
   }
 
   async importData(data) {
-    TransactionDatabaseSchema.validateSync(data);
+    data = TransactionDatabaseSchema.validateSync(data);
     return await this.db.transaction('rw', this.table, async () => {
       await this.table.clear();
       await this.table.bulkAdd(data);
@@ -19,7 +19,7 @@ export default class TransactionManager {
   }
 
   async create(data) {
-    TransactionSchema.omit(['id']).validateSync(data);
+    data = TransactionSchema.omit(['id']).validateSync(data);
     await this.table.add(data);
   }
 

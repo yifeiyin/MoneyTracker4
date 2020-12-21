@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Paper, TableContainer, Table, TableHead, TableBody, TableRow, TableCell, IconButton } from '@material-ui/core';
 import {
   Edit as EditIcon,
@@ -10,23 +10,8 @@ import ObjectEditor from '../ObjectEditor/index';
 
 import { TransactionCreateFormat, TransactionEditFormat } from '../ObjectEditor/ObjectFormats';
 
-import Monum from '../newCore/monum'
-import { deepCopy } from '../newCore/helpers'
-/**
- * Methods
- *  - setData
- *  - promptToCreate
- *  - closeModal
- *
- * Props
- *  - viewOnly: boolean  TODO
- *  - onCreateSave: (newTransactionValues) => shouldModalClose
- *  - onEditSave: (targetId, newTransactionValues) => shouldModalClose
- *  - onRemove: (targetId) => undefined
- *
- * Note
- *  - The caller should setData after onCreateSave, onEditSave or onRemove
- */
+import { deepCopy, getTodaysDateAt0000, sumOfAccountAndAmountList, formatDate } from '../newCore/helpers'
+
 export default class TransactionView extends React.Component {
   state = {
     data: [],
@@ -34,22 +19,21 @@ export default class TransactionView extends React.Component {
     currentTransactionValue: {},
   }
 
+  componentDidMount() {
+    this.reloadData();
+  }
+
+  reloadData = async () => {
+    const data = await this.props.loadData();
+    this.setState({ data });
+  }
+
   promptToCreate = (defaultValues = {}) => {
+    defaultValues.time = getTodaysDateAt0000();
     this.setState({
       currentTransactionId: 'new',
       currentTransactionValue: defaultValues,
     });
-  }
-
-  setData = (newData) => {
-    if (!(newData instanceof Array)) {
-      newData = Object.keys(newData).map(id => ({ id, ...newData[id] }));
-    }
-
-    // Sort by transaction time
-    newData.sort((a, b) => a.time - b.time);
-
-    this.setState({ data: newData });
   }
 
   onEdit = (data) => {
@@ -66,25 +50,47 @@ export default class TransactionView extends React.Component {
     });
   }
 
-  onSaveTransaction = (aborting) => {
+  onSaveTransaction = async (aborting) => {
     if (aborting) return this.closeModal();
 
     const newValue = deepCopy(this.state.currentTransactionValue);
     delete newValue.id;
     const id = this.state.currentTransactionId;
 
-    let shouldModalClose;
+    let success = false;
     if (id === 'new') {
-      shouldModalClose = this.props.onCreateSave(newValue);
+      try {
+        await global.transactionManager.create(newValue);
+        success = true;
+
+      } catch (error) { alert(error) }
+
     } else {
-      shouldModalClose = this.props.onEditSave(id, newValue);
+      try {
+        await global.transactionManager.update(id, newValue);
+        success = true;
+
+      } catch (error) { alert(error) }
     }
 
-    if (shouldModalClose) this.closeModal();
+    if (success) {
+      this.props.enqueueSnackbar('Done', { variant: 'success' });
+      this.closeModal();
+      this.reloadData();
+    }
   }
 
-  onRemove = (id) => {
-    this.props.onRemove(id);
+  onRemove = async (id) => {
+    let success = false;
+    try {
+      await global.transactionManager.remove(id);
+      success = true;
+    } catch (error) { alert(error) }
+
+    if (success) {
+      this.props.enqueueSnackbar('Deleted!', { variant: 'success' });
+      this.reloadData();
+    }
   }
 
   render() {
@@ -105,11 +111,7 @@ export default class TransactionView extends React.Component {
               <TableHead>
                 <TableRow>
                   <TableCell key='actions'>Actions</TableCell>
-                  {
-                    generateTransactionTableCells().map(key =>
-                      <TableCell key={key}>{key}</TableCell>
-                    )
-                  }
+                  <TransactionTableHeaderCells />
                 </TableRow>
               </TableHead>
 
@@ -126,9 +128,7 @@ export default class TransactionView extends React.Component {
                         <IconButton size='small' onClick={() => this.onRemove(data.id)}><DeleteIcon color="inherit" /></IconButton>
                       </TableCell>
 
-                      {
-                        generateTransactionTableCells(data)
-                      }
+                      <TransactionTableBodyCells transaction={data} />
                     </TableRow>
                   )
                 }
@@ -141,75 +141,57 @@ export default class TransactionView extends React.Component {
   }
 }
 
-function generateTransactionTableCells(t) {
+function TransactionTableHeaderCells() {
+  return [
+    'Id', 'Time', 'Title', 'Debits', 'Credits', 'Total Amount'
+  ].map(key => <TableCell key={key}>{key}</TableCell>)
+}
 
-  if (!t) {
-    return [
-      'Id', 'Time', 'Title', 'Debits', 'Credits', 'Total Amount'
-    ];
-  }
+function TransactionTableBodyCells({ transaction }) {
+  const { id, time, title, debits, credits } = transaction;
+
+  const [readable, setReadable] = React.useState(['loading', 'loading']);
+
+  useEffect(() => {
+    Promise.all([
+      stringifyAccountsAndAmounts(debits),
+      stringifyAccountsAndAmounts(credits)
+    ]).then(setReadable);
+
+  }, [debits, credits]);
 
   return (
     <>
-      <TableCell>{t.id}</TableCell>
-      <TableCell>{formatDate(t.time, false)}</TableCell>
-      <TableCell>{t.title}</TableCell>
-      <TableCell>{stringifyAccountsAndAmounts(t.debits)}</TableCell>
-      <TableCell>{stringifyAccountsAndAmounts(t.credits)}</TableCell>
-      <TableCell>{calculateAmount(t).toString()}</TableCell>
+      <TableCell>{id}</TableCell>
+      <TableCell>{formatDate(time, false)}</TableCell>
+      <TableCell>{title}</TableCell>
+      <TableCell>{readable[0]}</TableCell>
+      <TableCell>{readable[1]}</TableCell>
+      <TableCell>{sumOfAccountAndAmountList(debits).toReadable()}</TableCell>
     </>
   );
 }
 
 
-function stringifyAccountsAndAmounts(oneSide) {
+async function stringifyAccountsAndAmounts(side) {
   const accountManager = global.accountManager;
 
-  if (oneSide.length === 0) { return ''; }
-  if (oneSide.length === 1) {
-    const [targetAccountId] = oneSide[0];
-    return accountManager.fromIdToName(targetAccountId);
+  if (side.length === 0) { return ''; }
+  if (side.length === 1) {
+    const { acc } = side[0];
+    return await accountManager.fromIdToName(acc);
   }
 
-  return oneSide.map(([targetAccountId, monum], index) =>
-    <span key={String(index)}>{(index === 0 ? null : <br />)}<span>{accountManager.fromIdToName(targetAccountId) + ' – ' + monum.toString()}</span></span>
+  const accountNames = await Promise.all(side.map(({ acc }) => accountManager.fromIdToName(acc)));
+
+  return side.map(({ acc, amt }, index) =>
+    <span key={String(index)}>
+      {(index === 0 ? null : <br />)}
+      <span>
+        {accountNames[index] + ' – ' + amt.toReadable()}
+      </span>
+    </span>
   )
 }
 
 
-function calculateAmount(transaction) {  // 计算发生额
-  let debitTotal = new Monum();
-  let creditTotal = new Monum();
-
-  if (!(transaction.debits instanceof Array))
-    throw new Error('Transaction does not have debits as Array');
-  if (!(transaction.credits instanceof Array))
-    throw new Error('Transaction does not have credits as Array');
-
-  debitTotal = debitTotal.add(...transaction.debits.map(v => v[1]));
-  creditTotal = creditTotal.add(...transaction.credits.map(v => v[1]));
-  if (debitTotal.sub(creditTotal).isNotZero())
-    console.log('!!!WARNING: when calculating two side values, they does not seem to be the same.\n' +
-      'debit side total is ' + debitTotal.toString() + '\n' +
-      'credit side total is ' + creditTotal.toString() + '\n' +
-      '---- end of warning ----\n');             // We don't really throw an error, don't want to interrupt the program
-
-  return debitTotal; // Returning debit total
-}
-
-
-function formatDate(date, withTimezone = true) {
-  return (
-    date.getFullYear() + '-' +
-      TwoDigitPad(date.getMonth() + 1) + '-' +
-      TwoDigitPad(date.getDate()) + ' ' +
-      TwoDigitPad(date.getHours()) + ':' +
-      TwoDigitPad(date.getMinutes()) +
-      (date.getSeconds() === 0 ? '' : (':' + TwoDigitPad(date.getSeconds()))) +
-      withTimezone ? date.toString().substr(date.toString().indexOf('GMT')) : ''
-  )
-
-  function TwoDigitPad(s) {
-    return s < 10 ? '0' + s : s;
-  }
-}
