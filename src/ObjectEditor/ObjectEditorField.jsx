@@ -1,18 +1,36 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Input,
   Select,
   MenuItem,
 } from '@material-ui/core';
 import {
-  KeyboardTimePicker,
-  KeyboardDatePicker,
   KeyboardDateTimePicker,
 } from '@material-ui/pickers';
 
+import Monum from '../newCore/monum'
+import { getTodaysDateAt0000 } from '../newCore/helpers'
 
 export default function ObjectEditorField(props) {
+  // eslint-disable-next-line no-unused-vars
   const { id, value, type, label, propertyType, onChange } = props;
+  const [accountName, setAccountName] = React.useState('loading');
+  const [monumInputValue, setMonumInputValue] = React.useState(null);
+  useEffect(() => {
+    if (type === 'account' && value) {
+      global.accountManager.fromIdToName(value).then(setAccountName)
+    } else {
+      setAccountName('N/A')
+    }
+
+    if (type === 'monum') {
+      if (monumInputValue === null)
+        setMonumInputValue(value.toReadable());
+    } else {
+      setMonumInputValue('N/A');
+    }
+  }, [monumInputValue, type, value]);
+
   switch (type) {
     case 'input':
       return <Input value={ensureDefined(value)} onChange={(e) => onChange(e.target.value)} />
@@ -45,17 +63,22 @@ export default function ObjectEditorField(props) {
       )
 
     case 'monum':
-      return <Input value={getMonumStringByPriority(value)} error={!isValidMonum(getMonumStringByPriority(value))} onChange={(e) => onChange(tryParseMonum(e.target.value))} />
+      return (
+        <Input
+          value={monumInputValue}
+          error={!isValidMonum(monumInputValue)}
+          onChange={(e) => { setMonumInputValue(e.target.value); onChange(parseMonumOrZero(e.target.value)) }}
+        />)
 
     case 'datetime':
       return <KeyboardDateTimePicker
         variant="inline"
         ampm={false}
         label={label || id}
-        value={value === undefined ? null : value}
+        value={value === undefined ? getTodaysDateAt0000() : value}
         onChange={onChange}
         // onError={function () { console.warn(arguments) }}
-        format="yyyy/MM/dd HH:mm"
+        format="yyyy-MM-dd HH:mm"
       />
 
     case 'account':
@@ -66,13 +89,11 @@ export default function ObjectEditorField(props) {
             {
               value === undefined || value === null ?
                 placeholder || 'Please select' :
-                value + ' - ' + global.accountManager.fromIdToName(value)
+                value + ' - ' + accountName
             }
           </MenuItem>
         </Select>
       </>)
-
-
 
     default:
       return <div>Unknown type: {type}</div>
@@ -92,36 +113,17 @@ function isValidMonum(input) {
   return true;
 }
 
-function getMonumStringByPriority(monum) {
-  if (monum === undefined || monum === null || monum === '') {
-    console.log('Monum', monum);
-    return '';
-  }
-  return monum._rawInput === undefined ? monum.toString() : monum._rawInput;
-}
-
-function tryParseMonum(input) {
-  let result = new global.Monum();
+function parseMonumOrZero(input) {
   try {
-    result = parseMonum(input);
+    return parseMonum(input);
   } catch { }
-  result._rawInput = input;
-  return result;
+  return new Monum();
 }
 
 function parseMonum(input) {
-  const Monum = global.Monum;
-  /* Example inputs
-      10.2
-      10
-      cad 10
-      cad10
-      10cad
-      10 cad
-  */
   input = input.toUpperCase();
   let currencyFound;
-  for (let currency of Monum.setup.acceptableCurrencies) {
+  for (let currency of ['CAD', 'CNY', 'USD']) {
     if (input.includes(currency)) {
       if (currencyFound)
         throw new Error('Ambiguous currency: ' + currencyFound + ' and ' + currency);
@@ -129,21 +131,13 @@ function parseMonum(input) {
         currencyFound = currency;
     }
   }
-  if (currencyFound == undefined) {
-    if (Monum.setup.defaultCurrency != undefined && Monum.setup.defaultCurrency != '') {
-      currencyFound = Monum.setup.defaultCurrency;
-    } else {
-      throw new Error('Unable to find currency type, nor is a default one provided');
-    }
+
+  if (currencyFound === undefined) {
+    currencyFound = 'CAD';
   }
+
   let currencyRemoved = input.replace(currencyFound, '');
-  // NOTE TO MYSELF (about the logic here):
-  // Since eventually we are gonna store it in monum, we need to make sure
-  // it is valid first. So we convert it into number then back to string, to
-  // see if it is the string literal 'NaN'.
   let currencyValueAsString = String(Number(currencyRemoved));
-  if (currencyValueAsString == 'NaN') {
-    throw new Error('The number you entered does not seem to be a number');
-  }
+
   return new Monum(currencyFound, currencyValueAsString);
 }

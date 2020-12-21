@@ -9,21 +9,21 @@ import { Delete as DeleteIcon } from '@material-ui/icons'
 
 import ObjectEditorField from './ObjectEditorField';
 
+import Monum from '../newCore/monum';
+
+import { sumOfAccountAndAmountList, debitsMinusCredits } from '../newCore/helpers'
 
 export default function DebitsCreditsEditor(props) {
+  // eslint-disable-next-line no-unused-vars
   const { id, value, label, propertyType, onChange, accountModalControl } = props;
   const [idForDebits, idForCredits] = id;
   const [labelForDebits, labelForCredits] = label || id;
   const [debits, credits] = value;
-  const length = Math.max(debits.length, credits.length) + 1;
 
-  const debitTotal = global.Monum.combine(...debits.map(v => v[1]));
-  const creditTotal = global.Monum.combine(...credits.map(v => v[1]));
+  const debitsTotalReadable = sumOfAccountAndAmountList(debits).toReadable();
+  const creditsTotalReadable = sumOfAccountAndAmountList(credits).toReadable();
 
-  const debitsTotalReadable = debitTotal.toString();
-  const creditsTotalReadable = creditTotal.toString();
-
-  const isBalanced = debitTotal.sub(creditTotal).isZero();
+  const isBalanced = debitsMinusCredits(debits, credits).isZero();
 
   return (
     <div style={{ width: '100%', margin: '10px 0', padding: 15, borderRadius: 15, border: '1px solid #DDD' }}>
@@ -39,9 +39,9 @@ export default function DebitsCreditsEditor(props) {
             label={labelForDebits}
             id={idForDebits}
             accountModalControl={accountModalControl}
-            onChangeTarget={(index, newTarget) => { debits[index][0] = newTarget; onChange(debits, null); }}
-            onChangeMonum={(index, newMonum) => { debits[index][1] = newMonum; onChange(debits, null); }}
-            onAdd={(newTarget) => { debits.push([newTarget, new global.Monum()]); onChange(debits, null); }}
+            onChangeTarget={(index, newTarget) => { debits[index].acc = newTarget; onChange(debits, null); }}
+            onChangeMonum={(index, newMonum) => { debits[index].amt = newMonum; onChange(debits, null); }}
+            onAdd={(newTarget) => { debits.push({ acc: newTarget, amt: new Monum() }); onChange(debits, null); }}
             onRemove={(index) => { debits.splice(index, 1); onChange(debits, null); }}
           />
         </div>
@@ -53,9 +53,9 @@ export default function DebitsCreditsEditor(props) {
             label={labelForCredits}
             id={idForCredits}
             accountModalControl={accountModalControl}
-            onChangeTarget={(index, newTarget) => { credits[index][0] = newTarget; onChange(null, credits); }}
-            onChangeMonum={(index, newMonum) => { credits[index][1] = newMonum; onChange(null, credits); }}
-            onAdd={(newTarget) => { credits.push([newTarget, new global.Monum()]); onChange(null, credits); }}
+            onChangeTarget={(index, newTarget) => { credits[index].acc = newTarget; onChange(null, credits); }}
+            onChangeMonum={(index, newMonum) => { credits[index].amt = newMonum; onChange(null, credits); }}
+            onAdd={(newTarget) => { credits.push({ acc: newTarget, amt: new Monum() }); onChange(null, credits); }}
             onRemove={(index) => { credits.splice(index, 1); onChange(null, credits); }}
           />
         </div>
@@ -65,21 +65,22 @@ export default function DebitsCreditsEditor(props) {
 }
 
 function DebitCreditOneSide(props) {
+  // eslint-disable-next-line no-unused-vars
   const { side, label, id, accountModalControl, onChangeTarget, onChangeMonum, onAdd, onRemove } = props;
   return (
     <div>
       {
-        side.map(([targetAcc, monum], index) =>
+        side.map(({ acc, amt }, index) =>
           <div style={{ display: 'flex' }} key={id + index}>
             <span style={{ flex: 2 }}>
               <ObjectEditorField
-                value={targetAcc} type='account' accountModalControl={accountModalControl}
+                value={acc} type='account' accountModalControl={accountModalControl}
                 onChange={(value) => onChangeTarget(index, value)}
               />
             </span>
             <span style={{ flex: 1 }}>
               <ObjectEditorField
-                value={monum} type='monum'
+                value={amt} type='monum'
                 onChange={(value) => onChangeMonum(index, value)}
               />
             </span>

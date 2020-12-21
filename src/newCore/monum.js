@@ -40,11 +40,10 @@ export default class Monum {
     this[currency] = value;
   }
 
-  toString() {
-    return BOUNDARY + Object.entries(this).map(([k, v]) => k + SPACE + v).join(ITEM_SEPARATOR) + BOUNDARY;
-  }
+  toString() { return BOUNDARY + Object.entries(this).map(([k, v]) => k + SPACE + v).join(ITEM_SEPARATOR) + BOUNDARY; }
   toJSON() { return this.toString(); }
   copy() { return Object.assign(new Monum(), this); }
+  toReadable() { return Object.entries(this).map(([k, v]) => k + ' ' + v).join('+') }
 
   _add(other) {
     other = MonumSchema.validateSync(other);

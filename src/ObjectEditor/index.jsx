@@ -6,7 +6,6 @@ import {
   FormGroup,
   Typography,
   InputLabel,
-  IconButton,
 } from '@material-ui/core';
 import { AccountTreeView } from '../components';
 import { Modal } from '../components';
