@@ -14,6 +14,7 @@ class AccountsScreen extends React.Component {
     currentAccountValue: {},
     currentAccountId: null,
 
+    selectedAccountId: null,
     selectedAccountName: '',
     selectedTransactionsSummary: {},
   }
@@ -56,6 +57,18 @@ class AccountsScreen extends React.Component {
     this.resetModal();
   }
 
+  onStartCreate = async () => {
+    const currentAccountValue = {};
+
+    if (this.state.selectedAccountId !== 100) {
+      const parent = await global.accountManager.get(this.state.selectedAccountId);
+      currentAccountValue.accountType = parent.accountType;
+      currentAccountValue.parentId = parent.id;
+    }
+
+    this.setState({ currentAccountId: 'new', currentAccountValue })
+  }
+
   onStartEdit = async (id) => {
     const account = await global.accountManager.get(id);
     const accountValue = Object.assign({}, account);
@@ -71,6 +84,10 @@ class AccountsScreen extends React.Component {
     this.props.enqueueSnackbar('Removed!', { variant: 'success' });
     this.reloadAccountTree();
     this.resetModal();
+  }
+
+  onSelectAccount = (selectedAccountId) => {
+    this.setState({ selectedAccountId })
   }
 
   //  onSelectAccount = async (id) => {
@@ -96,7 +113,7 @@ class AccountsScreen extends React.Component {
       <div style={{ display: 'flex' }}>
         <div style={{ flex: 1 }}>
           <Button color='primary' variant='outlined' onClick={this.reloadAccountTree}>Reload</Button>
-          <Button color='primary' variant='outlined' onClick={() => this.setState({ currentAccountId: 'new' })}>New</Button>
+          <Button color='primary' variant='outlined' onClick={this.onStartCreate}>New</Button>
           <Button color='primary' variant='outlined' onClick={() => this.onSelectAccount()}>Overview</Button>
           {
             this.state.treeData &&

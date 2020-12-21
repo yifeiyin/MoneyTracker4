@@ -51,6 +51,7 @@ export default class AccountManager {
   }
 
   async create(newAccount) {
+    // TODO: Validate debit/credit type
     if (!newAccount.id) {
       newAccount = AccountSchema.omit(['id']).validateSync(newAccount);
     } else {
