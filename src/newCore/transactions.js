@@ -1,6 +1,18 @@
 import { TransactionDatabaseSchema, TransactionSchema } from './schema';
+import { getTodaysDateAt0000 } from './helpers'
 
 export default class TransactionManager {
+  static getInitialSetupData() {
+    const first = TransactionSchema.validateSync({
+      id: 100001,
+      time: getTodaysDateAt0000(),
+      title: 'Initial transaction',
+      credit: [],
+      debits: [],
+    });
+    return [first];
+  }
+
   constructor(table, db) {
     this.table = table;
     this.db = db;

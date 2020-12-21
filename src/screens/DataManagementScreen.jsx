@@ -46,7 +46,7 @@ class DataManagementScreen extends React.Component {
 
   getAllDataSet = async () => {
     const currentData = {};
-    currentData.fileList = parse(localStorage.fileList);
+    currentData.fileList = parse(localStorage.fileList || '[]');
     currentData.a = await global.accountManager.exportData();
     currentData.t = await global.transactionManager.exportData();
 

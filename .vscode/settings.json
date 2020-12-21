@@ -2,7 +2,9 @@
   "editor.formatOnSave": true,
   "javascript.format.enable": true,
   "cSpell.words": [
+    "CHEQUING",
     "Dropzone",
+    "Uncategorized",
     "clike",
     "dexie",
     "mastercard",

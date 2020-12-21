@@ -36,14 +36,25 @@ db.transactions.hook('reading', function (obj) {
   obj.debits.forEach(side => Object.setPrototypeOf(side.amt, new Monum()));
   obj.credits.forEach(side => Object.setPrototypeOf(side.amt, new Monum()));
   return obj;
-})
+});
+
+(async () => {
+  if ((await db.accounts.toArray()).length === 0) {
+    for (let a of AccountManager.getInitialSetupData())
+      await global.accountManager.create(a)
+  }
+
+  if ((await db.transactions.toArray()).length === 0) {
+    for (let a of TransactionManager.getInitialSetupData())
+      await global.transactionManager.create(a)
+  }
+
+})();
 
 /** Global variables */
 global.accountManager = new AccountManager(db.accounts, db);
 global.transactionManager = new TransactionManager(db.transactions, db);
 
-// for (let a of AccountManager.getInitialSetupData())
-//   accountManager.createAccount(a)
 
 /** Overmind */
 const overmind = createOvermind(config, { devtools: true });

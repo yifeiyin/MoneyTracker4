@@ -7,7 +7,9 @@ import 'prismjs/components/prism-clike';
 import 'prismjs/components/prism-javascript';
 import 'prismjs/components/prism-json';
 
-import bmoDebitCodeToReadableType from '../bmoDebitCodeToReadable';
+// import bmoDebitCodeToReadableType from '../scripts/bmoDebitCodeToReadable';
+
+import { BMODebit } from '../scripts'
 
 import { DropzoneArea } from 'material-ui-dropzone';
 
@@ -24,7 +26,7 @@ const fileTypes = {
   'Transform Statement': { format: 'js', executable: true, inputs: ['Plain Text'], outputs: ['JSON'] },  // Transform csv into array of strings
   'Generate Transactions': { format: 'js', executable: true, inputs: ['JSON'], outputs: ['JSON'], iterative: true },      // Apply rules, string to transaction objects
   'Post-Process Transactions': { format: 'js', executable: true, inputs: ['JSON'], outputs: ['JSON'], iterative: true },  // Post-process to assert outputs, transform shorthand syntax
-  'Commit Transactions': { format: 'none', executable: true, inputs: ['JSON'] },                         // Commit
+  'Commit Transactions': { format: 'none', executable: true, inputs: ['Plain Text'] },                         // Commit
   'JSON': { format: 'json', executable: false },                       // json, non executable
   'Plain Text': { format: 'plain', executable: false },                // non executable
 };
@@ -153,12 +155,12 @@ export default class ImportExportScreen extends React.Component {
     }
   }
 
-  run = () => {
+  run = async () => {
     // Prepare input
     const currentFileType = this.state.fileList[this.state.currentEditingFileIndex].type;
     const currentFileTypeInfo = fileTypes[currentFileType];
     const inputFileType = currentFileTypeInfo.inputs[0];
-    const outputFileType = currentFileTypeInfo.outputs === undefined ? null : 'JSON';  // hack
+    // const outputFileType = currentFileTypeInfo.outputs === undefined ? null : 'JSON';  // hack
     const inputFileName = this.state.objectEditorRunValues.inputFile;
     let inputFileContent = this.state.fileList.filter(f => f.name === inputFileName)[0].content;
     if (inputFileType === 'JSON') {
@@ -171,7 +173,8 @@ export default class ImportExportScreen extends React.Component {
 
     if (currentFileType === 'Commit Transactions') {
       try {
-        global.transactionManager.createTransaction(inputFileContent);
+        for (let t of await BMODebit(inputFileContent))
+          await global.transactionManager.createTransaction(t);
 
       } catch (error) {
         alert(error);
@@ -181,85 +184,85 @@ export default class ImportExportScreen extends React.Component {
       return;
     }
 
-    // Prepare arguments
-    const accounts = Object.keys(global.accountManager._accountNodes).map(id => ({ id, ...(global.accountManager._accountNodes[id]) }));
-    const accountsMap = {};
-    accounts.filter(account => account.isFolder === false).forEach(account => accountsMap[account.name] = account.id);
+    // // Prepare arguments
+    // const accounts = Object.keys(global.accountManager._accountNodes).map(id => ({ id, ...(global.accountManager._accountNodes[id]) }));
+    // const accountsMap = {};
+    // accounts.filter(account => account.isFolder === false).forEach(account => accountsMap[account.name] = account.id);
 
 
-    const args = [[inputFileContent], {
-      Monum: global.Monum,
-      accountNameToId: accountsMap,
-      console,
-      $DR: '$DR', $CR: '$CR',
-      bmoDebitCodeToReadableType,
-    }];
-    console.log('Arguments: ', args[0], args[1]);
+    // const args = [[inputFileContent], {
+    //   Monum: global.Monum,
+    //   accountNameToId: accountsMap,
+    //   console,
+    //   $DR: '$DR', $CR: '$CR',
+    //   bmoDebitCodeToReadableType,
+    // }];
+    // console.log('Arguments: ', args[0], args[1]);
 
-    // Preprocess code
-    const lines = this.state.currentEditorContent.split('\n');
-    let start, end;
-    lines.forEach((line, index) => {
-      if (line.includes('==== start')) start = index;
-      if (line.includes('==== end')) end = index;
-    });
+    // // Preprocess code
+    // const lines = this.state.currentEditorContent.split('\n');
+    // let start, end;
+    // lines.forEach((line, index) => {
+    //   if (line.includes('==== start')) start = index;
+    //   if (line.includes('==== end')) end = index;
+    // });
 
-    const codeOfInterest = lines.slice(start + 1, end).join('\n');
+    // const codeOfInterest = lines.slice(start + 1, end).join('\n');
 
-    // Compile
-    let functionToRun;
-    try {
-      functionToRun = new Function('inputs', 'utils', codeOfInterest);  // eslint-disable-line no-new-func
-    } catch (error) {
-      alert('Compile Error: ' + error);
-      console.error(error);
-      return;
-    }
+    // // Compile
+    // let functionToRun;
+    // try {
+    //   functionToRun = new Function('inputs', 'utils', codeOfInterest);  // eslint-disable-line no-new-func
+    // } catch (error) {
+    //   alert('Compile Error: ' + error);
+    //   console.error(error);
+    //   return;
+    // }
 
-    // Run
-    let result;
+    // // Run
+    // let result;
 
-    if (currentFileTypeInfo.iterative) {
-      if (!(inputFileContent instanceof Array)) return alert('Input file is not an array.');
-      result = [];
-      // eslint-disable-next-line no-unused-vars
-      const [arg1, ...rest] = args;
-      try {
-        inputFileContent.forEach((inputFilePiece, index) => {
-          try {
-            result.push(functionToRun(inputFilePiece, ...rest));
-          } catch (error) {
-            alert(`Encountered error at ${index} element: ` + error);
-            console.error(error);
-            throw new Error('ABORTED');
-          }
-        });
-      } catch (error) {
-        if (error.message === 'ABORTED') return;
-        alert('Unexpected error: ' + error);
-        console.error(error);
-      }
+    // if (currentFileTypeInfo.iterative) {
+    //   if (!(inputFileContent instanceof Array)) return alert('Input file is not an array.');
+    //   result = [];
+    //   // eslint-disable-next-line no-unused-vars
+    //   const [arg1, ...rest] = args;
+    //   try {
+    //     inputFileContent.forEach((inputFilePiece, index) => {
+    //       try {
+    //         result.push(functionToRun(inputFilePiece, ...rest));
+    //       } catch (error) {
+    //         alert(`Encountered error at ${index} element: ` + error);
+    //         console.error(error);
+    //         throw new Error('ABORTED');
+    //       }
+    //     });
+    //   } catch (error) {
+    //     if (error.message === 'ABORTED') return;
+    //     alert('Unexpected error: ' + error);
+    //     console.error(error);
+    //   }
 
-    } else {
-      try {
-        result = functionToRun(...args);
-      } catch (error) {
-        alert('Run Time Error: ' + error);
-        console.error(error);
-        return;
-      }
-    }
+    // } else {
+    //   try {
+    //     result = functionToRun(...args);
+    //   } catch (error) {
+    //     alert('Run Time Error: ' + error);
+    //     console.error(error);
+    //     return;
+    //   }
+    // }
 
-    // Process and store result
-    if (outputFileType === 'JSON' && result instanceof Object) {
-      this.createNewFile({
-        name: 'Result ' + getTimeAsString(),
-        content: JSON.stringify(result, null, 4),
-        type: 'JSON',
-      });
-    } else {
-      console.warn('Ignoring output: ', outputFileType, result);
-    }
+    // // Process and store result
+    // if (outputFileType === 'JSON' && result instanceof Object) {
+    //   this.createNewFile({
+    //     name: 'Result ' + getTimeAsString(),
+    //     content: JSON.stringify(result, null, 4),
+    //     type: 'JSON',
+    //   });
+    // } else {
+    //   console.warn('Ignoring output: ', outputFileType, result);
+    // }
   }
 
   handleHighLight = (code) => {

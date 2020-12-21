@@ -61,6 +61,8 @@ export default class AccountManager {
   }
 
   async remove(id) {
+    // TODO: Recursively delete children
+    // TODO: Handle the case where there are associated transactions
     await this.table.delete(id);
   }
 
@@ -78,6 +80,11 @@ export default class AccountManager {
     return (await this.table.get(id)).name;
   }
 
+  async fromNameToId(name) {
+    const result = await this.table.where('name').equals(name).toArray();
+    if (result.length !== 1) throw new Error(result.length === 0 ? `Account name not found: ${name}` : `Ambiguous account name: ${name}`);
+    return result;
+  }
 
   async isValidId(id) {
     return undefined === await this.table.get(id);
