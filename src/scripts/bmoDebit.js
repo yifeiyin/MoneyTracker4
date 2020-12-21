@@ -4,6 +4,12 @@ import bmoDebitCodeToReadableType from './bmoDebitCodeToReadable';
 const $CR = 'credit';
 const $DR = 'debit';
 
+const AC_CHEQUING = 'BMO Chequing';
+const AC_MASTER_CARD = 'BMO MasterCard';
+const AC_SAVING = 'BMO Saving';
+const AC_OTHER_EXPENSE = 'Other Income/Expense';
+const AC_DEFAULT_OTHER_SIDE = 'Unknown Income/Expense';
+
 
 export default async function csvToTransactions(input) {
   const transformed = transformStatement(input).map(generateTransaction).map(postProcess);
@@ -38,13 +44,8 @@ function transformStatement(originalStatement) {
 function generateTransaction(inputs) {
   const { type, $time, amount, rawDesc } = inputs;
 
-  const AC_CHEQUING = 'BMO Chequing';
-  const AC_MASTER_CARD = 'BMO MasterCard';
-  const AC_SAVING = 'BMO Saving';
-  const AC_OTHER_EXPENSE = 'Other Expense';
-
   const result = { $time, amount, type };
-  let $title, thisSide, otherSide;
+  let $title = 'Untitled', thisSide, otherSide;
   thisSide = AC_CHEQUING;
 
   let code = rawDesc.substr(1, 2);
@@ -108,7 +109,7 @@ async function postProcess(inputs) {
   const raw = inputs;
 
   let { type, thisSide, otherSide, amount } = raw;
-  otherSide = otherSide || 'Uncategorized Expense/Income';
+  otherSide = otherSide || AC_DEFAULT_OTHER_SIDE;
 
   const thisSideAcc = await global.accountManager.fromNameToId(thisSide);
   const otherSideAcc = await global.accountManager.fromNameToId(otherSide);

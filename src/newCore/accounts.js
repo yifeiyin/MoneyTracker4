@@ -84,7 +84,7 @@ export default class AccountManager {
   async fromNameToId(name) {
     const result = await this.table.where('name').equals(name).toArray();
     if (result.length !== 1) throw new Error(result.length === 0 ? `Account name not found: ${name}` : `Ambiguous account name: ${name}`);
-    return result;
+    return result[0].id;
   }
 
   async isValidId(id) {
