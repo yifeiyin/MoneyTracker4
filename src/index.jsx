@@ -9,6 +9,12 @@ import { SnackbarProvider } from 'notistack';
 import DateFnsUtils from '@date-io/date-fns';
 import { MuiPickersUtilsProvider } from '@material-ui/pickers';
 
+// Overmind
+import { createOvermind } from 'overmind';
+import { Provider as OverMindProvider } from 'overmind-react'
+import { config } from './overmind'
+
+
 // import { AccountManager } from './core/account-manager';
 // import { Monum } from './core/monum';
 // import { ScheduleContainer } from './core/schedule-container';
@@ -112,6 +118,10 @@ global.transactionContainer = new TransactionContainer(db.transactions, db);
 //   global.loadInitialData();
 // }
 
+const overmind = createOvermind(config, {
+  devtools: true
+})
+
 ReactDOM.render(
   <React.StrictMode>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
@@ -123,7 +133,9 @@ ReactDOM.render(
       horizontal: 'center',
     }}>
       <MuiPickersUtilsProvider utils={DateFnsUtils}>
-        <App />
+        <OverMindProvider value={overmind}>
+          <App />
+        </OverMindProvider>
       </MuiPickersUtilsProvider>
     </SnackbarProvider>
   </React.StrictMode>,

@@ -7,7 +7,7 @@ import 'prismjs/components/prism-clike';
 import 'prismjs/components/prism-javascript';
 import 'prismjs/components/prism-json';
 
-import bmoDebitCodeToReadableType from '../sampleData/bmoDebitCodeToReadable';
+import bmoDebitCodeToReadableType from '../../sampleData/bmoDebitCodeToReadable';
 
 import { DropzoneArea } from 'material-ui-dropzone';
 
