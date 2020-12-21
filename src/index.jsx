@@ -5,50 +5,32 @@ import App from './App';
 import * as serviceWorker from './serviceWorker';
 import CssBaseline from '@material-ui/core/CssBaseline';
 
+/** SnackBar */
 import { SnackbarProvider } from 'notistack';
+
+/** Date Picker */
 import DateFnsUtils from '@date-io/date-fns';
 import { MuiPickersUtilsProvider } from '@material-ui/pickers';
 
-// Overmind
+/** Overmind */
 import { createOvermind } from 'overmind';
 import { Provider as OverMindProvider } from 'overmind-react'
 import { config } from './overmind'
 
-
-// import { AccountManager } from './core/account-manager';
-// import { Monum } from './core/monum';
-// import { ScheduleContainer } from './core/schedule-container';
-// import { TransactionContainer } from './core/transaction-container';
-// import { TransactionManager } from './core/transaction-manager';
-
+/** Dexie */
 import Dexie from "dexie";
-import AccountManager from './newCore/accounts';
-import Monum from './newCore/monum';
-import TransactionManager from './newCore/transactions';
 
+/** Core */
+import AccountManager from './newCore/accounts';
+import TransactionManager from './newCore/transactions';
+import Monum from './newCore/monum';
+
+/** Database setup */
 const db = new Dexie('MyDatabase');
 db.version(1).stores({
-  accounts: '++id, name, parentId',  // isFolder, parentId, description
-  transactions: '++id, time, title, debitsFrom, creditsFrom', // debits, credits, description, tags
+  accounts: '++id, name, parentId',
+  transactions: '++id, time, title, debitsFrom, creditsFrom',
 });
-
-// db.transactions.defineClass({
-//   id: Number,
-//   time: Date,
-//   title: String,
-//   debits: [{ acc: Number, amt: Monum }],
-//   credits: [{ acc: Number, amt: Monum }],
-// })
-// class Transaction {
-//   constructor() {
-//     console.log(2)
-//     console.log(this)
-//     this.debits.forEach(side => Object.assign(Object.create(Monum), side.amt))
-//     this.credits.forEach(side => Object.assign(Object.create(Monum), side.amt))
-//   }
-// }
-
-// db.transactions.mapToClass(Transaction)
 
 db.transactions.hook('reading', function (obj) {
   obj.debits.forEach(side => Object.setPrototypeOf(side.amt, new Monum()));
@@ -56,94 +38,15 @@ db.transactions.hook('reading', function (obj) {
   return obj;
 })
 
-const accountManager = new AccountManager(db.accounts, db);
+/** Global variables */
+global.accountManager = new AccountManager(db.accounts, db);
+global.transactionManager = new TransactionManager(db.transactions, db);
+
 // for (let a of AccountManager.getInitialSetupData())
 //   accountManager.createAccount(a)
 
-global.accountManager = accountManager;
-
-global.transactionManager = new TransactionManager(db.transactions, db);
-// db.accounts.put({
-//   id: 1000,
-//   name: 'Under the Dome',
-//   author: 'Stephen King',
-//   categories: ['sci-fi', 'thriller']
-// });
-
-// db.accounts.put({
-//   name: 'Under the Dome',
-//   author: 'Stephen King',
-//   categories: ['sci-fi', 'thriller']
-// });
-
-// if (global.deepCopyReviver) console.error('deepCopyReviver is already defined.');
-// global.deepCopyReviver = (k, v) => {
-//   return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z/.test(v) ? new Date(v) :
-//     typeof (v) === 'object' && v !== null && v._class === 'monum' ? Monum.fromObject(v) : v;
-// };
-
-// if (global.deepCopy) console.error('deepCopy is already defined.');
-// global.deepCopy = function (obj) {
-//   return this.JSON.parse(JSON.stringify(obj), global.deepCopyReviver);
-// }
-
-// global.loadInitialData = function () {
-//   console.log('Loading new app instance');
-//   global.accountManager = new AccountManager(JSON.stringify(require('./sampleData/Accounts.json')));
-
-//   global.Monum = Monum;
-//   global.Monum.setup.fromJSON(JSON.stringify(require('./sampleData/Monum Setup.json')));
-
-//   global.transactionContainer = new TransactionContainer();
-//   global.transactionContainer.fromJSON(JSON.stringify(require('./sampleData/Transactions.json')));
-
-//   global.scheduleContainer = new ScheduleContainer();
-//   global.scheduleContainer.fromJSON(JSON.stringify(require('./sampleData/Schedules.json')));
-
-//   global.transactionManager = new TransactionManager(global.transactionContainer, global.scheduleContainer, global.accountManager);
-
-// }
-
-// global.loadAllData = function () {
-//   global.accountManager = new AccountManager(localStorage.getItem('a'));
-
-//   global.Monum = Monum;
-//   global.Monum.setup.fromJSON(localStorage.getItem('m'));
-
-//   global.transactionContainer = new TransactionContainer();
-//   global.transactionContainer.fromJSON(localStorage.getItem('t'));
-
-//   global.scheduleContainer = new ScheduleContainer();
-//   global.scheduleContainer.fromJSON(localStorage.getItem('s'));
-
-//   global.transactionManager = new TransactionManager(global.transactionContainer, global.scheduleContainer, global.accountManager);
-// }
-
-// global.saveAllData = function () {
-//   try {
-//     localStorage.setItem('a', JSON.stringify(global.accountManager));
-//     localStorage.setItem('m', JSON.stringify(global.Monum.setup));
-//     localStorage.setItem('t', JSON.stringify(global.transactionContainer));
-//     localStorage.setItem('s', JSON.stringify(global.scheduleContainer));
-//   } catch (error) {
-//     this.console.error(error);
-//     return false;
-//   }
-//   this.console.log('Saved!');
-//   return true;
-// }
-
-// try {
-//   global.loadAllData();
-// } catch (error) {
-//   console.log('Error when trying to load from localStorage');
-//   console.log(error);
-//   global.loadInitialData();
-// }
-
-const overmind = createOvermind(config, {
-  devtools: true
-})
+/** Overmind */
+const overmind = createOvermind(config, { devtools: true });
 
 ReactDOM.render(
   <React.StrictMode>
