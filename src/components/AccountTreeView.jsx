@@ -13,7 +13,7 @@ export default function AccountTreeView(props) {
   return (
     <TreeView
       defaultCollapseIcon={<ExpandMoreIcon />}
-      defaultExpanded={["0", "10", "20", "30"]}
+      defaultExpanded={["100", "101", "102", "103"]}
       defaultExpandIcon={<ChevronRightIcon />}
       style={{
         ...style,
