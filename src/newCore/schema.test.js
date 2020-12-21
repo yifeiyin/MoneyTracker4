@@ -1,4 +1,4 @@
-import { MonumCurrencySchema, MonumValueSchema, MonumSchema, AccountIdSchema, TransactionIdSchema } from './schema';
+import { MonumCurrencySchema, MonumValueSchema, MonumSchema, AccountIdSchema, TransactionIdSchema, AccountSchema } from './schema';
 let count = 1;
 
 /**
@@ -46,7 +46,9 @@ testSchema(AccountIdSchema, '', false);
 testSchema(AccountIdSchema, 0, false);
 testSchema(AccountIdSchema, 99, false);
 testSchema(AccountIdSchema, 100, true);
-testSchema(AccountIdSchema, 487, true);
+
+testSchema(AccountIdSchema.notRequired().nullable(true), null, true);
+testSchema(AccountIdSchema.notRequired().nullable(true), undefined, false);
 
 /**
  * TransactionIdSchema
@@ -58,6 +60,19 @@ testSchema(TransactionIdSchema, 0, false);
 testSchema(TransactionIdSchema, 100000, false);
 testSchema(TransactionIdSchema, 100001, true);
 testSchema(TransactionIdSchema, 458274, true);
+
+/**
+ * AccountSchema
+ */
+const asset = {
+  parentId: 100,
+  name: 'Asset',
+  accountType: 'debit',
+  isFolder: true,
+}
+testSchema(AccountSchema.omit(['id']), { ...asset }, true)
+testSchema(AccountSchema, Object.assign({ ...asset }, { id: 101 }), true)
+
 
 /**
  * Helper

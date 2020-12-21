@@ -9,21 +9,24 @@ import { SnackbarProvider } from 'notistack';
 import DateFnsUtils from '@date-io/date-fns';
 import { MuiPickersUtilsProvider } from '@material-ui/pickers';
 
-import { AccountManager } from './core/account-manager';
-import { Monum } from './core/monum';
-import { ScheduleContainer } from './core/schedule-container';
-import { TransactionContainer } from './core/transaction-container';
-import { TransactionManager } from './core/transaction-manager';
+// import { AccountManager } from './core/account-manager';
+// import { Monum } from './core/monum';
+// import { ScheduleContainer } from './core/schedule-container';
+// import { TransactionContainer } from './core/transaction-container';
+// import { TransactionManager } from './core/transaction-manager';
 
+import Dexie from "dexie";
+import AccountManager from './newCore/accounts';
 
-import './newCore/schema.test'
-// import Dexie from "dexie";
+const db = new Dexie('MyDatabase');
+db.version(1).stores({
+  accounts: '++id, name',  // isFolder, parentId, description
+  transactions: '++id, time, title, debitsFrom, creditsFrom', // debits, credits, description, tags
+});
 
-// const db = new Dexie('MyDatabase');
-// db.version(1).stores({
-//   accounts: '&id, name',  // isFolder, parentId, description
-//   transactions: '++id, time, title, debitsFrom, creditsFrom', // debits, credits, description, tags
-// });
+const acc = new AccountManager(db.accounts);
+for (let a of AccountManager.getInitialSetupData())
+  acc.createAccount(a)
 
 // db.accounts.put({
 //   id: 1000,
@@ -38,70 +41,70 @@ import './newCore/schema.test'
 //   categories: ['sci-fi', 'thriller']
 // });
 
-if (global.deepCopyReviver) console.error('deepCopyReviver is already defined.');
-global.deepCopyReviver = (k, v) => {
-  return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z/.test(v) ? new Date(v) :
-    typeof (v) === 'object' && v !== null && v._class === 'monum' ? Monum.fromObject(v) : v;
-};
+// if (global.deepCopyReviver) console.error('deepCopyReviver is already defined.');
+// global.deepCopyReviver = (k, v) => {
+//   return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z/.test(v) ? new Date(v) :
+//     typeof (v) === 'object' && v !== null && v._class === 'monum' ? Monum.fromObject(v) : v;
+// };
 
-if (global.deepCopy) console.error('deepCopy is already defined.');
-global.deepCopy = function (obj) {
-  return this.JSON.parse(JSON.stringify(obj), global.deepCopyReviver);
-}
+// if (global.deepCopy) console.error('deepCopy is already defined.');
+// global.deepCopy = function (obj) {
+//   return this.JSON.parse(JSON.stringify(obj), global.deepCopyReviver);
+// }
 
-global.loadInitialData = function () {
-  console.log('Loading new app instance');
-  global.accountManager = new AccountManager(JSON.stringify(require('./sampleData/Accounts.json')));
+// global.loadInitialData = function () {
+//   console.log('Loading new app instance');
+//   global.accountManager = new AccountManager(JSON.stringify(require('./sampleData/Accounts.json')));
 
-  global.Monum = Monum;
-  global.Monum.setup.fromJSON(JSON.stringify(require('./sampleData/Monum Setup.json')));
+//   global.Monum = Monum;
+//   global.Monum.setup.fromJSON(JSON.stringify(require('./sampleData/Monum Setup.json')));
 
-  global.transactionContainer = new TransactionContainer();
-  global.transactionContainer.fromJSON(JSON.stringify(require('./sampleData/Transactions.json')));
+//   global.transactionContainer = new TransactionContainer();
+//   global.transactionContainer.fromJSON(JSON.stringify(require('./sampleData/Transactions.json')));
 
-  global.scheduleContainer = new ScheduleContainer();
-  global.scheduleContainer.fromJSON(JSON.stringify(require('./sampleData/Schedules.json')));
+//   global.scheduleContainer = new ScheduleContainer();
+//   global.scheduleContainer.fromJSON(JSON.stringify(require('./sampleData/Schedules.json')));
 
-  global.transactionManager = new TransactionManager(global.transactionContainer, global.scheduleContainer, global.accountManager);
+//   global.transactionManager = new TransactionManager(global.transactionContainer, global.scheduleContainer, global.accountManager);
 
-}
+// }
 
-global.loadAllData = function () {
-  global.accountManager = new AccountManager(localStorage.getItem('a'));
+// global.loadAllData = function () {
+//   global.accountManager = new AccountManager(localStorage.getItem('a'));
 
-  global.Monum = Monum;
-  global.Monum.setup.fromJSON(localStorage.getItem('m'));
+//   global.Monum = Monum;
+//   global.Monum.setup.fromJSON(localStorage.getItem('m'));
 
-  global.transactionContainer = new TransactionContainer();
-  global.transactionContainer.fromJSON(localStorage.getItem('t'));
+//   global.transactionContainer = new TransactionContainer();
+//   global.transactionContainer.fromJSON(localStorage.getItem('t'));
 
-  global.scheduleContainer = new ScheduleContainer();
-  global.scheduleContainer.fromJSON(localStorage.getItem('s'));
+//   global.scheduleContainer = new ScheduleContainer();
+//   global.scheduleContainer.fromJSON(localStorage.getItem('s'));
 
-  global.transactionManager = new TransactionManager(global.transactionContainer, global.scheduleContainer, global.accountManager);
-}
+//   global.transactionManager = new TransactionManager(global.transactionContainer, global.scheduleContainer, global.accountManager);
+// }
 
-global.saveAllData = function () {
-  try {
-    localStorage.setItem('a', JSON.stringify(global.accountManager));
-    localStorage.setItem('m', JSON.stringify(global.Monum.setup));
-    localStorage.setItem('t', JSON.stringify(global.transactionContainer));
-    localStorage.setItem('s', JSON.stringify(global.scheduleContainer));
-  } catch (error) {
-    this.console.error(error);
-    return false;
-  }
-  this.console.log('Saved!');
-  return true;
-}
+// global.saveAllData = function () {
+//   try {
+//     localStorage.setItem('a', JSON.stringify(global.accountManager));
+//     localStorage.setItem('m', JSON.stringify(global.Monum.setup));
+//     localStorage.setItem('t', JSON.stringify(global.transactionContainer));
+//     localStorage.setItem('s', JSON.stringify(global.scheduleContainer));
+//   } catch (error) {
+//     this.console.error(error);
+//     return false;
+//   }
+//   this.console.log('Saved!');
+//   return true;
+// }
 
-try {
-  global.loadAllData();
-} catch (error) {
-  console.log('Error when trying to load from localStorage');
-  console.log(error);
-  global.loadInitialData();
-}
+// try {
+//   global.loadAllData();
+// } catch (error) {
+//   console.log('Error when trying to load from localStorage');
+//   console.log(error);
+//   global.loadInitialData();
+// }
 
 ReactDOM.render(
   <React.StrictMode>

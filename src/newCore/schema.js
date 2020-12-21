@@ -23,8 +23,10 @@ export const TransactionIdSchema = yup.number().min(100001).required().strict();
 
 export const AccountSchema = yup.object({
   id: AccountIdSchema,
+  parentId: AccountIdSchema.notRequired().nullable(),
+  name: yup.string().required().min(1),
+  accountType: yup.string().oneOf(['debit', 'credit']).required(),
   isFolder: yup.bool(),
-  parentId: AccountIdSchema.nullable(),
   description: yup.string().notRequired(),
 }).strict().noUnknown()
 

@@ -40,7 +40,7 @@ class DataManagementScreen extends React.Component {
   }
 
   refresh = () => {
-    this.setState({ allDataSet: this.getAllDataSet() });
+    // this.setState({ allDataSet: this.getAllDataSet() });
   }
 
   getAllDataSet() {
