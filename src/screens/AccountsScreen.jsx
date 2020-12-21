@@ -3,7 +3,7 @@ import { Button, Typography } from '@material-ui/core';
 import { ArrowDropDown as ArrowDropDownIcon, ArrowDropUp as ArrowDropUpIcon } from '@material-ui/icons';
 
 import ObjectEditor from '../ObjectEditor/index';
-import { AccountTreeView, Modal, TransactionList } from '../components';
+import { AccountTreeView, Modal } from '../components';
 import { withSnackbar } from 'notistack';
 
 import { AccountEditFormat, AccountCreateFormat } from '../ObjectEditor/ObjectFormats';
@@ -79,9 +79,9 @@ class AccountsScreen extends React.Component {
   //     id = 100;
   //     name = 'Overview';
   //   } else {
-  //     name = global.accountManager.fromIdToName(id);
+  //     name = await global.accountManager.fromIdToName(id);
   //   }
-
+  //
   //   const targetAccountType = global.accountManager._accountNodes[id].accountType;
   //   console.assert(['debit', 'credit'].includes(targetAccountType), 'Unexpected value: ' + targetAccountType);
   //   const [transactionsForThisAccount, accountsIncluded] = getTransactionsForAccount(id);
@@ -138,13 +138,13 @@ class AccountsScreen extends React.Component {
             </div>
           </div>
 
-          <TransactionList
+          {/* <TransactionList
             ref={(o) => this.TransactionView = o}
             viewOnly={true}
             onEditSave={() => { }}
             onCreateSave={() => { }}
             onRemove={() => { }}
-          />
+          /> */}
         </div>
       </div>
     );

@@ -355,7 +355,7 @@ export default class ImportExportScreen extends React.Component {
           <div style={{ width: 200 }}>
             <DropzoneArea acceptedFiles={['text/*']} dropzoneText='' onChange={this.loadFile} />
           </div>
-          <textarea style={{ fontFamily: 'monospace', height: 300, flex: 1 }} value={this.state.dropZoneContent}></textarea>
+          <textarea style={{ fontFamily: 'monospace', height: 300, flex: 1 }} readOnly value={this.state.dropZoneContent}></textarea>
         </div>
 
       </div>
