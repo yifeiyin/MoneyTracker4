@@ -19,9 +19,9 @@ tooltip
 format: {
 	title:
 	fields: [
-		{ 	key: 
+		{ 	key:
 			label:
-			type: 'input' | 'multiline' | 'boolean' | 'integer' | 
+			type: 'input' | 'multiline' | 'boolean' | 'integer' |
 			      'decimal' | 'monum' | 'datetime' | 'account'
 			valueValidator: ''
 			propertyType: 'mutable' | 'immutable'
@@ -29,3 +29,10 @@ format: {
 	]
 }
 
+
+TODO:
+- Better transaction list component
+- Global state using overmind, store pending transactions
+- Clean up logic in accounts page
+- Fix data management
+- Add batch balance
