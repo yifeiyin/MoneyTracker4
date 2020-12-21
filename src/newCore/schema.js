@@ -28,7 +28,7 @@ export const AccountSchema = yup.object({
   parentId: AccountIdNullableSchema,
   name: yup.string().required().min(1),
   accountType: yup.string().oneOf(['debit', 'credit']).required(),
-  isFolder: yup.bool(),
+  isFolder: yup.bool().required(),
   description: yup.string().notRequired(),
 }).strict().noUnknown().test('valid parentId', 'parentId can only be null for root', (obj) => {
   return obj.id === 100 || AccountIdSchema.isValidSync(obj.parentId)

@@ -69,7 +69,7 @@ testSchema(TransactionIdSchema, 458274, true);
 /**
  * AccountSchema
  */
-testing('AccountSchema')
+testing('AccountSchema - id')
 const asset = {
   parentId: 100,
   name: 'Asset',
@@ -79,6 +79,36 @@ const asset = {
 testSchema(AccountSchema.omit(['id']), { ...asset }, true)
 testSchema(AccountSchema, Object.assign({ ...asset }, { id: 101 }), true)
 
+testing('AccountSchema - accountType')
+const accountType1 = { id: 101, parentId: 100, name: 'Asset', accountType: 'debit', isFolder: true }
+const accountType2 = { id: 101, parentId: 100, name: 'Asset', accountType: 'credit', isFolder: true }
+const accountType3 = { id: 101, parentId: 100, name: 'Asset', accountType: 'aa', isFolder: true }
+const accountType4 = { id: 101, parentId: 100, name: 'Asset', accountType: 'DEBIT', isFolder: true }
+const accountType5 = { id: 101, parentId: 100, name: 'Asset', accountType: '', isFolder: true }
+const accountType6 = { id: 101, parentId: 100, name: 'Asset', accountType: null, isFolder: true }
+const accountType7 = { id: 101, parentId: 100, name: 'Asset', accountType: undefined, isFolder: true }
+testSchema(AccountSchema, accountType1, true)
+testSchema(AccountSchema, accountType2, true)
+testSchema(AccountSchema, accountType3, false)
+testSchema(AccountSchema, accountType4, false)
+testSchema(AccountSchema, accountType5, false)
+testSchema(AccountSchema, accountType6, false)
+testSchema(AccountSchema, accountType7, false)
+
+
+testing('AccountSchema - isFolder')
+const isFolder1 = { id: 101, parentId: 100, name: 'Asset', accountType: 'debit', isFolder: true }
+const isFolder2 = { id: 101, parentId: 100, name: 'Asset', accountType: 'debit', isFolder: false }
+const isFolder3 = { id: 101, parentId: 100, name: 'Asset', accountType: 'debit', isFolder: null }
+const isFolder4 = { id: 101, parentId: 100, name: 'Asset', accountType: 'debit', isFolder: undefined }
+const isFolder5 = { id: 101, parentId: 100, name: 'Asset', accountType: 'debit', isFolder: '' }
+const isFolder6 = { id: 101, parentId: 100, name: 'Asset', accountType: null, isFolder: 1234 }
+testSchema(AccountSchema, isFolder1, true)
+testSchema(AccountSchema, isFolder2, true)
+testSchema(AccountSchema, isFolder3, false)
+testSchema(AccountSchema, isFolder4, false)
+testSchema(AccountSchema, isFolder5, false)
+testSchema(AccountSchema, isFolder6, false)
 
 /**
  * TransactionSchema
