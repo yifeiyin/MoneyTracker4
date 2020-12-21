@@ -11,12 +11,12 @@ class TransactionsScreen extends React.Component {
   }
 
   reloadData = () => {
-    this.TransactionView.setData(global.transactionContainer.getAllTransactions());
+    global.transactionContainer.getAll().then(this.TransactionView.setData)
   }
 
   onCreateSave = (newValue) => {
     try {
-      global.transactionManager.createTransaction(newValue);
+      global.transactionManager.create(newValue);
       this.props.enqueueSnackbar('Created!', { variant: 'success' });
 
     } catch (error) {
@@ -30,7 +30,7 @@ class TransactionsScreen extends React.Component {
 
   onEditSave = (id, newValue) => {
     try {
-      global.transactionManager.changeTransactionProperty(id, newValue);
+      global.transactionManager.update(id, newValue);
       this.props.enqueueSnackbar('Updated!', { variant: 'success' });
 
     } catch (error) {
@@ -44,7 +44,7 @@ class TransactionsScreen extends React.Component {
 
   onRemove = (id) => {
     try {
-      global.transactionManager.removeTransaction(id);
+      global.transactionManager.remove(id);
       this.props.enqueueSnackbar('Removed!', { variant: 'success' });
     } catch (error) {
       alert(error);
@@ -56,7 +56,7 @@ class TransactionsScreen extends React.Component {
   render() {
     return (
       <div>
-        <Button variant='outlined' color='primary' onClick={() => { this.TransactionView.promptToCreate(); }}>Create New Transaction</Button>
+        <Button variant='outlined' color='primary' onClick={() => this.TransactionView.promptToCreate()}>Create New Transaction</Button>
         <TransactionList
           ref={(o) => this.TransactionView = o}
           viewOnly={false}

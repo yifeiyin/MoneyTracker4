@@ -10,6 +10,8 @@ import ObjectEditor from '../ObjectEditor/index';
 
 import { TransactionCreateFormat, TransactionEditFormat } from '../ObjectEditor/ObjectFormats';
 
+import Monum from '../newCore/monum'
+import { deepCopy } from '../newCore/helpers'
 /**
  * Methods
  *  - setData
@@ -26,15 +28,10 @@ import { TransactionCreateFormat, TransactionEditFormat } from '../ObjectEditor/
  *  - The caller should setData after onCreateSave, onEditSave or onRemove
  */
 export default class TransactionView extends React.Component {
-
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      data: [],
-      currentTransactionId: null,
-      currentTransactionValue: {},
-    }
+  state = {
+    data: [],
+    currentTransactionId: null,
+    currentTransactionValue: {},
   }
 
   promptToCreate = (defaultValues = {}) => {
@@ -58,7 +55,7 @@ export default class TransactionView extends React.Component {
   onEdit = (data) => {
     this.setState({
       currentTransactionId: data.id,
-      currentTransactionValue: global.deepCopy(data),
+      currentTransactionValue: deepCopy(data),
     });
   }
 
@@ -72,7 +69,7 @@ export default class TransactionView extends React.Component {
   onSaveTransaction = (aborting) => {
     if (aborting) return this.closeModal();
 
-    const newValue = global.deepCopy(this.state.currentTransactionValue);
+    const newValue = deepCopy(this.state.currentTransactionValue);
     delete newValue.id;
     const id = this.state.currentTransactionId;
 
@@ -104,7 +101,7 @@ export default class TransactionView extends React.Component {
 
         <Paper>
           <TableContainer>
-            <Table size='medium' >
+            <Table size='medium'>
               <TableHead>
                 <TableRow>
                   <TableCell key='actions'>Actions</TableCell>
@@ -181,7 +178,6 @@ function stringifyAccountsAndAmounts(oneSide) {
 
 
 function calculateAmount(transaction) {  // 计算发生额
-  const Monum = global.Monum;
   let debitTotal = new Monum();
   let creditTotal = new Monum();
 
@@ -205,7 +201,7 @@ function calculateAmount(transaction) {  // 计算发生额
 function formatDate(date, withTimezone = true) {
   return (
     `${date.getFullYear()}-${TwoDigitPad(date.getMonth() + 1)}-${TwoDigitPad(date.getDate())}` + ' ' +
-    `${TwoDigitPad(date.getHours())}:${TwoDigitPad(date.getMinutes())}` + (date.getSeconds() == 0 ? '' : `:${TwoDigitPad(date.getSeconds())}`) +
+    `${TwoDigitPad(date.getHours())}:${TwoDigitPad(date.getMinutes())}` + (date.getSeconds() === 0 ? '' : `:${TwoDigitPad(date.getSeconds())}`) +
     (withTimezone ? date.toString().substr(date.toString().indexOf('GMT')) : '')
   );
 

@@ -39,7 +39,7 @@ class AccountsScreen extends React.Component {
 
     if (this.state.currentAccountId === 'new') {
       try {
-        await global.accountManager.createAccount(this.state.currentAccountValue);
+        await global.accountManager.create(this.state.currentAccountValue);
       } catch (error) { return alert(error); }
 
     } else {
@@ -48,7 +48,7 @@ class AccountsScreen extends React.Component {
       delete newValue.id; delete newValue.isFolder; delete newValue.accountType;
 
       try {
-        await global.accountManager.updateAccount(targetId, newValue);
+        await global.accountManager.update(targetId, newValue);
       } catch (error) { return alert(error); }
     }
     this.props.enqueueSnackbar('Success!', { variant: 'success' });
@@ -65,7 +65,7 @@ class AccountsScreen extends React.Component {
   onRemove = async () => {
     const targetId = this.state.currentAccountId;
     try {
-      await global.accountManager.removeAccount(targetId);
+      await global.accountManager.remove(targetId);
     } catch (error) { return alert(error); }
 
     this.props.enqueueSnackbar('Removed!', { variant: 'success' });
@@ -151,6 +151,7 @@ class AccountsScreen extends React.Component {
   }
 }
 
+/*
 function getTransactionsForAccount(id) {
 
   const allTransactionsObj = global.transactionContainer.getAllTransactions();
@@ -234,6 +235,6 @@ function getTransactionsSummary(transactions, accounts, accountType) {
     negativeChange,
   };
 }
-
+*/
 
 export default withSnackbar(AccountsScreen);
