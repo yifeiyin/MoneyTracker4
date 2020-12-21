@@ -10,8 +10,6 @@ import {
 import {
   AppBar,
   Toolbar,
-  IconButton,
-  Typography,
   Button
 } from '@material-ui/core';
 

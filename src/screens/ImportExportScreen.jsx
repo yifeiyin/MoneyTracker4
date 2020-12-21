@@ -222,6 +222,7 @@ export default class ImportExportScreen extends React.Component {
     if (currentFileTypeInfo.iterative) {
       if (!(inputFileContent instanceof Array)) return alert('Input file is not an array.');
       result = [];
+      // eslint-disable-next-line no-unused-vars
       const [arg1, ...rest] = args;
       try {
         inputFileContent.forEach((inputFilePiece, index) => {

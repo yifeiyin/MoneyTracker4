@@ -200,10 +200,14 @@ function calculateAmount(transaction) {  // 计算发生额
 
 function formatDate(date, withTimezone = true) {
   return (
-    `${date.getFullYear()}-${TwoDigitPad(date.getMonth() + 1)}-${TwoDigitPad(date.getDate())}` + ' ' +
-    `${TwoDigitPad(date.getHours())}:${TwoDigitPad(date.getMinutes())}` + (date.getSeconds() === 0 ? '' : `:${TwoDigitPad(date.getSeconds())}`) +
-    (withTimezone ? date.toString().substr(date.toString().indexOf('GMT')) : '')
-  );
+    date.getFullYear() + '-' +
+      TwoDigitPad(date.getMonth() + 1) + '-' +
+      TwoDigitPad(date.getDate()) + ' ' +
+      TwoDigitPad(date.getHours()) + ':' +
+      TwoDigitPad(date.getMinutes()) +
+      (date.getSeconds() === 0 ? '' : (':' + TwoDigitPad(date.getSeconds()))) +
+      withTimezone ? date.toString().substr(date.toString().indexOf('GMT')) : ''
+  )
 
   function TwoDigitPad(s) {
     return s < 10 ? '0' + s : s;

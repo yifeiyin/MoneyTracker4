@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   Button,
-  ButtonGroup,
   Card,
   CardContent,
   CardActions,
@@ -15,7 +14,6 @@ import {
 import { withSnackbar } from 'notistack';
 
 import {
-  Edit as EditIcon,
   Delete as DeleteIcon,
   FileCopy as FileCopyIcon,
   SaveAlt as SaveAltIcon,
