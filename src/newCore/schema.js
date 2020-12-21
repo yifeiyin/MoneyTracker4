@@ -1,4 +1,5 @@
 import * as yup from 'yup';
+import Monum from './monum';
 
 export const MonumCurrencySchema = yup.string().matches(/^[a-zA-Z]+$/).uppercase().required();
 export const MonumValueSchema = yup.string().ensure().test('currency value', 'currency value is invalid', (value) => String(Number(value)) !== 'NaN');
@@ -19,16 +20,19 @@ export const MonumSchema = yup.object({})
   })
 
 export const AccountIdSchema = yup.number().min(100).max(999).required().strict();
+export const AccountIdNullableSchema = AccountIdSchema.notRequired().defined().nullable(true);
 export const TransactionIdSchema = yup.number().min(100001).required().strict();
 
 export const AccountSchema = yup.object({
   id: AccountIdSchema,
-  parentId: AccountIdSchema.notRequired().nullable(),
+  parentId: AccountIdNullableSchema,
   name: yup.string().required().min(1),
   accountType: yup.string().oneOf(['debit', 'credit']).required(),
   isFolder: yup.bool(),
   description: yup.string().notRequired(),
-}).strict().noUnknown()
+}).strict().noUnknown().test('parentId can only be null for root', (obj) => {
+  return obj.id === 100 || AccountIdSchema.validateSync(obj.parentId)
+})
 
 export const AccountAndAmountSchema = yup.object({
   acc: AccountIdSchema,
@@ -39,12 +43,17 @@ export const TransactionSchema = yup.object({
   id: TransactionIdSchema,
   time: yup.date().required(),
   title: yup.string().required().min(1),
-  DRFrom: yup.string().required(),
-  CRFrom: yup.string().required(),
+  // DRFrom: yup.string().required(),
+  // CRFrom: yup.string().required(),
   debits: yup.array(AccountAndAmountSchema).ensure(),
   credits: yup.array(AccountAndAmountSchema).ensure(),
   description: yup.string().notRequired(),
-}).strict().noUnknown()
+})
+  .strict(false)
+  .noUnknown(false)
+  .test('is balanced', 'is not balanced', (obj) => {
+    return Monum.combine(...obj.debits.map(i => i.amt)).neg().add(...obj.credits.map(i => i.amt)).isZero()
+  })
 
 export const DefaultMonumSetup = {
   defaultCurrency: 'CAD',
@@ -52,3 +61,4 @@ export const DefaultMonumSetup = {
 }
 
 export const AccountDatabaseSchema = yup.array(AccountSchema)
+export const TransactionDatabaseSchema = yup.array(TransactionSchema)

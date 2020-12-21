@@ -9,3 +9,5 @@ export const Reviver = (k, v) => {
     return v;
   }
 };
+
+export const deepCopy = (obj) => this.JSON.parse(JSON.stringify(obj), global.deepCopyReviver);

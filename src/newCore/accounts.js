@@ -17,14 +17,14 @@ export default class AccountManager {
       isFolder: true,
     });
     const liability = AccountSchema.validateSync({
-      id: 101,
+      id: 102,
       parentId: 100,
       name: 'Liability',
       accountType: 'credit',
       isFolder: true,
     });
     const equity = AccountSchema.validateSync({
-      id: 102,
+      id: 103,
       parentId: 100,
       name: 'Equity',
       accountType: 'credit',
@@ -50,7 +50,7 @@ export default class AccountManager {
     });
   }
 
-  async createAccount(newAccount) {
+  async create(newAccount) {
     if (!newAccount.id) {
       newAccount = AccountSchema.omit(['id']).validateSync(newAccount);
     } else {
@@ -60,23 +60,24 @@ export default class AccountManager {
     await this.table.add(newAccount);
   }
 
-  async removeAccount(id) {
+  async remove(id) {
     await this.table.delete(id);
   }
 
-  async updateAccount(id, changes) {
+  async update(id, changes) {
     await this.table.update(id, changes);
-  }
-
-  async fromIdToName(id) {
-    return 'TODO ' + id;
   }
 
   async get(id) {
     const result = await this.table.get(id);
-    if (result === undefined) throw new Error('Account not found')
+    if (result === undefined) throw new Error('Item not found')
     return result;
   }
+
+  async fromIdToName(id) {
+    return (await this.table.get(id)).name;
+  }
+
 
   async isValidId(id) {
     return undefined === await this.table.get(id);

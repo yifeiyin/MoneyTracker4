@@ -17,6 +17,7 @@ import { MuiPickersUtilsProvider } from '@material-ui/pickers';
 
 import Dexie from "dexie";
 import AccountManager from './newCore/accounts';
+import TransactionContainer from './newCore/transactions';
 
 const db = new Dexie('MyDatabase');
 db.version(1).stores({
@@ -32,8 +33,7 @@ const accountManager = new AccountManager(db.accounts, db);
 
 global.accountManager = accountManager;
 
-accountManager.exportData().then(console.log)
-
+global.transactionContainer = new TransactionContainer(db.transactions, db);
 // db.accounts.put({
 //   id: 1000,
 //   name: 'Under the Dome',
