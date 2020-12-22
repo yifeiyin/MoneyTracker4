@@ -24,7 +24,7 @@ export default class TransactionView extends React.Component {
   }
 
   reloadData = async () => {
-    const data = await this.props.loadData();
+    const data = await this.props.loadData().toArray();
     this.setState({ data });
   }
 
@@ -157,7 +157,6 @@ function TransactionTableBodyCells({ transaction }) {
       stringifyAccountsAndAmounts(debits),
       stringifyAccountsAndAmounts(credits)
     ]).then(setReadable);
-
   }, [debits, credits]);
 
   return (
