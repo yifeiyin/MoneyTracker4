@@ -1,16 +1,12 @@
 import React, { useEffect } from 'react';
-import { Paper, TableContainer, Table, TableHead, TableBody, TableRow, TableCell, IconButton } from '@material-ui/core';
-import {
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-} from '@material-ui/icons'
 
 import { Modal } from '.';
 import ObjectEditor from '../ObjectEditor/index';
-
 import { TransactionCreateFormat, TransactionEditFormat } from '../ObjectEditor/ObjectFormats';
+import { deepCopy, getTodaysDateAt0000, sumOfAccountAndAmountList, formatDate } from '../newCore/helpers';
+import { FixedSizeList as List } from 'react-window';
+// import AutoSizer from 'react-virtualized-auto-sizer';
 
-import { deepCopy, getTodaysDateAt0000, sumOfAccountAndAmountList, formatDate } from '../newCore/helpers'
 
 export default class TransactionView extends React.Component {
   state = {
@@ -105,47 +101,23 @@ export default class TransactionView extends React.Component {
           />
         </Modal>
 
-        <Paper>
-          <TableContainer>
-            <Table size='medium'>
-              <TableHead>
-                <TableRow>
-                  <TableCell key='actions'>Actions</TableCell>
-                  <TransactionTableHeaderCells />
-                </TableRow>
-              </TableHead>
-
-              <TableBody>
-                {
-                  this.state.data.map(data =>
-                    <TableRow
-                      hover
-                      // onClick={(event) => handleClick(event, row.name)}
-                      key={data.id}
-                    >
-                      <TableCell padding='checkbox'>
-                        <IconButton size='small' onClick={() => this.onEdit(data)}><EditIcon color="inherit" /></IconButton>
-                        <IconButton size='small' onClick={() => this.onRemove(data.id)}><DeleteIcon color="inherit" /></IconButton>
-                      </TableCell>
-
-                      <TransactionTableBodyCells transaction={data} />
-                    </TableRow>
-                  )
-                }
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Paper>
+        <List
+          height={800}
+          width={1300}
+          itemCount={this.state.data.length}
+          itemSize={50}
+        >
+          {({ index, style }) => (
+            <div className={'transaction-row' + (index % 2 ? ' even' : '')} style={style}>
+              <TransactionTableBodyCells transaction={this.state.data[index]} />
+            </div>
+          )}
+        </List>
       </div>
     );
   }
 }
 
-function TransactionTableHeaderCells() {
-  return [
-    'Id', 'Time', 'Title', 'Debits', 'Credits', 'Total Amount'
-  ].map(key => <TableCell key={key}>{key}</TableCell>)
-}
 
 function TransactionTableBodyCells({ transaction }) {
   const { id, time, title, debits, credits } = transaction;
@@ -161,12 +133,12 @@ function TransactionTableBodyCells({ transaction }) {
 
   return (
     <>
-      <TableCell>{id}</TableCell>
-      <TableCell>{formatDate(time, false)}</TableCell>
-      <TableCell>{title}</TableCell>
-      <TableCell>{readable[0]}</TableCell>
-      <TableCell>{readable[1]}</TableCell>
-      <TableCell>{sumOfAccountAndAmountList(debits).toReadable()}</TableCell>
+      <div data-type="id">{id}</div>
+      <div data-type="date">{formatDate(time, false)}</div>
+      <div data-type="title">{title}</div>
+      <div data-type="debit">{readable[0]}</div>
+      <div data-type="credit">{readable[1]}</div>
+      <div data-type="amount">{sumOfAccountAndAmountList(debits).toReadable()}</div>
     </>
   );
 }
@@ -192,5 +164,3 @@ async function stringifyAccountsAndAmounts(side) {
     </span>
   )
 }
-
-

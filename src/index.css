@@ -11,3 +11,22 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+.transaction-row {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  background-color: white;
+}
+
+/* .transaction-row.even { */
+.transaction-row.even {
+  background-color: #F8F8F8;
+}
+
+.transaction-row [data-type="id"] { flex: 1; }
+.transaction-row [data-type="date"] { flex: 1; }
+.transaction-row [data-type="title"] { flex: 5; }
+.transaction-row [data-type="debit"] { flex: 3; }
+.transaction-row [data-type="credit"] { flex: 3; }
+.transaction-row [data-type="amount"] { flex: 2; }
