@@ -64,7 +64,7 @@ function transformStatement(originalStatement) {
 }
 
 async function generateTransaction(input) {
-  const { type, rawDesc, amount, ...unusedInputs } = input;
+  const { type, rawDesc, ...unusedInputs } = input;
   let thisSide = AC_MASTER_CARD,
     otherSide = AC_UNKNOWN_EXPENSE,
     $title = 'Untitled',
@@ -98,7 +98,7 @@ async function generateTransaction(input) {
 ${additionalFields._category}
 
 Some info:
-amt:  ${amount}
+amt:  ${unusedInputs.amount}
 desc: ${rawDesc}
 cat:  ${additionalFields._category}
 name: ${additionalFields._merchantName}
