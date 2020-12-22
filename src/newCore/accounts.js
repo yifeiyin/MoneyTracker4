@@ -120,6 +120,10 @@ export default class AccountManager {
     return result;
   }
 
+  getPath(id) {
+    return this._cachePathById[id];
+  }
+
   async fromIdToName(id) {
     const liveResult = (await this.table.get(id)).name;
     const result = this._cacheById[id].name;
