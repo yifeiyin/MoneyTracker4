@@ -92,3 +92,16 @@ this month
 
 last month
 ```
+
+
+
+```
+where time | debits/credits
+
+and/filter
+
+count + limit offset
+
+reverse
+sortBy
+```
