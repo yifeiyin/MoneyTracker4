@@ -386,9 +386,9 @@ function DataSetDetails({
           }
         </TableBody>
       </Table>
-      <details open style={{ fontSize: 18 }}>
+      {/* <details open style={{ fontSize: 18 }}>
         <pre style={{ overflow: 'auto', maxWidth: '70vw', maxHeight: '48vh' }}>{JSON.stringify(data, null, 4)}</pre>
-      </details>
+      </details> */}
     </div>
   );
 }
