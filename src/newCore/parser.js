@@ -1,3 +1,86 @@
+export function queryTableGetCollection(table, input) {
+  const [first, ...operations] = constructOperationList(tokenize(input));
+  console.log(first, operations);
+  if (first === undefined) return table;
+  let query = buildQueryForTable(table, first);
+  for (let operation of operations) {
+    query = buildQueryForCollection(query, operation);
+  }
+  return query;
+}
+
+function buildQueryForTable(table, { op, args }) {
+  switch (op) {
+    case 'debit':
+      return table.where('_debits').startsWith(accountIdentifierToPath(args));
+
+    case 'credit':
+      return table.where('_credits').startsWith(accountIdentifierToPath(args));
+
+    case 'account':
+      return table.where('_debitsCredits').startsWith(accountIdentifierToPath(args));
+
+    case 'date': {
+      const start = args;
+      const end = new Date(args); end.setDate(end.getDate() + 1);
+      return table.where('time').between(start, end);
+    }
+
+    case 'date-range': {
+      const start = args[0];
+      const end = args[1]; end.setDate(end.getDate() + 1);
+      return table.where('time').between(start, end);
+    }
+
+    default:
+      return buildQueryForCollection(table, { op, args });
+  }
+}
+
+function buildQueryForCollection(collection, { op, args }) {
+  switch (op) {
+    case 'debit':
+      return collection.filter((obj) => obj._debits.includes(accountIdentifierToPath(args)));
+
+    case 'credit':
+      return collection.filter((obj) => obj._credits.includes(accountIdentifierToPath(args)));
+
+    case 'account':
+      return collection.filter((obj) => obj._debitCredits.includes(accountIdentifierToPath(args)));
+
+    case 'date': {
+      const start = args;
+      const end = new Date(args); end.setDate(end.getDate() + 1);
+      return collection.filter((obj) => start <= obj.time && obj.time < end);
+    }
+
+    case 'date-range': {
+      const start = args[0];
+      const end = args[1]; end.setDate(end.getDate() + 1);
+      return collection.filter((obj) => start <= obj.time && obj.time < end);
+    }
+
+    case 'where': {
+      const [lhs, operator, rhs] = args;
+      // TODO: where
+      return collection;
+    }
+
+    case 'limit':
+      return collection.limit(args)
+
+    case 'offset':
+      return collection.offset(args)
+
+    default:
+      throw new Error(`Unknown op: ${op}`)
+  }
+}
+
+function accountIdentifierToPath(name) {
+  return global.accountManager.fuzzyFindGetPath(name);
+}
+
 export function constructOperationList(tokens) {
   const operations = [];
 
@@ -42,13 +125,13 @@ export function consumeOperation(tokens) {
 
     case 'limit':
       op = 'limit'
-      args = tokens[1]
+      args = +tokens[1]
       argConsumed = 1
       break;
 
     case 'offset':
       op = 'offset'
-      args = tokens[1]
+      args = +tokens[1]
       argConsumed = 1
       break;
 
@@ -77,14 +160,14 @@ export function consumeOperation(tokens) {
     throw new Error('Unexpected undefined argument for operation ' + op)
   }
 
-  return { operation: op, args, tokensLeft: tokens.splice(argConsumed + 1) }
+  return { op, args, tokensLeft: tokens.splice(argConsumed + 1) }
 }
 
 
 export function toDate(str) {
   let match = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (match) {
-    return new Date(match[1], match[2], match[3]);
+    return new Date(match[1], match[2] - 1, match[3]);
   } else {
     return null;
   }
