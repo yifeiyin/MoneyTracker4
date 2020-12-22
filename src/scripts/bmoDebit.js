@@ -1,6 +1,8 @@
 import Monum from '../newCore/monum';
 import bmoDebitCodeToReadableType from './bmoDebitCodeToReadable';
 
+import { assert } from '../newCore/helpers'
+
 const $CR = 'credit';
 const $DR = 'debit';
 
@@ -151,8 +153,4 @@ async function postProcess(inputs) {
   }
 
   return raw;
-}
-
-function assert(condition, message) {
-  if (!condition) throw new Error(message || "Assertion failed")
 }

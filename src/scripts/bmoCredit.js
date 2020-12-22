@@ -1,5 +1,5 @@
 import Monum from '../newCore/monum';
-import { toTitleCase } from '../newCore/helpers'
+import { toTitleCase, assert } from '../newCore/helpers'
 
 const $CR = 'credit';
 const $DR = 'debit';
@@ -174,10 +174,6 @@ async function fetchDetails(desc) {
     return null;
   }
 
-}
-
-function assert(condition, message) {
-  if (!condition) throw new Error(message || "Assertion failed")
 }
 
 async function postProcess(inputs) {
