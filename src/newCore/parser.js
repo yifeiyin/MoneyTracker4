@@ -2,8 +2,8 @@ export function constructOperationList(tokens) {
   const operations = [];
 
   while (tokens.length !== 0) {
-    let { operation, args, tokensLeft } = consumeOperation(tokens);
-    operations.push({ operation, args });
+    let { op, args, tokensLeft } = consumeOperation(tokens);
+    operations.push({ op, args });
     tokens = tokensLeft;
   }
 
@@ -14,34 +14,40 @@ export function consumeOperation(tokens) {
   if (tokens.length === 0) return {};
   const arg0 = tokens[0]
 
-  let operation = '', args = [], argConsumed = 0;
+  let op = '', args = [], argConsumed = 0;
   switch (arg0.toLowerCase()) {
     case 'debit': case 'dr':
-      operation = 'debit'
+      op = 'debit'
       args = tokens[1]
       argConsumed = 1
       break;
 
     case 'credit': case 'cr':
-      operation = 'credit'
+      op = 'credit'
+      args = tokens[1]
+      argConsumed = 1
+      break;
+
+    case 'relate': case 'relates':
+      op = 'account'
       args = tokens[1]
       argConsumed = 1
       break;
 
     case 'where':
-      operation = 'where'
+      op = 'where'
       args = [tokens[1], tokens[2], tokens[3]]
       argConsumed = 3
       break;
 
     case 'limit':
-      operation = 'limit'
+      op = 'limit'
       args = tokens[1]
       argConsumed = 1
       break;
 
     case 'offset':
-      operation = 'offset'
+      op = 'offset'
       args = tokens[1]
       argConsumed = 1
       break;
@@ -49,29 +55,29 @@ export function consumeOperation(tokens) {
     default:
   }
 
-  if (!operation) {
+  if (!op) {
     if (toDate(arg0)) {
-      operation = 'date'
+      op = 'date'
       args = toDate(arg0)
       argConsumed = 0
 
     } else if (toDateRange(arg0)) {
-      operation = 'date-range'
+      op = 'date-range'
       args = toDateRange(arg0)
       argConsumed = 0
 
     } else {
-      operation = 'account'
+      op = 'account'
       args = arg0
       argConsumed = 0
     }
   }
 
   if (args === undefined || (args instanceof Array && args.includes(undefined))) {
-    throw new Error('Unexpected undefined argument for operation ' + operation)
+    throw new Error('Unexpected undefined argument for operation ' + op)
   }
 
-  return { operation, args, tokensLeft: tokens.splice(argConsumed + 1) }
+  return { operation: op, args, tokensLeft: tokens.splice(argConsumed + 1) }
 }
 
 
