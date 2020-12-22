@@ -29,13 +29,31 @@ import Monum from './newCore/monum';
 const db = new Dexie('MyDatabase');
 db.version(1).stores({
   accounts: '++id, name, parentId',
-  transactions: '++id, time, title, debitsFrom, creditsFrom',
+  transactions: '++id, time, title, *_debits, *_credits, *_debitsCredits',
 });
 
 db.transactions.hook('reading', function (obj) {
   obj.debits.forEach(side => Object.setPrototypeOf(side.amt, new Monum()));
   obj.credits.forEach(side => Object.setPrototypeOf(side.amt, new Monum()));
+  delete obj._debits;
+  delete obj._credits;
+  delete obj._debitsCredits;
   return obj;
+});
+
+db.transactions.hook('creating', function (primKey, obj, transaction) {
+  obj._debits = '';
+  obj._credits = '';
+  obj._debitsCredits = '';
+  return obj;
+});
+
+db.transactions.hook('updating', function (modifications, primKey, obj, transaction) {
+  const additionalModifications = {};
+  additionalModifications._debits = '';
+  additionalModifications._credits = '';
+  additionalModifications._debitsCredits = '';
+  return additionalModifications;
 });
 
 (async () => {
