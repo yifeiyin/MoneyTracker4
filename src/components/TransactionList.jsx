@@ -121,15 +121,7 @@ export default class TransactionView extends React.Component {
 
 function TransactionTableBodyCells({ transaction }) {
   const { id, time, title, debits, credits } = transaction;
-
-  const [readable, setReadable] = React.useState(['loading', 'loading']);
-
-  useEffect(() => {
-    Promise.all([
-      stringifyAccountsAndAmounts(debits),
-      stringifyAccountsAndAmounts(credits)
-    ]).then(setReadable);
-  }, [debits, credits]);
+  const readable = [stringifyAccountsAndAmounts(debits), stringifyAccountsAndAmounts(credits)]
 
   return (
     <>
@@ -144,16 +136,16 @@ function TransactionTableBodyCells({ transaction }) {
 }
 
 
-async function stringifyAccountsAndAmounts(side) {
+function stringifyAccountsAndAmounts(side) {
   const accountManager = global.accountManager;
 
-  if (side.length === 0) { return ''; }
+  if (side.length === 0) { return '-'; }
   if (side.length === 1) {
     const { acc } = side[0];
-    return await accountManager.fromIdToName(acc);
+    return accountManager.fromIdToName(acc);
   }
 
-  const accountNames = await Promise.all(side.map(({ acc }) => accountManager.fromIdToName(acc)));
+  const accountNames = side.map(({ acc }) => accountManager.fromIdToName(acc));
 
   return side.map(({ acc, amt }, index) =>
     <span key={String(index)}>

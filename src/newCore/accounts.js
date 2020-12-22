@@ -1,4 +1,3 @@
-import { assert } from './helpers';
 import { AccountDatabaseSchema, AccountSchema } from './schema'
 
 export default class AccountManager {
@@ -112,10 +111,8 @@ export default class AccountManager {
     await this.updateCache();
   }
 
-  async get(id) {
-    const liveResult = await this.table.get(id);
+  get(id) {
     const result = this._cacheById[id];
-    assert(liveResult === result);
     if (result === undefined) throw new Error('Item not found')
     return result;
   }
@@ -124,11 +121,8 @@ export default class AccountManager {
     return this._cachePathById[id];
   }
 
-  async fromIdToName(id) {
-    const liveResult = (await this.table.get(id)).name;
-    const result = this._cacheById[id].name;
-    assert(liveResult === result)
-    return result;
+  fromIdToName(id) {
+    return this._cacheById[id].name;
   }
 
   async fromNameToId(name) {
@@ -137,9 +131,8 @@ export default class AccountManager {
     return result[0].id;
   }
 
-  async isValidId(id) {
-    assert(await this.table.get(id) === id in this._cacheById)
-    return undefined === await this.table.get(id);
+  isValidId(id) {
+    return id in this._cacheById;
   }
 
   getTreeData(startsFrom = 100) {

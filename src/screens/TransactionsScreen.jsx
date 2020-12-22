@@ -26,7 +26,7 @@ class TransactionsScreen extends React.Component {
           ref={(o) => this.TransactionView = o}
           enqueueSnackbar={this.props.enqueueSnackbar}
           viewOnly={false}
-          loadData={() => queryTableGetCollection(global.transactionManager.table, this.state.currentQuery)}
+          loadData={() => queryTableGetCollection(global.transactionManager.table, '')}
         />
       </div>
     );
