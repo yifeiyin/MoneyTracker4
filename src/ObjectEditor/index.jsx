@@ -113,7 +113,7 @@ export default class ObjectEditor extends React.Component {
                       <Button style={{ textTransform: 'none' }} onClick={() => {
                         const newValue = global.prompt(`Editing ${key}:`, values[key]);
                         if (newValue !== null) this.onChange(key, newValue);
-                      }}>{values[key]}</Button>
+                      }}>{JSON.stringify(values[key])}</Button>
                     </ButtonGroup>
                   )
                 }

@@ -9,7 +9,7 @@ import 'prismjs/components/prism-json';
 
 // import bmoDebitCodeToReadableType from '../scripts/bmoDebitCodeToReadable';
 
-import { BMODebit } from '../scripts'
+import { BMODebit, BMOCredit } from '../scripts'
 
 import { DropzoneArea } from 'material-ui-dropzone';
 
@@ -27,6 +27,7 @@ const fileTypes = {
   'Generate Transactions': { format: 'js', executable: true, inputs: ['JSON'], outputs: ['JSON'], iterative: true },      // Apply rules, string to transaction objects
   'Post-Process Transactions': { format: 'js', executable: true, inputs: ['JSON'], outputs: ['JSON'], iterative: true },  // Post-process to assert outputs, transform shorthand syntax
   'Commit Transactions': { format: 'none', executable: true, inputs: ['Plain Text'] },                         // Commit
+  'Commit Transactions 2': { format: 'none', executable: true, inputs: ['Plain Text'] },                         // Commit
   'JSON': { format: 'json', executable: false },                       // json, non executable
   'Plain Text': { format: 'plain', executable: false },                // non executable
 };
@@ -174,6 +175,20 @@ export default class ImportExportScreen extends React.Component {
     if (currentFileType === 'Commit Transactions') {
       try {
         for (let t of await BMODebit(inputFileContent))
+          await global.transactionManager.create(t);
+
+      } catch (error) {
+        alert(error);
+        console.error(error);
+      }
+
+      return;
+    }
+
+    if (currentFileType === 'Commit Transactions 2') {
+      try {
+        for (let t of await BMOCredit(inputFileContent))
+          // (() => { })()
           await global.transactionManager.create(t);
 
       } catch (error) {
@@ -379,28 +394,28 @@ function getTimeAsString() {
 }
 
 function getNewFileContent(type) {
-  if (['Commit Transactions', 'JSON', 'Plain Text'].includes(type)) {
-    return '\n// ' + type + '\n\n\n\n\n\n';
-  }
+  // if (['Commit Transactions', 'JSON', 'Plain Text'].includes(type)) {
+  return '\n// ' + type + '\n\n\n\n\n\n';
+  // }
 
-  const table = {
-    'Transform Statement': ['TransformStatement', 'originalStatement'],
-    'Generate Transactions': ['GenerateTransactions', 'transformedStatementItem'],
-    'Post-Process Transactions': ['PostProcessTransactions', 'transactionItem'],
-  }
-  let names = table[type];
+  // const table = {
+  //   'Transform Statement': ['TransformStatement', 'originalStatement'],
+  //   'Generate Transactions': ['GenerateTransactions', 'transformedStatementItem'],
+  //   'Post-Process Transactions': ['PostProcessTransactions', 'transactionItem'],
+  // }
+  // let names = table[type];
 
-  return (
-    `\n` +
-    `// ${type} \n` +
-    `// Created on ${getTimeAsString()} \n` +
-    `\n` +
-    `function ${names[0]}(inputs, utils) { // ==== start ====\n` +
-    `  const [ ${names[1]} ] = inputs;\n` +
-    `  const { console, Monum, accountNameToId, $DR, $CR } = utils;\n` +
-    `\n` +
-    `\n` +
-    `} // ==== end ====\n` +
-    `\n\n\n\n`
-  );
+  // return (
+  //   `\n` +
+  //   `// ${type} \n` +
+  //   `// Created on ${getTimeAsString()} \n` +
+  //   `\n` +
+  //   `function ${names[0]}(inputs, utils) { // ==== start ====\n` +
+  //   `  const [ ${names[1]} ] = inputs;\n` +
+  //   `  const { console, Monum, accountNameToId, $DR, $CR } = utils;\n` +
+  //   `\n` +
+  //   `\n` +
+  //   `} // ==== end ====\n` +
+  //   `\n\n\n\n`
+  // );
 }

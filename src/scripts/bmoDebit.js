@@ -8,7 +8,7 @@ const AC_CHEQUING = 'BMO Chequing';
 const AC_MASTER_CARD = 'BMO MasterCard';
 const AC_SAVING = 'BMO Saving';
 const AC_OTHER_EXPENSE = 'Other Income/Expense';
-const AC_DEFAULT_OTHER_SIDE = 'Unknown Income/Expense';
+const AC_UNKNOWN_EXPENSE = 'Unknown Income/Expense';
 
 
 export default async function csvToTransactions(input) {
@@ -109,7 +109,7 @@ async function postProcess(inputs) {
   const raw = inputs;
 
   let { type, thisSide, otherSide, amount } = raw;
-  otherSide = otherSide || AC_DEFAULT_OTHER_SIDE;
+  otherSide = otherSide || AC_UNKNOWN_EXPENSE;
 
   const thisSideAcc = await global.accountManager.fromNameToId(thisSide);
   const otherSideAcc = await global.accountManager.fromNameToId(otherSide);

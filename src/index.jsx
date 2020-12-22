@@ -56,6 +56,9 @@ global.accountManager = new AccountManager(db.accounts, db);
 global.transactionManager = new TransactionManager(db.transactions, db);
 
 
+global.categories = JSON.parse(localStorage.getItem('categories') || '{}')
+
+
 /** Overmind */
 const overmind = createOvermind(config, { devtools: true });
 
