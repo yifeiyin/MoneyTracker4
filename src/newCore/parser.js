@@ -1,6 +1,5 @@
 export function queryTableGetCollection(table, input) {
   const [first, ...operations] = constructOperationList(tokenize(input));
-  console.log(first, operations);
   if (first === undefined) return table;
   let query = buildQueryForTable(table, first);
   for (let operation of operations) {

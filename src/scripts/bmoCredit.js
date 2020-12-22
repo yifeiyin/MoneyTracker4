@@ -35,7 +35,6 @@ export default async function csvToTransactions(input) {
     a = await postProcess(a);
     result.push(a);
   }
-  console.log(result)
   return result;
 }
 
