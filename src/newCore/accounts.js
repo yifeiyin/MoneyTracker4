@@ -1,3 +1,4 @@
+import { assert } from './helpers';
 import { AccountDatabaseSchema, AccountSchema } from './schema'
 
 export default class AccountManager {
@@ -36,6 +37,41 @@ export default class AccountManager {
   constructor(table, db) {
     this.table = table;
     this.db = db;
+    this._cacheById = {}; // id -> { id, ... }
+    // this._cacheByName = {}; // name -> { id, ... }
+    this._cacheByParentId = {}; // name -> [{ id, ... }]
+    this._cachePathById = {}; // id -> path
+  }
+
+  async getReady() {
+    if (Object.keys(this._cacheById).length !== 0) {
+      // React hot reloading
+      return;
+    }
+    await this.updateCache();
+  }
+
+  async updateCache() {
+    const data = await this.exportData();
+    for (let acc of data) {
+      // this._cacheByName[acc.name] = acc;
+      this._cacheById[acc.id] = acc;
+
+      if (acc.parentId !== null) {
+        if (this._cacheByParentId[acc.parentId]) this._cacheByParentId[acc.parentId].push(acc);
+        else this._cacheByParentId[acc.parentId] = [acc];
+      }
+    }
+
+    this.updateCachePath(100, '');
+  }
+
+  updateCachePath(id, path) {
+    const currentPath = path + '/' + id;
+    this._cachePathById[id] = currentPath;
+    (this._cacheByParentId[id] || []).forEach((child) => {
+      this.updateCachePath(child.id, currentPath);
+    })
   }
 
   async exportData() {
@@ -44,10 +80,11 @@ export default class AccountManager {
 
   async importData(data) {
     data = AccountDatabaseSchema.validateSync(data);
-    return await this.db.transaction('rw', this.table, async () => {
+    await this.db.transaction('rw', this.table, async () => {
       await this.table.clear();
       await this.table.bulkAdd(data);
     });
+    await this.updateCache();
   }
 
   async create(newAccount) {
@@ -59,26 +96,35 @@ export default class AccountManager {
     }
 
     await this.table.add(newAccount);
+    await this.updateCache();
   }
 
   async remove(id) {
     // TODO: Recursively delete children
     // TODO: Handle the case where there are associated transactions
     await this.table.delete(id);
+    await this.updateCache();
   }
 
   async update(id, changes) {
+    // TODO: If parentId has changed, need to re-index transactions
     await this.table.update(id, changes);
+    await this.updateCache();
   }
 
   async get(id) {
-    const result = await this.table.get(id);
+    const liveResult = await this.table.get(id);
+    const result = this._cacheById[id];
+    assert(liveResult === result);
     if (result === undefined) throw new Error('Item not found')
     return result;
   }
 
   async fromIdToName(id) {
-    return (await this.table.get(id)).name;
+    const liveResult = (await this.table.get(id)).name;
+    const result = this._cacheById[id].name;
+    assert(liveResult === result)
+    return result;
   }
 
   async fromNameToId(name) {
@@ -88,17 +134,30 @@ export default class AccountManager {
   }
 
   async isValidId(id) {
+    assert(await this.table.get(id) === id in this._cacheById)
     return undefined === await this.table.get(id);
   }
 
-  async getTreeData(startsFrom = 100) {
-    const children = await this.table.where('parentId').equals(startsFrom).toArray();
-    const self = await this.table.get(startsFrom);
+  getTreeData(startsFrom = 100) {
+    const children = this._cacheByParentId[startsFrom] || [];
+    const self = this._cacheById[startsFrom];
+
     return {
       id: startsFrom,
       name: self.name,
       isFolder: self.isFolder,
-      children: await Promise.all(children.map(child => this.getTreeData(child.id))),
+      children: children.map(child => this.getTreeData(child.id)),
     }
   }
+
+  // async getTreeData(startsFrom = 100) {
+  //   const children = await this.table.where('parentId').equals(startsFrom).toArray();
+  //   const self = await this.table.get(startsFrom);
+  //   return {
+  //     id: startsFrom,
+  //     name: self.name,
+  //     isFolder: self.isFolder,
+  //     children: await Promise.all(children.map(child => this.getTreeData(child.id))),
+  //   }
+  // }
 }

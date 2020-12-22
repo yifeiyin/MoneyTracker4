@@ -17,6 +17,7 @@ import ImportExportScreen from './screens/ImportExportScreen';
 import AccountsScreen from './screens/AccountsScreen';
 import TransactionsScreen from './screens/TransactionsScreen';
 import DataManagementScreen from './screens/DataManagementScreen';
+import { useActions, useState } from './overmind';
 
 const routes = [
   ['/accounts', AccountsScreen, 'Accounts'],
@@ -26,6 +27,13 @@ const routes = [
 ];
 
 function App() {
+  const { isReady } = useState();
+  const actions = useActions();
+
+  React.useEffect(() => {
+    actions.load();
+  }, [actions]);
+
   return (
     <Router>
       <Switch>
@@ -36,7 +44,7 @@ function App() {
           routes.map(([path, Component, name]) =>
             <Route key={path} path={path}>
               <AppBarWrapper path={path} />
-              <Component />
+              {isReady ? <Component /> : <span>Loading</span>}
             </Route>
           )
         }
@@ -60,11 +68,11 @@ const AppBarWrapper = (props) => {
             </Link>
           )
         }
-        <span style={{ marginLeft: 'auto' }}>
+        {/* <span style={{ marginLeft: 'auto' }}>
           <Button color="inherit" onClick={() => global.loadInitialData()}>Reset</Button>
           <Button color="inherit" onClick={() => global.loadAllData()}>Reload</Button>
           <Button color="inherit" onClick={() => global.saveAllData()}>Save</Button>
-        </span>
+        </span> */}
       </Toolbar>
     </AppBar>
   );

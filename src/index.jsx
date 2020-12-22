@@ -42,32 +42,19 @@ db.transactions.hook('reading', function (obj) {
 });
 
 db.transactions.hook('creating', function (primKey, obj, transaction) {
-  obj._debits = '';
-  obj._credits = '';
-  obj._debitsCredits = '';
+  obj._debits = [''];
+  obj._credits = [''];
+  obj._debitsCredits = [''];
   return obj;
 });
 
 db.transactions.hook('updating', function (modifications, primKey, obj, transaction) {
   const additionalModifications = {};
-  additionalModifications._debits = '';
-  additionalModifications._credits = '';
-  additionalModifications._debitsCredits = '';
+  additionalModifications._debits = [''];
+  additionalModifications._credits = [''];
+  additionalModifications._debitsCredits = [''];
   return additionalModifications;
 });
-
-(async () => {
-  if ((await db.accounts.toArray()).length === 0) {
-    for (let a of AccountManager.getInitialSetupData())
-      await global.accountManager.create(a)
-  }
-
-  if ((await db.transactions.toArray()).length === 0) {
-    for (let a of TransactionManager.getInitialSetupData())
-      await global.transactionManager.create(a)
-  }
-
-})();
 
 /** Global variables */
 global.accountManager = new AccountManager(db.accounts, db);
@@ -76,6 +63,18 @@ global.transactionManager = new TransactionManager(db.transactions, db);
 
 global.categories = JSON.parse(localStorage.getItem('categories') || '{}')
 
+
+global.getReady = async () => {
+  if ((await db.accounts.toArray()).length === 0)
+    for (let a of AccountManager.getInitialSetupData())
+      await global.accountManager.create(a)
+
+  if ((await db.transactions.toArray()).length === 0)
+    for (let a of TransactionManager.getInitialSetupData())
+      await global.transactionManager.create(a)
+
+  await global.accountManager.getReady();
+}
 
 /** Overmind */
 const overmind = createOvermind(config, { devtools: true });

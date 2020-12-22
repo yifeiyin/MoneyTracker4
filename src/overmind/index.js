@@ -9,8 +9,13 @@ import {
 
 export const config = {
   state: {
+    isReady: false,
   },
   actions: {
+    load: async ({ state }) => {
+      await global.getReady();
+      state.isReady = true;
+    }
   }
 }
 
