@@ -65,11 +65,11 @@ global.categories = JSON.parse(localStorage.getItem('categories') || '{}')
 
 
 global.getReady = async () => {
-  if ((await db.accounts.toArray()).length === 0)
+  if ((await db.accounts.count()) === 0)
     for (let a of AccountManager.getInitialSetupData())
       await global.accountManager.create(a)
 
-  if ((await db.transactions.toArray()).length === 0)
+  if ((await db.transactions.count()) === 0)
     for (let a of TransactionManager.getInitialSetupData())
       await global.transactionManager.create(a)
 
