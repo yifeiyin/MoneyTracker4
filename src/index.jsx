@@ -45,7 +45,7 @@ db.transactions.hook('reading', function (obj) {
 
 db.transactions.hook('creating', function (primKey, obj, transaction) {
   obj._debits = obj.debits.map(({ acc }) => global.accountManager.getPath(acc));
-  obj._credits = obj.debits.map(({ acc }) => global.accountManager.getPath(acc));
+  obj._credits = obj.credits.map(({ acc }) => global.accountManager.getPath(acc));
   obj._debitsCredits = [...obj._debits, ...obj._credits];
 });
 

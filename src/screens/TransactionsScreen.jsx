@@ -11,6 +11,12 @@ class TransactionsScreen extends React.Component {
     currentQuery: '',
   }
 
+  onChange = (currentQuery) => {
+    this.setState({ currentQuery }, () => {
+      this.execute();
+    });
+  }
+
   execute = () => {
     this.TransactionView.reloadData();
   }
@@ -19,14 +25,15 @@ class TransactionsScreen extends React.Component {
     return (
       <div>
         <Button variant='outlined' color='primary' onClick={() => this.TransactionView.promptToCreate()}>Create New Transaction</Button>
-        <Input value={this.state.currentQuery} onChange={(e) => this.setState({ currentQuery: e.target.value })} />
+        <div></div>
+        <Input fullWidth value={this.state.currentQuery} onChange={(e) => this.onChange(e.target.value)} />
         <Button variant='outlined' color='primary' onClick={() => this.execute()}>Execute</Button>
 
         <TransactionList
           ref={(o) => this.TransactionView = o}
           enqueueSnackbar={this.props.enqueueSnackbar}
           viewOnly={false}
-          loadData={() => queryTableGetCollection(global.transactionManager.table, '')}
+          loadData={() => queryTableGetCollection(global.transactionManager.table, this.state.currentQuery)}
         />
       </div>
     );

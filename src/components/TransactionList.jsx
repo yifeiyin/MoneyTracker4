@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 
 import { Modal } from '.';
+import { Typography } from '@material-ui/core'
 import ObjectEditor from '../ObjectEditor/index';
 import { TransactionCreateFormat, TransactionEditFormat } from '../ObjectEditor/ObjectFormats';
 import { deepCopy, getTodaysDateAt0000, sumOfAccountAndAmountList, formatDate } from '../newCore/helpers';
@@ -13,6 +14,7 @@ export default class TransactionView extends React.Component {
     data: [],
     currentTransactionId: null,
     currentTransactionValue: {},
+    error: null,
   }
 
   componentDidMount() {
@@ -20,8 +22,12 @@ export default class TransactionView extends React.Component {
   }
 
   reloadData = async () => {
-    const data = await this.props.loadData().toArray();
-    this.setState({ data });
+    try {
+      const data = await this.props.loadData().toArray();
+      this.setState({ data, error: null });
+    } catch (error) {
+      this.setState({ error: error.message })
+    }
   }
 
   promptToCreate = (defaultValues = {}) => {
@@ -100,7 +106,9 @@ export default class TransactionView extends React.Component {
             onSave={this.onSaveTransaction}
           />
         </Modal>
-
+        <Typography color={this.state.error ? 'error' : 'textPrimary'} type='h5'>
+          {this.state.error || this.state.data.length + ' matches'}
+        </Typography>
         <List
           height={800}
           width={1300}

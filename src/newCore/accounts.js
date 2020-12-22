@@ -155,8 +155,11 @@ export default class AccountManager {
       }
     }
     if (result.length > 1) {
-      const firstThree = result.filter((v, i) => i < 3)
-      throw new Error(`Ambiguous account name ${name}, matches: ${firstThree.join(', ')} and ${result.lenght - firstThree.length} more`);
+      const firstThree = result.filter((v, i) => i < 3).map(id => this._cacheById[id].name)
+      const restCount = result.length - firstThree.length;
+      throw new Error(`Ambiguous account name ${name}, matches: ${firstThree.join(', ')}`
+        + (restCount > 0 ? ` and ${restCount} more` : '')
+      );
     }
     if (result.length === 0) {
       throw new Error(`No matches for account name ${name}`);
