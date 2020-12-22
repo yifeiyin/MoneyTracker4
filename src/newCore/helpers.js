@@ -37,10 +37,18 @@ export function formatDate(date, withTimezone = true) {
     date.getFullYear() + '-' +
     TwoDigitPad(date.getMonth() + 1) + '-' +
     TwoDigitPad(date.getDate()) + ' ' +
-    TwoDigitPad(date.getHours()) + ':' +
-    TwoDigitPad(date.getMinutes()) +
-    (date.getSeconds() === 0 ? '' : (':' + TwoDigitPad(date.getSeconds()))) +
-    (withTimezone ? date.toString().substr(date.toString().indexOf('GMT')) : '')
+    (
+      date.getHours() === 0 && date.getMinutes() === 0 ? '' :
+        TwoDigitPad(date.getHours()) + ':' +
+        TwoDigitPad(date.getMinutes())) +
+    (
+      date.getSeconds() === 0 ? '' :
+        (':' + TwoDigitPad(date.getSeconds()))
+    ) +
+    (
+      !withTimezone ? '' :
+        date.toString().substr(date.toString().indexOf('GMT'))
+    )
   )
 
   function TwoDigitPad(s) {
