@@ -154,6 +154,29 @@ export default class AccountManager {
     }
   }
 
+  fuzzyFindGetId(name) {
+    const result = []
+    for (let [id, account] of Object.entries(this._cacheById)) {
+      if (account.name.toLowerCase().includes(name.toLowerCase())) {
+        result.push(id)
+      }
+    }
+    if (result.length > 1) {
+      const firstThree = result.filter((v, i) => i < 3)
+      throw new Error(`Ambiguous account name ${name}, matches: ${firstThree.join(', ')} and ${result.lenght - firstThree.length} more`);
+    }
+    if (result.length === 0) {
+      throw new Error(`No matches for account name ${name}`);
+    }
+
+    return result[0]
+  }
+
+  fuzzyFindGetPath(name) {
+    const id = this.fuzzyFindGetId(name)
+    return this._cachePathById[id]
+  }
+
   // async getTreeData(startsFrom = 100) {
   //   const children = await this.table.where('parentId').equals(startsFrom).toArray();
   //   const self = await this.table.get(startsFrom);
