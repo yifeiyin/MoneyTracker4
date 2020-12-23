@@ -105,3 +105,21 @@ count + limit offset
 reverse
 sortBy
 ```
+
+---------------
+
+TODO:
+- implement sort by, reverse
+- implement where
+- extend filter to highlight
+- automatic paging
+- delete all
+- batch update
+- add back the edit button for transactions
+
+- old backlog: read only transaction list
+
+- transaction list pop up window with a filter set?
+  - make sure to have date first
+  - or make another index: tag?
+
