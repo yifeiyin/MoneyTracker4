@@ -45,11 +45,10 @@ export const TransactionSchema = yup.object({
   id: TransactionIdSchema,
   time: yup.date().required(),
   title: yup.string().required().min(1),
-  // DRFrom: yup.string().required(),
-  // CRFrom: yup.string().required(),
   debits: AccountAndAmountListSchema,
   credits: AccountAndAmountListSchema,
   description: yup.string().notRequired(),
+  tags: yup.array(yup.string().ensure()).ensure(),
 })
   .strict(false)
   .noUnknown(false)

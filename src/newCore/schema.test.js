@@ -140,6 +140,10 @@ testSchema(TransactionSchema, {
   credits: { acc: 100, amt: new Monum('CAD', '2') }
 }, false);
 
+testing('TransactionSchema - tags')
+testSchema(TransactionSchema.pick(['tags']), { debits: [], credits: [] }, { debits: [], credits: [], tags: [] });
+testSchema(TransactionSchema.pick(['tags']), { debits: [], credits: [], tags: [1] }, { debits: [], credits: [], tags: ['1'] });
+testSchema(TransactionSchema.pick(['tags']), { debits: [], credits: [], tags: ['hi', 'hello'] }, { debits: [], credits: [], tags: ['hi', 'hello'] });
 
 /**
  * Helper
@@ -161,7 +165,10 @@ function testSchema(schema, input, expectedState) {
       expect(() => schema.validateSync(input)).toThrow();
 
     } else {
-      expect(schema.validateSync(input)).toBe(expectedState);
+      if (typeof expectedState === 'object')
+        expect(schema.validateSync(input)).toMatchObject(expectedState);
+      else
+        expect(schema.validateSync(input)).toBe(expectedState);
     }
   })
 }
