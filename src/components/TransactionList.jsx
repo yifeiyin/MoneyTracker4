@@ -1,11 +1,15 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 
 import { Modal } from '.';
-import { Typography } from '@material-ui/core'
+import { Typography, IconButton, Checkbox } from '@material-ui/core'
+import EditIcon from '@material-ui/icons/Edit';
+import DeleteIcon from '@material-ui/icons/Delete';
+
 import ObjectEditor from '../ObjectEditor/index';
 import { TransactionCreateFormat, TransactionEditFormat } from '../ObjectEditor/ObjectFormats';
 import { deepCopy, getTodaysDateAt0000, sumOfAccountAndAmountList, formatDate } from '../newCore/helpers';
 import { FixedSizeList as List } from 'react-window';
+import { es } from 'date-fns/locale';
 // import AutoSizer from 'react-virtualized-auto-sizer';
 
 
@@ -15,6 +19,7 @@ export default class TransactionView extends React.Component {
     currentTransactionId: null,
     currentTransactionValue: {},
     error: null,
+    selectedTransactionMap: {}
   }
 
   componentDidMount() {
@@ -95,6 +100,12 @@ export default class TransactionView extends React.Component {
     }
   }
 
+  isTransactionSelectedById(id) { return this.state.selectedTransactionMap[id]; }
+  onChangeSelect = (id, newValue) => {
+    if (newValue) this.setState({ selectedTransactionMap: { ...this.state.selectedTransactionMap, [id]: true } })
+    else this.setState({ selectedTransactionMap: { ...this.state.selectedTransactionMap, [id]: false } })
+  }
+
   render() {
     return (
       <div style={{ padding: 5 }}>
@@ -115,24 +126,37 @@ export default class TransactionView extends React.Component {
           itemCount={this.state.data.length}
           itemSize={50}
         >
-          {({ index, style }) => (
-            <div className={'transaction-row' + (index % 2 ? ' even' : '')} style={style}>
-              <TransactionTableBodyCells transaction={this.state.data[index]} />
-            </div>
-          )}
+          {({ index, style }) => {
+            const transaction = this.state.data[index];
+            const id = transaction.id;
+
+            return (
+              <div className={'transaction-row' + (index % 2 ? ' even' : '')} style={style}>
+                <TransactionTableBodyCells
+                  isSelected={this.isTransactionSelectedById(id)}
+                  onChangeSelect={(newValue) => this.onChangeSelect(id, newValue)}
+                  onEdit={() => this.onEdit(transaction)}
+                  onDelete={() => this.onRemove(id)}
+                  transaction={transaction}
+                />
+              </div>
+            )
+          }}
         </List>
       </div>
     );
   }
 }
 
-
-function TransactionTableBodyCells({ transaction }) {
+function TransactionTableBodyCells({ transaction, onEdit, onRemove, isSelected, onChangeSelect }) {
   const { id, time, title, debits, credits } = transaction;
   const readable = [stringifyAccountsAndAmounts(debits), stringifyAccountsAndAmounts(credits)]
 
   return (
     <>
+      <Checkbox checked={isSelected} onChange={(e) => onChangeSelect(e.target.checked)} />
+      <IconButton size='small' onClick={onEdit}><EditIcon /></IconButton>
+      <IconButton size='small' onClick={onRemove}><DeleteIcon /></IconButton>
       <div data-type="id">{id}</div>
       <div data-type="date">{formatDate(time, false)}</div>
       <div data-type="title">{title}</div>
