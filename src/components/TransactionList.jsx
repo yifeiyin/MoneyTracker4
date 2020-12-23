@@ -18,7 +18,7 @@ export default class TransactionView extends React.Component {
   state = {
     data: [],
     totalCount: 0,
-    currentOffset: 0,
+    currentPage: 0,
     currentTransactionId: null,
     currentTransactionValue: {},
     error: null,
@@ -44,13 +44,13 @@ export default class TransactionView extends React.Component {
     await this.loadDataAtPage(0);
   }
 
-  loadDataAtPage = async (page) => {
-    const currentOffset = page * PAGE_LIMIT;
+  loadDataAtPage = async (currentPage) => {
+    const offset = currentPage * PAGE_LIMIT;
     const startTime = new Date();
     try {
       const totalCount = await this.collection.clone().count();
-      const data = await this.collection.clone().offset(currentOffset).limit(PAGE_LIMIT).sortBy('date');
-      this.setState({ data, currentOffset, totalCount, error: null });
+      const data = await this.collection.clone().offset(offset).limit(PAGE_LIMIT).sortBy('date');
+      this.setState({ data, currentPage, totalCount, error: null });
     } catch (error) {
       this.setState({ error: 'Query runtime: ' + error.message });
     }
@@ -67,10 +67,10 @@ export default class TransactionView extends React.Component {
         </Typography>
       )
 
-    const { totalCount, currentOffset, data } = this.state;
+    const { totalCount, currentPage, data } = this.state;
     let pageText = totalCount + ' item' + (totalCount === 1 ? '' : 's');
     if (totalCount > PAGE_LIMIT) {
-      pageText = `${currentOffset + 1} - ${currentOffset + data.length} / ${pageText}`;
+      pageText = `${currentPage * PAGE_LIMIT + 1} - ${currentPage * PAGE_LIMIT + data.length} / ${pageText}`;
     }
 
     const selectedCount = Object.values(this.state.selectedTransactionMap).filter(Boolean).length;
@@ -91,7 +91,7 @@ export default class TransactionView extends React.Component {
             <Button
               key={String(index)}
               size="small"
-              variant={(index === currentOffset / PAGE_LIMIT) ? "outlined" : "text"}
+              variant={(index === currentPage) ? "outlined" : "text"}
               onClick={() => this.loadDataAtPage(index)}
             >
               {index + 1}
@@ -152,40 +152,26 @@ export default class TransactionView extends React.Component {
     delete newValue.id;
     const id = this.state.currentTransactionId;
 
-    let success = false;
-    if (id === 'new') {
-      try {
+    try {
+      if (id === 'new') {
         await global.transactionManager.create(newValue);
-        success = true;
-
-      } catch (error) { alert(error) }
-
-    } else {
-      try {
+      } else {
         await global.transactionManager.update(id, newValue);
-        success = true;
+      }
+    } catch (error) { alert(error); return; }
 
-      } catch (error) { alert(error) }
-    }
-
-    if (success) {
-      this.props.enqueueSnackbar('Done', { variant: 'success' });
-      this.closeModal();
-      this.reloadData();
-    }
+    this.props.enqueueSnackbar('Done', { variant: 'success' });
+    this.closeModal();
+    this.loadDataAtPage(this.state.currentPage);
   }
 
   onRemove = async (id) => {
-    let success = false;
     try {
       await global.transactionManager.remove(id);
-      success = true;
-    } catch (error) { alert(error) }
+    } catch (error) { alert(error); return; }
 
-    if (success) {
-      this.props.enqueueSnackbar('Deleted!', { variant: 'success' });
-      this.reloadData();
-    }
+    this.props.enqueueSnackbar('Deleted!', { variant: 'success' });
+    this.loadDataAtPage(this.state.currentPage);
   }
 
   isTransactionSelectedById(id) { return this.state.selectedTransactionMap[id]; }
