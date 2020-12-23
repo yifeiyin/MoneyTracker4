@@ -1,5 +1,5 @@
 import bmoDebitCodeToReadableType from './bmoDebitCodeToReadable';
-import { assert, getNowDateTimeString } from '../newCore/helpers'
+import { assert, getNowDateTimeString, toTitleCase } from '../newCore/helpers'
 
 import {
   postProcess,
@@ -77,23 +77,23 @@ function generateTransaction(inputs) {
           toFrom = 'saving';
           otherSide = AC_SAVING;
         }
-        $title = 'Bank Transfer ' + (type === $DR ? 'from' : 'to') + ' ' + toFrom;
+        $title = 'Bank transfer ' + (type === $DR ? 'from' : 'to') + ' ' + toTitleCase(toFrom);
       }
 
       break;
 
     case 'PR':
-      $title = 'Purchase at ' + desc;
+      $title = 'Purchase at ' + toTitleCase(desc);
       break;
 
     case 'SC':
       otherSide = AC_OTHER_EXPENSE;
 
       if (desc.includes('PREMIUM PLAN')) {
-        $title = 'Premium Plan Banking Fee';
+        $title = 'Premium plan banking fee';
 
       } else if (desc.includes('FULL PLAN FEE REBATE')) {
-        $title = 'Premium Plan Banking Fee Refund';
+        $title = 'Premium Plan banking fee refund';
       }
 
       break;
