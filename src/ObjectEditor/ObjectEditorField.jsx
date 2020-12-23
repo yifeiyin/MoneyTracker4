@@ -14,15 +14,9 @@ import { getTodaysDateAt0000 } from '../newCore/helpers'
 export default function ObjectEditorField(props) {
   // eslint-disable-next-line no-unused-vars
   const { id, value, type, label, propertyType, onChange } = props;
-  const [accountName, setAccountName] = React.useState('loading');
+
   const [monumInputValue, setMonumInputValue] = React.useState(null);
   useEffect(() => {
-    if (type === 'account' && value) {
-      global.accountManager.fromIdToName(value).then(setAccountName)
-    } else {
-      setAccountName('N/A')
-    }
-
     if (type === 'monum') {
       if (monumInputValue === null)
         setMonumInputValue(value.toReadable());
@@ -89,7 +83,7 @@ export default function ObjectEditorField(props) {
             {
               value === undefined || value === null ?
                 placeholder || 'Please select' :
-                value + ' - ' + accountName
+                value + ' - ' + global.accountManager.fromIdToName(value)
             }
           </MenuItem>
         </Select>
