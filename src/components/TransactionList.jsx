@@ -1,37 +1,126 @@
 import React from 'react';
 
 import { Modal } from '.';
-import { Typography, IconButton, Checkbox } from '@material-ui/core'
+import { Typography, IconButton, Checkbox, Button } from '@material-ui/core'
 import EditIcon from '@material-ui/icons/Edit';
 import DeleteIcon from '@material-ui/icons/Delete';
 
 import ObjectEditor from '../ObjectEditor/index';
 import { TransactionCreateFormat, TransactionEditFormat } from '../ObjectEditor/ObjectFormats';
 import { deepCopy, getTodaysDateAt0000, sumOfAccountAndAmountList, formatDate } from '../newCore/helpers';
+import { queryTableGetCollection } from '../newCore/parser';
 import { FixedSizeList as List } from 'react-window';
 // import AutoSizer from 'react-virtualized-auto-sizer';
 
+const PAGE_LIMIT = 80;
 
 export default class TransactionView extends React.Component {
   state = {
     data: [],
+    totalCount: 0,
+    currentOffset: 0,
     currentTransactionId: null,
     currentTransactionValue: {},
     error: null,
-    selectedTransactionMap: {}
+    selectedTransactionMap: {},
   }
+
+  collection = null;
+  queryTime = null;
 
   componentDidMount() {
-    this.reloadData();
+    this.setQuery(this.props.initialQuery || '');
   }
 
-  reloadData = async () => {
+  setQuery = async (query) => {
     try {
-      const data = await this.props.loadData().toArray();
-      this.setState({ data, error: null });
+      this.collection = queryTableGetCollection(global.transactionManager.table, query);
+
     } catch (error) {
-      this.setState({ error: error.message })
+      this.setState({ error: error.message });
+      return;
     }
+
+    await this.loadDataAtPage(0);
+  }
+
+  loadDataAtPage = async (page) => {
+    const currentOffset = page * PAGE_LIMIT;
+    const startTime = new Date();
+    try {
+      const totalCount = await this.collection.clone().count();
+      const data = await this.collection.clone().offset(currentOffset).limit(PAGE_LIMIT).sortBy('date');
+      this.setState({ data, currentOffset, totalCount, error: null });
+    } catch (error) {
+      this.setState({ error: 'Query runtime: ' + error.message });
+    }
+    const endTime = new Date();
+    this.queryTime = endTime - startTime;
+  }
+
+
+  InformationLine = () => {
+    if (this.state.error)
+      return (
+        <Typography color='error'>
+          {this.state.error}
+        </Typography>
+      )
+
+    const { totalCount, currentOffset, data } = this.state;
+    let pageText = totalCount + ' item' + (totalCount === 1 ? '' : 's');
+    if (totalCount > PAGE_LIMIT) {
+      pageText = `${currentOffset + 1} - ${currentOffset + data.length} / ${pageText}`;
+    }
+
+    const selectedCount = Object.values(this.state.selectedTransactionMap).filter(Boolean).length;
+
+    return (
+      <div style={{ display: 'flex', margin: '10px' }}>
+        <Typography color='textPrimary' style={{ width: '160px', marginRight: '25px' }}>
+          {pageText}
+        </Typography>
+        <Typography color='textPrimary' style={{ width: '100px', marginRight: '25px' }}>
+          {selectedCount === 0 ? '' : selectedCount + ' selected'}
+        </Typography>
+        <Typography color='textSecondary' style={{ width: '120px', marginRight: '25px' }}>
+          {'took ' + this.queryTime + ' ms'}
+        </Typography>
+        {
+          Array.from({ length: Math.ceil((totalCount - 1) / PAGE_LIMIT) }).map((v, index) =>
+            <Button
+              key={String(index)}
+              size="small"
+              variant={(index === currentOffset / PAGE_LIMIT) ? "outlined" : "text"}
+              onClick={() => this.loadDataAtPage(index)}
+            >
+              {index + 1}
+            </Button>
+          )
+        }
+      </div>
+    )
+  }
+
+  selectAll = async () => {
+    const ids = await this.collection.clone().primaryKeys();
+    const map = {};
+    ids.forEach((id) => map[id] = true);
+    this.setState({ selectedTransactionMap: map });
+  }
+  deselectAll = () => { this.setState({ selectedTransactionMap: {} }); }
+
+  ToolBar = () => {
+    return (
+      <div style={{ display: 'flex', margin: '10px' }}>
+        <Button variant="outlined" onClick={() => this.selectAll()}>
+          Select All
+        </Button>
+        <Button variant="outlined" onClick={() => this.deselectAll()}>
+          Deselect All
+        </Button>
+      </div>
+    )
   }
 
   promptToCreate = (defaultValues = {}) => {
@@ -116,13 +205,13 @@ export default class TransactionView extends React.Component {
             onSave={this.onSaveTransaction}
           />
         </Modal>
-        <Typography color={this.state.error ? 'error' : 'textPrimary'} type='h5'>
-          {this.state.error || this.state.data.length + ' matches'}
-        </Typography>
+        <this.InformationLine />
+        <this.ToolBar />
         <List
           height={800}
           width={1300}
           itemCount={this.state.data.length}
+          itemKey={(index) => String(this.state.data[index].id)}
           itemSize={50}
         >
           {({ index, style }) => {

@@ -2,7 +2,6 @@ import React from 'react';
 import { Button, Input } from '@material-ui/core';
 import { TransactionList } from '../components';
 import { withSnackbar } from 'notistack';
-import { queryTableGetCollection } from '../newCore/parser'
 
 class TransactionsScreen extends React.Component {
   TransactionView = null;
@@ -18,7 +17,7 @@ class TransactionsScreen extends React.Component {
   }
 
   execute = () => {
-    this.TransactionView.reloadData();
+    this.TransactionView.setQuery(this.state.currentQuery);
   }
 
   render() {
@@ -33,7 +32,6 @@ class TransactionsScreen extends React.Component {
           ref={(o) => this.TransactionView = o}
           enqueueSnackbar={this.props.enqueueSnackbar}
           viewOnly={false}
-          loadData={() => queryTableGetCollection(global.transactionManager.table, this.state.currentQuery)}
         />
       </div>
     );
