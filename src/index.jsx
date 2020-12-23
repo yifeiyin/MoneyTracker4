@@ -31,7 +31,7 @@ import Monum from './newCore/monum';
 const db = new Dexie('MyDatabase');
 db.version(1).stores({
   accounts: '++id, name, parentId',
-  transactions: '++id, time, title, *_debits, *_credits, *_debitsCredits',
+  transactions: '++id, time, title, *_debits, *_credits, *_debitsCredits, *tags',
 });
 
 db.transactions.hook('reading', function (obj) {
