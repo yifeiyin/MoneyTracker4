@@ -17,10 +17,10 @@ export default function ObjectEditorField(props) {
   // eslint-disable-next-line no-unused-vars
   const { id, value, type, label, propertyType, onChange } = props;
 
-  const [monumInputValue, setMonumInputValue] = React.useState('');
+  const [monumInputValue, setMonumInputValue] = React.useState('uninitialized');
   useEffect(() => {
     if (type === 'monum') {
-      if (monumInputValue === null)
+      if (monumInputValue === 'uninitialized')
         setMonumInputValue(value.toReadable());
     } else {
       setMonumInputValue('N/A');
