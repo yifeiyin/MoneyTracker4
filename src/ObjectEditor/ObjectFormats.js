@@ -34,6 +34,7 @@ export const TransactionEditFormat = {
     { id: 'time', type: 'datetime' },
     { id: ['debits', 'credits'], type: 'debits/credits' },
     { id: 'description', type: 'multiline' },
+    { id: 'tags', type: 'array-of-string' },
   ]
 };
 

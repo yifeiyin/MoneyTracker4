@@ -3,6 +3,8 @@ import {
   Input,
   Select,
   MenuItem,
+  ButtonGroup,
+  Button,
 } from '@material-ui/core';
 import {
   KeyboardDateTimePicker,
@@ -88,6 +90,31 @@ export default function ObjectEditorField(props) {
           </MenuItem>
         </Select>
       </>)
+
+    case 'array-of-string':
+      const tags = value || [];
+      return (
+        <ButtonGroup color='primary' size='small' style={{ margin: 5 }}>
+          <Button>Tags</Button>
+          {
+            tags.map((tag, index) =>
+              <Button
+                key={String(index)}
+                onClick={() => {
+                  if (global.confirm(`Delete tag ${tag}?`))
+                    onChange(tags.filter((v, i) => i !== index))
+                }}
+              >{tag}</Button>
+            )
+          }
+          <Button
+            onClick={() => {
+              let newTag;
+              if ((newTag = prompt('New tag:')))
+                onChange([...tags, newTag])
+            }}>+</Button>
+        </ButtonGroup>
+      )
 
     default:
       return <div>Unknown type: {type}</div>

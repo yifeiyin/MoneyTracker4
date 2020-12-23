@@ -24,6 +24,19 @@ code {
   background-color: #F8F8F8;
 }
 
+
+.custom-property-editor-header {
+  width: 100%;
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.custom-property-editor-container button,
+.main-form-components-container button {
+  text-transform: none;
+}
+
 .transaction-row [data-type="id"] { flex: 1; }
 .transaction-row [data-type="date"] { flex: 1; }
 .transaction-row [data-type="title"] { flex: 5; }

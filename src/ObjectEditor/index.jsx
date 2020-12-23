@@ -52,18 +52,27 @@ export default class ObjectEditor extends React.Component {
     const { format, values, onSave } = this.props;
     return (
       <div>
+        {/* ======== Title ======== */}
         {
           !format.title ? null :
             <Typography variant='h4'>{templateString(format.title, values)}</Typography>
         }
-        <FormGroup row={true}>
+
+        <FormGroup className="main-form-components-container" row={true}>
+
+          {/* ======== Main Components ======== */}
           {
             format.fields.map(field =>
               field.type === 'debits/credits' ?
-                <DebitsCreditsEditor key={field.id.toString()}
-                  {...field} accountModalControl={this.accountModalControl}
+                <DebitsCreditsEditor
+                  key={field.id.toString()}
+                  {...field}
+                  accountModalControl={this.accountModalControl}
                   value={[values[field.id[0]] || [], values[field.id[1]] || []]}
-                  onChange={(debits, credits) => { if (debits !== null) this.onChange(field.id[0], debits); if (credits !== null) this.onChange(field.id[1], credits); }}
+                  onChange={(debits, credits) => {
+                    if (debits !== null) this.onChange(field.id[0], debits);
+                    if (credits !== null) this.onChange(field.id[1], credits);
+                  }}
                 />
                 :
                 <FormControl key={field.id}
@@ -72,7 +81,7 @@ export default class ObjectEditor extends React.Component {
                 >
                   {
                     // Show labels unless the component provides its own
-                    ['date', 'time', 'datetime'].includes(field.type) ? null :
+                    ['date', 'time', 'datetime', 'array-of-string'].includes(field.type) ? null :
                       <InputLabel>{field.label || field.id}</InputLabel>
                   }
                   <ObjectEditorField
@@ -84,12 +93,14 @@ export default class ObjectEditor extends React.Component {
                 </FormControl>
             )
           }
+
+          {/* ======== Custom Property Editor ======== */}
           {
             format.disableCustomProperties === true ? null :
-              <>
-                <div style={{ width: '100%', marginTop: 20, display: 'flex', alignItems: 'center' }}>
+              <div className='custom-property-editor-container'>
+                <div className='custom-property-editor-header'>
                   <Typography variant='h5' display='inline'>Custom Properties</Typography>
-                  {/* <IconButton color='primary' variant='outlined' size='small' style={{ margin: 5 }}><AddIcon /></IconButton> */}
+
                   <Button
                     color='primary' variant='outlined' size='small' style={{ margin: 5 }} startIcon={<AddIcon />}
                     onClick={() => {
@@ -105,28 +116,31 @@ export default class ObjectEditor extends React.Component {
                 {
                   Object.keys(values).filter(k => !format.fields.map(f => f.id).flat().includes(k)).map(key =>
                     <ButtonGroup color='primary' size='small' style={{ margin: 5 }} key={key}>
-                      <Button style={{ textTransform: 'none' }} onClick={() => {
+                      <Button onClick={() => {
                         if (global.confirm(`Confirm delete key ${key}?`))
                           this.onChange(key, undefined);
                       }}>{key}</Button>
 
-                      <Button style={{ textTransform: 'none' }} onClick={() => {
+                      <Button onClick={() => {
                         const newValue = global.prompt(`Editing ${key}:`, values[key]);
                         if (newValue !== null) this.onChange(key, newValue);
                       }}>{JSON.stringify(values[key])}</Button>
                     </ButtonGroup>
                   )
                 }
-              </>
+              </div>
           }
         </FormGroup>
 
+        {/* ======== Account Selection Modal ======== */}
         <Modal open={this.state.showingAccountModal} onModalRequestClose={() => this.closeAccountModal(null)}>
           <AccountTreeView
             treeData={this.state.accountTreeData}
             onDoubleClick={(id) => this.closeAccountModal(id)}
           />
         </Modal>
+
+        {/* ======== Actions ======== */}
         {
           format.actions === undefined ?
             <Button
