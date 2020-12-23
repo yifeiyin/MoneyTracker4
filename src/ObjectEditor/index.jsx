@@ -122,9 +122,9 @@ export default class ObjectEditor extends React.Component {
                       }}>{key}</Button>
 
                       <Button onClick={() => {
-                        const newValue = global.prompt(`Editing ${key}:`, values[key]);
+                        const newValue = global.prompt(`Editing ${key}:`, ensureString(values[key]));
                         if (newValue !== null) this.onChange(key, newValue);
-                      }}>{JSON.stringify(values[key])}</Button>
+                      }}>{ensureString(values[key])}</Button>
                     </ButtonGroup>
                   )
                 }
@@ -162,6 +162,10 @@ export default class ObjectEditor extends React.Component {
   }
 }
 
+function ensureString(obj) {
+  if (typeof obj === 'string') return obj;
+  else return JSON.stringify(obj);
+}
 
 function templateString(string, obj) {
   let s = string;

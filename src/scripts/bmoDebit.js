@@ -45,7 +45,7 @@ function transformStatement(originalStatement, tag) {
 function generateTransaction(inputs) {
   const { type, $time, amount, rawDesc, ...unusedProperties } = inputs;
 
-  const result = { $time, amount, type, ...unusedProperties };
+  const result = { $time, amount, type, _rawDesc: rawDesc, ...unusedProperties };
   let $title = 'Untitled', thisSide, otherSide;
   thisSide = AC_CHEQUING;
 
@@ -56,15 +56,15 @@ function generateTransaction(inputs) {
   switch (code) {
     case 'CW':
       if (desc.includes('INTERAC ETRNSFR')) {
-        const emtParty = desc.substr(25, 25).trim();
+        const emtParty = toTitleCase(desc.substr(25, 25).trim());
         result._emtOtherParty = emtParty;
         result._emtRefNumber = desc.substr(50, 17);
         if (desc.includes('SENT')) {
-          $title = 'eTransfer to ' + emtParty;
+          $title = 'e-transfer to ' + emtParty;
           assert(type === $CR);
 
         } else {
-          $title = 'eTransfer from ' + emtParty;
+          $title = 'e-transfer from ' + emtParty;
           assert(type === $DR);
         }
 

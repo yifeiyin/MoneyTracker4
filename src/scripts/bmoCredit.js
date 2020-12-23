@@ -39,7 +39,7 @@ function transformStatement(originalStatement, tag) {
     const amount = amount0.replace(/-/, '');
 
     result.push({
-      type, $time, amount, rawDesc: desc, _postingDate, $tags: [tag]
+      type, $time, amount, rawDesc: desc, _rawDesc: desc, _postingDate, $tags: [tag]
     });
   }
 

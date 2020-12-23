@@ -59,18 +59,26 @@ export async function postProcess(inputs) {
       const newKey = key.substr(1);
       assert(['amount', 'time', 'debits', 'credits', 'title', 'tags'].includes(newKey));
       raw[newKey] = raw[key];
-      delete raw[key];
 
     } else if (key.startsWith('_')) {
       // Keep them as custom fields
       const newKey = key.substr(1);
-      raw[newKey] = raw[key];
-      delete raw[key];
 
-    } else {
-      // If the field does not starts with $ or _, remove it
-      delete raw[key];
+      let str = raw[key];
+
+      if (typeof str !== 'string')
+        if (str instanceof Date)
+          str = str.toJSON();
+        else if (typeof str === 'number')
+          str = '' + str;
+        else
+          str = JSON.stringify(str);
+
+      raw[newKey] = str;
     }
+
+    // If the field does not starts with $ or _, remove it
+    delete raw[key];
   }
 
   return raw;
