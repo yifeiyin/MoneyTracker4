@@ -148,6 +148,10 @@ export default class AccountManager {
   }
 
   fuzzyFindGetId(name) {
+    // Optimization? Reject right away if it looks like date
+    if (name.match(/^[\d-]*$/))
+      throw new Error('Invalid account name');
+
     const result = []
     for (let [id, account] of Object.entries(this._cacheById)) {
       if (account.name.toLowerCase().includes(name.toLowerCase())) {
