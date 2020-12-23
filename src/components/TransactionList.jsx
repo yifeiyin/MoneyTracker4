@@ -210,7 +210,7 @@ export default class TransactionView extends React.Component {
                   isSelected={this.isTransactionSelectedById(id)}
                   onChangeSelect={(newValue) => this.onChangeSelect(id, newValue)}
                   onEdit={() => this.onEdit(transaction)}
-                  onDelete={() => this.onRemove(id)}
+                  onRemove={() => this.onRemove(id)}
                   transaction={transaction}
                 />
               </div>
