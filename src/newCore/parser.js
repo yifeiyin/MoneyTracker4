@@ -25,6 +25,10 @@ function buildQueryForTable(table, { op, args }) {
       return table.where('time').between(start, end);
     }
 
+    case 'tag': {
+      return table.where('tags').equals(args);
+    }
+
     default:
       return buildQueryForCollection(table, { op, args });
   }
@@ -48,9 +52,13 @@ function buildQueryForCollection(collection, { op, args }) {
     }
 
     case 'where': {
-      const [lhs, operator, rhs] = args;
+      // const [lhs, operator, rhs] = args;
       // TODO: where
       return collection;
+    }
+
+    case 'tag': {
+      return collection.filter((obj) => obj.tags.includes(args));
     }
 
     case 'limit':
@@ -119,6 +127,12 @@ export function consumeOperation(tokens) {
     case 'offset':
       op = 'offset'
       args = +tokens[1]
+      argConsumed = 1
+      break;
+
+    case 'tag':
+      op = 'tag'
+      args = tokens[1]
       argConsumed = 1
       break;
 

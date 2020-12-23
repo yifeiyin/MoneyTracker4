@@ -56,6 +56,10 @@ export function formatDate(date, withTimezone = true) {
   }
 }
 
+export function getNowDateTimeString() {
+  return formatDate(new Date(), false).replace(' ', '-').replace(/:/g, '');
+}
+
 export function toTitleCase(str) {
   return str.replace(
     /(\w*\W*|\w*)\s*/g,

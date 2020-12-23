@@ -1,25 +1,24 @@
-import Monum from '../newCore/monum';
 import bmoDebitCodeToReadableType from './bmoDebitCodeToReadable';
+import { assert, getNowDateTimeString } from '../newCore/helpers'
 
-import { assert } from '../newCore/helpers'
-
-const $CR = 'credit';
-const $DR = 'debit';
-
-const AC_CHEQUING = 'BMO Chequing';
-const AC_MASTER_CARD = 'BMO MasterCard';
-const AC_SAVING = 'BMO Saving';
-const AC_OTHER_EXPENSE = 'Other Income/Expense';
-const AC_UNKNOWN_EXPENSE = 'Unknown Income/Expense';
-
+import {
+  postProcess,
+  $CR,
+  $DR,
+  AC_CHEQUING,
+  AC_MASTER_CARD,
+  AC_SAVING,
+  AC_OTHER_EXPENSE,
+} from './helper'
 
 export default async function csvToTransactions(input) {
-  const transformed = transformStatement(input).map(generateTransaction).map(postProcess);
+  const tag = 'import/debit@' + getNowDateTimeString();
+  const transformed = transformStatement(input, tag).map(generateTransaction).map(postProcess);
   return await Promise.all(transformed);
 }
 
 
-function transformStatement(originalStatement) {
+function transformStatement(originalStatement, tag) {
   const lines = originalStatement.split('\n');
 
   let result = [];
@@ -35,7 +34,7 @@ function transformStatement(originalStatement) {
     const rawDesc = desc;
 
     result.push({
-      type, $time, amount, rawDesc,
+      type, $time, amount, rawDesc, $tags: [tag]
     });
   }
 
@@ -44,9 +43,9 @@ function transformStatement(originalStatement) {
 
 
 function generateTransaction(inputs) {
-  const { type, $time, amount, rawDesc } = inputs;
+  const { type, $time, amount, rawDesc, ...unusedProperties } = inputs;
 
-  const result = { $time, amount, type };
+  const result = { $time, amount, type, ...unusedProperties };
   let $title = 'Untitled', thisSide, otherSide;
   thisSide = AC_CHEQUING;
 
@@ -105,52 +104,4 @@ function generateTransaction(inputs) {
   Object.assign(result, { thisSide, otherSide, $title });
 
   return result;
-}
-
-async function postProcess(inputs) {
-  const raw = inputs;
-
-  let { type, thisSide, otherSide, amount } = raw;
-  otherSide = otherSide || AC_UNKNOWN_EXPENSE;
-
-  const thisSideAcc = await global.accountManager.fromNameToId(thisSide);
-  const otherSideAcc = await global.accountManager.fromNameToId(otherSide);
-  assert(thisSideAcc !== undefined, thisSide + ' not found');
-  assert(otherSideAcc !== undefined, otherSide + ' not found');
-  const thisSideCrDr = { acc: thisSideAcc, amt: new Monum('CAD', amount) };
-  const otherSideCrDr = { acc: otherSideAcc, amt: new Monum('CAD', amount) };
-  if (type === $CR) {
-    raw.$credits = thisSideCrDr;
-    raw.$debits = otherSideCrDr;
-
-  } else if (type === $DR) {
-    raw.$debits = thisSideCrDr;
-    raw.$credits = otherSideCrDr;
-
-  } else {
-    throw new Error('Unexpected value for type: ' + type);
-  }
-
-  // Remove properties that starts with $
-  for (let key in raw) {
-    if (key.startsWith('$')) {
-      // Must be a valid mandatory field
-      const newKey = key.substr(1);
-      assert(['amount', 'time', 'debits', 'credits', 'title'].includes(newKey));
-      raw[newKey] = raw[key];
-      delete raw[key];
-
-    } else if (key.startsWith('_')) {
-      // Keep them as custom fields
-      const newKey = key.substr(1);
-      raw[newKey] = raw[key];
-      delete raw[key];
-
-    } else {
-      // If the field does not starts with $ or _, remove it
-      delete raw[key];
-    }
-  }
-
-  return raw;
 }
