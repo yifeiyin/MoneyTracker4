@@ -19,15 +19,9 @@ function buildQueryForTable(table, { op, args }) {
     case 'account':
       return table.where('_debitsCredits').startsWith(accountIdentifierToPath(args));
 
-    case 'date': {
-      const start = args;
-      const end = new Date(args); end.setDate(end.getDate() + 1);
-      return table.where('time').between(start, end);
-    }
-
     case 'date-range': {
       const start = args[0];
-      const end = args[1]; end.setDate(end.getDate() + 1);
+      const end = args[1];
       return table.where('time').between(start, end);
     }
 
@@ -46,12 +40,6 @@ function buildQueryForCollection(collection, { op, args }) {
 
     case 'account':
       return collection.filter((obj) => obj._debitCredits.includes(accountIdentifierToPath(args)));
-
-    case 'date': {
-      const start = args;
-      const end = new Date(args); end.setDate(end.getDate() + 1);
-      return collection.filter((obj) => start <= obj.time && obj.time < end);
-    }
 
     case 'date-range': {
       const start = args[0];
@@ -138,12 +126,7 @@ export function consumeOperation(tokens) {
   }
 
   if (!op) {
-    if (toDate(arg0)) {
-      op = 'date'
-      args = toDate(arg0)
-      argConsumed = 0
-
-    } else if (toDateRange(arg0)) {
+    if (toDateRange(arg0)) {
       op = 'date-range'
       args = toDateRange(arg0)
       argConsumed = 0
@@ -164,22 +147,28 @@ export function consumeOperation(tokens) {
 
 
 export function toDate(str) {
-  let match = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (match) {
-    return new Date(match[1], match[2] - 1, match[3]);
-  } else {
-    return null;
+  let match
+  if ((match = str.match(/^(\d{4})-(\d{2})-(\d{2})$/))) {
+    return [new Date(match[1], match[2] - 1, match[3]), new Date(match[1], match[2] - 1, 1 + +match[3])];
+  } else if ((match = str.match(/^(\d{4})-(\d{2})$/))) {
+    return [new Date(match[1], match[2] - 1, 1), new Date(match[1], match[2] - 1 + 1, 1)]
+  } else if ((match = str.match(/^(\d{4})$/))) {
+    return [new Date(match[1], 0, 1), new Date(1 + +match[1], 0, 1)]
   }
+  return null;
 }
 
 export function toDateRange(str) {
+  if (toDate(str))
+    return toDate(str);
+
   let parts = str.split('--');
   if (parts.length !== 2) return null;
   let start = toDate(parts[0])
   let end = toDate(parts[1])
 
   if (start === null || end === null) return null;
-  return [start, end]
+  return [start[0], end[1]]
 }
 
 export function tokenize(input) {

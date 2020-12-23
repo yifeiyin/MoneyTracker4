@@ -9,7 +9,6 @@ import ObjectEditor from '../ObjectEditor/index';
 import { TransactionCreateFormat, TransactionEditFormat } from '../ObjectEditor/ObjectFormats';
 import { deepCopy, getTodaysDateAt0000, sumOfAccountAndAmountList, formatDate } from '../newCore/helpers';
 import { FixedSizeList as List } from 'react-window';
-import { es } from 'date-fns/locale';
 // import AutoSizer from 'react-virtualized-auto-sizer';
 
 
