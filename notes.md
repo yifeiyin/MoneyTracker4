@@ -123,3 +123,22 @@ TODO:
   - make sure to have date first
   - or make another index: tag?
 
+--------------------
+
+NEXT:
+- add tags to transactions: object editor, schema, database index
+- adjust import scripts to add tags
+- open a new window when imported: save all, discard all, close
+
+PICK:
+- filter where, tag
+- highlight grammar
+- adjust pagination logic
+
+THEN:
+- budget/summary page
+
+LATER:
+- better import rules
+- balance
+
