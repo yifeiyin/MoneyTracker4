@@ -7,7 +7,7 @@ export default class TransactionManager {
       id: 100001,
       time: getTodaysDateAt0000(),
       title: 'Initial transaction',
-      credit: [],
+      credits: [],
       debits: [],
     });
     return [first];
