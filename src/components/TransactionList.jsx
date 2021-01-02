@@ -35,6 +35,7 @@ export default class TransactionView extends React.Component {
   setQuery = async (query) => {
     try {
       this.collection = queryTableGetCollection(global.transactionManager.table, query);
+      if (this.collection.toCollection) this.collection = this.collection.toCollection();
 
     } catch (error) {
       this.setState({ error: error.message });
@@ -50,12 +51,13 @@ export default class TransactionView extends React.Component {
     try {
       const totalCount = await this.collection.clone().count();
       const data = await this.collection.clone().offset(offset).limit(PAGE_LIMIT).sortBy('date');
+
+      this.queryTime = new Date() - startTime;
       this.setState({ data, currentPage, totalCount, error: null });
+
     } catch (error) {
       this.setState({ error: 'Query runtime error: ' + error.message });
     }
-    const endTime = new Date();
-    this.queryTime = endTime - startTime;
   }
 
 
