@@ -10,9 +10,11 @@ class TransactionsScreen extends React.Component {
     currentQuery: '',
   }
 
+  timeout = null;
   onChange = (currentQuery) => {
     this.setState({ currentQuery }, () => {
-      this.execute();
+      if (this.timeout) clearTimeout(this.timeout);
+      this.timeout = setTimeout(() => this.execute(), 200)
     });
   }
 
