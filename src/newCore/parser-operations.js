@@ -83,11 +83,16 @@ export class OP_DATE_RANGE extends OP {
 export class OP_WHERE extends OP {
   static schema = yup.object({
     lhs: yup.mixed().defined(),
-    op: yup.string().oneOf(['<', '>', '>=', '<=', '=', 'in', 'not in', 'starts', 'ends']).required(),
+    op: yup.string().oneOf(['<', '>', '=', 'has']).required(),
     rhs: yup.mixed().defined(),
   }).strict().noUnknown()
 
-  filter = this.NOT_SUPPORTED;
+  filter(item) {
+    if (this.lhs.toLowerCase() === 'title' && this.op === 'has') {
+      return item.title.toLowerCase().includes(this.rhs.toLowerCase())
+    }
+    throw new Error('Unsupported where clause');
+  }
 }
 
 
