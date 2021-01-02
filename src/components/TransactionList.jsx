@@ -52,7 +52,7 @@ export default class TransactionView extends React.Component {
       const data = await this.collection.clone().offset(offset).limit(PAGE_LIMIT).sortBy('date');
       this.setState({ data, currentPage, totalCount, error: null });
     } catch (error) {
-      this.setState({ error: 'Query runtime: ' + error.message });
+      this.setState({ error: 'Query runtime error: ' + error.message });
     }
     const endTime = new Date();
     this.queryTime = endTime - startTime;
