@@ -72,19 +72,79 @@ export function consumeOperation(tokens) {
       break;
 
     default:
-      let date;
-      if ((date = toDateRange(arg0))) {
-        op = new OP_DATE_RANGE({ start: date[0], end: date[1] })
-        op.argCount = 1
-      } else {
-        op = new OP_FUZZY_ACCOUNT({ type: 'any', identifier: arg0 });
-        op.argCount = 1
+      {
+        let date;
+        if ((date = toDateRange(arg0))) {
+          op = new OP_DATE_RANGE({ start: date[0], end: date[1] })
+          op.argCount = 1
+          break;
+        }
       }
+
+      {
+        let relativeDate;
+        if (
+          (relativeDate = toRelativeDateRange(arg0, tokens[1]))) {
+          op = new OP_DATE_RANGE({ start: relativeDate[0], end: relativeDate[1] })
+          op.argCount = 2
+          break;
+        }
+      }
+
+      op = new OP_FUZZY_ACCOUNT({ type: 'any', identifier: arg0 });
+      op.argCount = 1
   }
 
   return { operation: op, tokensLeft: tokens.splice(op.actualArgCount) }
 }
 
+export function toRelativeDateRange(modifier, unit, now = null) {
+  /**
+   *                     a unit of time interval
+   *                    |<          >|
+   *                                       now
+   *  past <<                               V                >> future
+   *             -------|------------|-------~~~~~|~~~~~~~~
+   *
+   *                           |<   past   >|
+   *                    |<   last   >|<   this   >|
+   */
+  try {
+    modifier = modifier.toLowerCase();
+    unit = unit.toLowerCase();
+  } catch { return null; }
+
+  if (!['this', 'past', 'last'].includes(modifier))
+    return null;
+  if (!['year', 'month', 'week'].includes(unit))
+    return null;
+
+  now = now || new Date();
+  const combined = modifier + ' ' + unit;
+
+  if (combined === 'past week') {
+    const start = new Date(now);
+    start.setDate(start.getDate() - 7);
+    return [start, now];
+  }
+
+  if (combined === 'past month') {
+    const start = new Date(now);
+    // start.setMonth(start.getMonth() - 1);
+    start.setDate(now.getDate() - 30);
+    return [start, now];
+  }
+
+  if (combined === 'past year') {
+    const start = new Date(now);
+    start.setFullYear(now.getFullYear() - 1);
+    start.setMonth(now.getMonth());
+    start.setDate(now.getDate());
+    return [start, now];
+  }
+
+  throw new Error('Not implemented')
+}
 
 export function toDate(str) {
   let match

@@ -1,4 +1,4 @@
-import { tokenize, constructOperationList, consumeOperation, toDate, toDateRange } from './parser'
+import { tokenize, constructOperationList, consumeOperation, toDate, toDateRange, toRelativeDateRange } from './parser'
 import { OP_DATE_RANGE, OP_FUZZY_ACCOUNT, OP_WHERE } from './parser-operations'
 
 test('tokenize', () => {
@@ -46,3 +46,27 @@ test('constructOperationList', () => {
       new OP_FUZZY_ACCOUNT({ type: 'credit', identifier: 'acc' })
     ])
 })
+
+test('toRelativeDateRange past x', () => {
+  expect(toRelativeDateRange('past', 'week', new Date('2021-01-01'))).toMatchObject([
+    new Date('2020-12-25'), new Date('2021-01-01')
+  ])
+  // expect(toRelativeDateRange('past', 'month', new Date('2021-01-01'))).toMatchObject([
+  //   new Date('2020-12-01'), new Date('2021-01-01')
+  // ])
+  expect(toRelativeDateRange('past', 'year', new Date('2021-01-01'))).toMatchObject([
+    new Date('2020-01-01'), new Date('2021-01-01')
+  ])
+})
+
+// test('toRelativeDateRange this x', () => {
+//   expect(toRelativeDateRange('this', 'week', new Date('2021-01-01'))).toMatchObject([
+//     new Date('2020-12-27'), new Date('2021-01-02')
+//   ])
+//   expect(toRelativeDateRange('this', 'month', new Date('2021-01-01'))).toMatchObject([
+//     new Date('2021-01-01'), new Date('2021-02-01')
+//   ])
+//   expect(toRelativeDateRange('this', 'year', new Date('2021-01-01'))).toMatchObject([
+//     new Date('2021-01-01'), new Date('2022-01-01')
+//   ])
+// })
