@@ -130,16 +130,13 @@ export function toRelativeDateRange(modifier, unit, now = null) {
 
   if (combined === 'past month') {
     const start = new Date(now);
-    // start.setMonth(start.getMonth() - 1);
     start.setDate(now.getDate() - 30);
     return [start, now];
   }
 
   if (combined === 'past year') {
     const start = new Date(now);
-    start.setFullYear(now.getFullYear() - 1);
-    start.setMonth(now.getMonth());
-    start.setDate(now.getDate());
+    start.setDate(now.getDate() - 365);
     return [start, now];
   }
 
