@@ -1,162 +1,88 @@
+import { OP_DATE_RANGE, OP_FUZZY_ACCOUNT, OP_HAS_TAG, OP_LIMIT, OP_OFFSET, OP_WHERE } from './parser-operations'
+
 export function queryTableGetCollection(table, input) {
-  const [first, ...operations] = constructOperationList(tokenize(input));
-  if (first === undefined) return table.toCollection();
-  let query = buildQueryForTable(table, first);
-  for (let operation of operations) {
-    query = buildQueryForCollection(query, operation);
-  }
+  const operations = constructOperationList(tokenize(input));
+  let query = table;
+  operations.forEach((operation) => {
+    query = buildQuery(table, operation);
+  })
   return query;
-}
-
-function buildQueryForTable(table, { op, args }) {
-  switch (op) {
-    case 'debit':
-      return table.where('_debits').startsWith(accountIdentifierToPath(args));
-
-    case 'credit':
-      return table.where('_credits').startsWith(accountIdentifierToPath(args));
-
-    case 'account':
-      return table.where('_debitsCredits').startsWith(accountIdentifierToPath(args));
-
-    case 'date-range': {
-      const start = args[0];
-      const end = args[1];
-      return table.where('time').between(start, end);
-    }
-
-    case 'tag': {
-      return table.where('tags').equals(args);
-    }
-
-    default:
-      return buildQueryForCollection(table, { op, args });
-  }
-}
-
-function buildQueryForCollection(collection, { op, args }) {
-  switch (op) {
-    case 'debit':
-      return collection.filter((obj) => obj._debits.includes(accountIdentifierToPath(args)));
-
-    case 'credit':
-      return collection.filter((obj) => obj._credits.includes(accountIdentifierToPath(args)));
-
-    case 'account':
-      return collection.filter((obj) => obj._debitCredits.includes(accountIdentifierToPath(args)));
-
-    case 'date-range': {
-      const start = args[0];
-      const end = args[1]; end.setDate(end.getDate() + 1);
-      return collection.filter((obj) => start <= obj.time && obj.time < end);
-    }
-
-    case 'where': {
-      // const [lhs, operator, rhs] = args;
-      // TODO: where
-      return collection;
-    }
-
-    case 'tag': {
-      return collection.filter((obj) => obj.tags.includes(args));
-    }
-
-    case 'limit':
-      return collection.limit(args)
-
-    case 'offset':
-      return collection.offset(args)
-
-    default:
-      throw new Error(`Unknown op: ${op}`)
-  }
-}
-
-function accountIdentifierToPath(name) {
-  return global.accountManager.fuzzyFindGetPath(name);
 }
 
 export function constructOperationList(tokens) {
   const operations = [];
 
   while (tokens.length !== 0) {
-    let { op, args, tokensLeft } = consumeOperation(tokens);
-    operations.push({ op, args });
+    let { operation, tokensLeft } = consumeOperation(tokens);
+    operations.push(operation);
     tokens = tokensLeft;
   }
 
   return operations;
 }
 
+function buildQuery(data, operation) {
+  if (data.toCollection) {
+    return operation.queryTable(data);
+
+  } else if (data.toArray) {
+    return operation.queryCollection(data);
+
+  } else if (data instanceof Array) {
+    return data.filter((item) => operation.filter(item))
+
+  } else {
+    throw new Error('Unexpected data type', data);
+  }
+}
+
+
 export function consumeOperation(tokens) {
   if (tokens.length === 0) return {};
   const arg0 = tokens[0]
 
-  let op = '', args = [], argConsumed = 0;
+  let op = null;
   switch (arg0.toLowerCase()) {
     case 'debit': case 'dr':
-      op = 'debit'
-      args = tokens[1]
-      argConsumed = 1
+      op = new OP_FUZZY_ACCOUNT({ type: 'debit', identifier: tokens[1] })
       break;
 
     case 'credit': case 'cr':
-      op = 'credit'
-      args = tokens[1]
-      argConsumed = 1
+      op = new OP_FUZZY_ACCOUNT({ type: 'credit', identifier: tokens[1] })
       break;
 
     case 'relate': case 'relates':
-      op = 'account'
-      args = tokens[1]
-      argConsumed = 1
+      op = new OP_FUZZY_ACCOUNT({ type: 'any', identifier: tokens[1] })
       break;
 
     case 'where':
-      op = 'where'
-      args = [tokens[1], tokens[2], tokens[3]]
-      argConsumed = 3
+      op = new OP_WHERE({ lhs: tokens[1], op: tokens[2], rhs: tokens[3] })
       break;
 
     case 'limit':
-      op = 'limit'
-      args = +tokens[1]
-      argConsumed = 1
+      op = new OP_LIMIT({ n: +tokens[1] })
       break;
 
     case 'offset':
-      op = 'offset'
-      args = +tokens[1]
-      argConsumed = 1
+      op = new OP_OFFSET({ n: +tokens[1] })
       break;
 
     case 'tag':
-      op = 'tag'
-      args = tokens[1]
-      argConsumed = 1
+      op = new OP_HAS_TAG({ tag: tokens[1] })
       break;
 
     default:
+      let date;
+      if ((date = toDateRange(arg0))) {
+        op = new OP_DATE_RANGE({ start: date[0], end: date[1] })
+        op.argCount = 1
+      } else {
+        op = new OP_FUZZY_ACCOUNT({ type: 'any', identifier: arg0 });
+        op.argCount = 1
+      }
   }
 
-  if (!op) {
-    if (toDateRange(arg0)) {
-      op = 'date-range'
-      args = toDateRange(arg0)
-      argConsumed = 0
-
-    } else {
-      op = 'account'
-      args = arg0
-      argConsumed = 0
-    }
-  }
-
-  if (args === undefined || (args instanceof Array && args.includes(undefined))) {
-    throw new Error('Unexpected undefined argument for operation ' + op)
-  }
-
-  return { op, args, tokensLeft: tokens.splice(argConsumed + 1) }
+  return { operation: op, tokensLeft: tokens.splice(op.actualArgCount) }
 }
 
 

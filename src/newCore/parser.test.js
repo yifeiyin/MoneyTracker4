@@ -1,4 +1,5 @@
-import { tokenize, consumeOperation, constructOperationList, toDate, toDateRange } from './parser'
+import { tokenize, constructOperationList, consumeOperation, toDate, toDateRange } from './parser'
+import { OP_DATE_RANGE, OP_FUZZY_ACCOUNT, OP_WHERE } from './parser-operations'
 
 test('tokenize', () => {
   expect(tokenize('')).toMatchObject([])
@@ -10,10 +11,14 @@ test('tokenize', () => {
 })
 
 test('consumeOperation', () => {
-  expect(consumeOperation(tokenize('where 1 > 2'))).toMatchObject({ op: 'where', args: ['1', '>', '2'] })
-  expect(consumeOperation(tokenize('cr acc'))).toMatchObject({ op: 'credit', args: 'acc' })
-  expect(consumeOperation(tokenize('dr acc'))).toMatchObject({ op: 'debit', args: 'acc' })
-  expect(consumeOperation(tokenize('acc'))).toMatchObject({ op: 'account', args: 'acc' })
+  const tests = {
+    'where 1 > 2': new OP_WHERE({ op: '>', lhs: '1', rhs: '2' }),
+    'cr acc': new OP_FUZZY_ACCOUNT({ type: 'credit', identifier: 'acc' }),
+    'dr acc': new OP_FUZZY_ACCOUNT({ type: 'debit', identifier: 'acc' }),
+    'acc': new OP_FUZZY_ACCOUNT({ type: 'any', identifier: 'acc' })
+  }
+  for (let [key, value] of Object.entries(tests))
+    expect(consumeOperation(tokenize(key))).toMatchObject({ operation: value })
 })
 
 test('toDate', () => {
@@ -37,7 +42,7 @@ test('toDateRange', () => {
 test('constructOperationList', () => {
   expect(constructOperationList(tokenize('2020-12-12--2020-12-14 cr acc')))
     .toMatchObject([
-      { op: 'date-range', args: [new Date(2020, 11, 12), new Date(2020, 11, 15)] },
-      { op: 'credit', args: 'acc' }
+      new OP_DATE_RANGE({ start: new Date(2020, 11, 12), end: new Date(2020, 11, 15) }),
+      new OP_FUZZY_ACCOUNT({ type: 'credit', identifier: 'acc' })
     ])
 })
