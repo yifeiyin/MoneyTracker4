@@ -177,14 +177,7 @@ export default class AccountManager {
     return this._cachePathById[id]
   }
 
-  // async getTreeData(startsFrom = 100) {
-  //   const children = await this.table.where('parentId').equals(startsFrom).toArray();
-  //   const self = await this.table.get(startsFrom);
-  //   return {
-  //     id: startsFrom,
-  //     name: self.name,
-  //     isFolder: self.isFolder,
-  //     children: await Promise.all(children.map(child => this.getTreeData(child.id))),
-  //   }
-  // }
+  getAllNonFolderAccounts() {
+    return Object.values(this._cacheById).filter(account => !account.isFolder)
+  }
 }

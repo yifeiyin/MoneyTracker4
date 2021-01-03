@@ -96,6 +96,7 @@ global.transactionManager.checkpointManager = global.checkpointManager
 
 global.categories = JSON.parse(localStorage.getItem('categories') || '{}')
 
+global.Monum = Monum;
 
 global.getReady = async () => {
   if ((await db.accounts.count()) === 0)

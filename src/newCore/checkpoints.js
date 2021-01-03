@@ -1,4 +1,4 @@
-import { CheckpointDatabaseSchema } from "./schema";
+import { CheckpointDatabaseSchema, CheckpointSchema } from "./schema";
 import TransactionManager from "./transactions"; // eslint-disable-line
 import AccountManager from "./accounts"; // eslint-disable-line
 import Monum from './monum';
@@ -34,48 +34,58 @@ export default class CheckpointManager {
     });
   }
 
-  async create(data) {
-    data = CheckpointDatabaseSchema.validateSync(data);
+  async create(checkpoint) {
+    checkpoint = CheckpointSchema.omit(['transactionId']).validateSync(checkpoint);
 
     // Make sure time is unique, multiple checkpoints at a time can be problematic.
     // It is possible to be less strict and only fail when there is an actual conflict.
     // But here we just reject regardless.
-    if (await this.table.where('time').equals(data.time).first() !== null)
-      throw new Error(`Another checkpoint already exists at ${data.time}`)
+    if (await this.table.where('time').equals(checkpoint.time).first() !== undefined)
+      throw new Error(`Another checkpoint already exists at ${checkpoint.time.toISOString()}`)
 
-    const differences = await this.computeBalanceDifferences(data.time, data.balances);
-    const debits = [], credits = [];
-    for (let { acc, amt } of differences) {
-      if (this.accountIdToType(acc) === 'debit' && amt.isPositive())
-        debits.push({ acc, amt })
-      else if (this.accountIdToType(acc) === 'debit' && amt.isNegative())
-        credits.push({ acc, amt })
-      else if (this.accountIdToType(acc) === 'credit' && amt.isPositive())
-        credits.push({ acc, amt })
-      else if (this.accountIdToType(acc) === 'credit' && amt.isNegative())
-        debits.push({ acc, amt })
-      else
-        throw new Error('Unreachable')
-    }
+    // Compute the difference to generate the transaction
+    const differences = await this.computeBalanceDifferences(checkpoint.time, checkpoint.balances);
+
+    // TODO: Change current implementation. This method should balance the transaction, since
+    //       user only records balances for real-world accounts, not for income/expense accounts.
+    const [debits, credits] = changesToDebitsCredits(differences);
 
     const transaction = {
-      time: data.time,
+      time: checkpoint.time,
       title: 'Auto balance',
       debits,
       credits,
-      tags: ['checkpoint/x'],
+      tags: [`checkpoint/${checkpoint.time.toISOString()}`],
     }
-    // await this.table.add(data);
 
-    // Create linked transaction
-    // Need to compute the current balance, then find the difference
-    // The difference is what gets added to the transaction
+    await this.db.transaction('rw', this.table, this.transactionManager.table, async () => {
+      const transactionId = await this.transactionManager.create(transaction);
+      await this.table.add({ ...checkpoint, transactionId });
+    });
   }
 
   async remove(time) {
-    await this.table.delete(time);
     // Move the delta to the next checkpoint, if exists.
     // If not, discard it.
+
+    const checkpoint = await this.table.get(time);
+    if (!checkpoint)
+      throw new Error(`Cannot find checkpoint at ${time.toISOString()}`)
+
+    // eslint-disable-next-line
+    const transaction = await this.transactionManager.get(checkpoint.transactionId);
+
+    // eslint-disable-next-line
+    for (let { acc, amt } of checkpoint.balances) {
+      const nextCheckpoint = await this.findNextCheckpoint(time, this.accountManager.getPath(acc));
+
+      if (nextCheckpoint) {
+
+      }
+
+    }
+
+    await this.table.delete(time);
   }
 
   async update(time, changes) {
@@ -95,55 +105,100 @@ export default class CheckpointManager {
 
     const differences = [];
     for (let { acc, amt } of newBalances) {
-      const diff = amt.sub(existingBalances[acc] || new Monum());
+      const diff = amt.sub(existingBalances[acc]);
       if (diff.isNotZero())
-        differences.push(diff);
+        differences.push({ acc, amt: diff });
     }
 
     return differences;
   }
 
   async computeAccountBalanceAt(time) {
-    const previousCheckpoint = await this.getPreviousCheckpoint(time);
-    const transactionsBetween = await this.findTransactionsBetween(previousCheckpoint?.time, time);
-    const runningBalances = previousCheckpoint?.balances || {};
+    const allAccountPaths = this.accountManager.getAllNonFolderAccounts()
+      .map(account => account.id)
+      .map(accountId => [
+        accountId,
+        this.accountManager.get(accountId).accountType,
+        this.accountManager.getPath(accountId)
+      ]);
 
-    transactionsBetween.forEach(({ debits, credits }) => {
-      for (let { acc, amt } of debits)
-        if (this.accountIdToType(acc) === 'debit')
-          runningBalances[acc] = (runningBalances[acc] || new Monum()).add(amt)
-        else
-          runningBalances[acc] = (runningBalances[acc] || new Monum()).add(amt.neg())
+    const balances = {};
 
-      for (let { acc, amt } of credits)
-        if (this.accountIdToType(acc) === 'credit')
-          runningBalances[acc] = (runningBalances[acc] || new Monum()).add(amt)
-        else
-          runningBalances[acc] = (runningBalances[acc] || new Monum()).add(amt.neg())
-    })
+    for (let [accountId, accountType, accountPath] of allAccountPaths) {
+      const previousCheckpoint = await this.findPreviousCheckpoint(time, accountPath);
+      const transactionsBetween = await this.findTransactionsBetween(previousCheckpoint?.time, time, accountPath);
 
-    return runningBalances;
+      let balance = new Monum();
+      if (previousCheckpoint) {
+        balance = getSumOfAmountsForAccountPath(previousCheckpoint.balances, accountPath);
+      }
+
+      const debits = transactionsBetween.map(transaction => transaction.debits).flat();
+      const credits = transactionsBetween.map(transaction => transaction.credits).flat();
+
+      const debitSum = getSumOfAmountsForAccountPath(debits, accountPath);
+      const creditSum = getSumOfAmountsForAccountPath(credits, accountPath);
+
+      if (accountType === 'debit')
+        balance = balance.add(debitSum).sub(creditSum);
+      else if (accountType === 'credit')
+        balance = balance.add(creditSum).sub(debitSum);
+      else
+        throw new Error('Unreachable');
+
+      balances[accountId] = balance;
+    }
+
+    return balances;
+
+    function getSumOfAmountsForAccountPath(listOfAccAmt, accountPath) {
+      return Monum.combine(...listOfAccAmt.filter(({ acc }) => acc === pathToId(accountPath)).map(({ amt }) => amt));
+    }
+
+    function pathToId(path) {
+      return +path.split('/').reverse()[0];
+    }
   }
 
-  accountIdToType(id) {
-    return this.accountManager.get(id).accountType;
-  }
-
-  async findTransactionsBetween(exclusiveFrom, inclusiveTo) {
-    if (exclusiveFrom)
+  async findTransactionsBetween(exclusiveFrom, inclusiveTo, accountPath) {
+    if (exclusiveFrom && inclusiveTo)
       return await this.transactionManager.table
         .where('time')
         .between(exclusiveFrom, inclusiveTo, false, true)
+        .filter(transaction => transaction._debitsCredits.includes(accountPath))
         .toArray()
-    else
+
+    else if (exclusiveFrom)
+      return await this.transactionManager.table
+        .where('time')
+        .above(exclusiveFrom)
+        .filter(transaction => transaction._debitsCredits.includes(accountPath))
+        .toArray()
+
+    else if (inclusiveTo)
       return await this.transactionManager.table
         .where('time')
         .belowOrEqual(inclusiveTo)
+        .filter(transaction => transaction._debitsCredits.includes(accountPath))
         .toArray()
+
+    else
+      throw new Error('At least one of exclusiveFrom and inclusiveTo must be defined')
   }
 
-  async getPreviousCheckpoint(time) {
-    let result = await this.table.where('time').below(time).first();
+  async findPreviousCheckpoint(time, accountPath) {
+    let result = await this.table
+      .where('time').below(time)
+      .filter(checkpoint => checkpoint._accounts.includes(accountPath))
+      .first();
+    return result || null;
+  }
+
+  async findNextCheckpoint(time, accountPath) {
+    let result = await this.table
+      .where('time').above(time)
+      .filter(checkpoint => checkpoint._accounts.includes(accountPath))
+      .first();
     return result || null;
   }
 
@@ -153,3 +208,30 @@ export default class CheckpointManager {
     return result;
   }
 }
+
+// function debitsCreditsToChanges(debits, credits) {
+
+// }
+
+function changesToDebitsCredits(changes) {
+  const debits = [], credits = [];
+  for (let { acc, amt } of changes) {
+    if (accountIdToType(acc) === 'debit' && amt.isPositive())
+      debits.push({ acc, amt })
+    else if (accountIdToType(acc) === 'debit' && amt.isNegative())
+      credits.push({ acc, amt })
+    else if (accountIdToType(acc) === 'credit' && amt.isPositive())
+      credits.push({ acc, amt })
+    else if (accountIdToType(acc) === 'credit' && amt.isNegative())
+      debits.push({ acc, amt })
+    else
+      throw new Error('Unreachable')
+  }
+
+  return [debits, credits]
+
+  function accountIdToType(id) {
+    return this.accountManager.get(id).accountType;
+  }
+}
+

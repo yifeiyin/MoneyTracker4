@@ -40,7 +40,7 @@ export default class TransactionManager {
 
   async create(data) {
     data = TransactionSchema.omit(['id']).validateSync(data);
-    await this.table.add(data);
+    return await this.table.add(data);
   }
 
   async remove(id) {
