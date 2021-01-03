@@ -26,14 +26,17 @@ import Dexie from "dexie";
 import AccountManager from './newCore/accounts';
 import TransactionManager from './newCore/transactions';
 import Monum from './newCore/monum';
+import CheckpointManager from './newCore/checkpoints';
 
 /** Database setup */
 const db = new Dexie('MyDatabase');
-db.version(1).stores({
+db.version(11).stores({
   accounts: '++id, name, parentId',
   transactions: '++id, time, title, *_debits, *_credits, *_debitsCredits, *tags',
+  checkpoints: 'time, *_accounts',
 });
 
+/** Database hooks for transactions */
 db.transactions.hook('reading', function (obj) {
   obj.debits.forEach(side => Object.setPrototypeOf(side.amt, new Monum()));
   obj.credits.forEach(side => Object.setPrototypeOf(side.amt, new Monum()));
@@ -59,10 +62,37 @@ db.transactions.hook('updating', function (modifications, primKey, obj, transact
   return additionalModifications;
 });
 
+/** Database hooks for checkpoints */
+db.checkpoints.hook('reading', function (obj) {
+  obj.balances.forEach(balance => Object.setPrototypeOf(balance.amt, new Monum()));
+  delete obj._accounts;
+  return obj;
+});
+
+db.checkpoints.hook('creating', function (primKey, obj, transaction) {
+  obj._accounts = obj.balances.map(balance => balance.acc);
+});
+
+db.checkpoints.hook('updating', function (modifications, primKey, obj, transaction) {
+  /**
+   * Only handling the hidden column for internal indexing purposes.
+   * The outside should ensure the correctness of values of the checkpoints.
+   */
+  const additionalModifications = {};
+  if ('balances' in modifications) {
+    additionalModifications._accounts = obj.balances.map(balance => balance.acc);
+  }
+  return additionalModifications;
+});
+
+
 /** Global variables */
 global.accountManager = new AccountManager(db.accounts, db);
 global.transactionManager = new TransactionManager(db.transactions, db);
-
+global.checkpointManager = new CheckpointManager(db.checkpoints, db);
+global.checkpointManager.transactionManager = global.transactionManager
+global.checkpointManager.accountManager = global.accountManager
+global.transactionManager.checkpointManager = global.checkpointManager
 
 global.categories = JSON.parse(localStorage.getItem('categories') || '{}')
 

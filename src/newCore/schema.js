@@ -63,3 +63,11 @@ export const DefaultMonumSetup = {
 
 export const AccountDatabaseSchema = yup.array(AccountSchema)
 export const TransactionDatabaseSchema = yup.array(TransactionSchema)
+
+export const CheckpointSchema = yup.object({
+  time: yup.DateSchema,
+  balances: AccountAndAmountListSchema,
+  transactionId: TransactionIdSchema,
+}).strict().noUnknown()
+
+export const CheckpointDatabaseSchema = yup.array(CheckpointSchema);

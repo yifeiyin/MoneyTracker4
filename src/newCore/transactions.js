@@ -1,5 +1,6 @@
 import { TransactionDatabaseSchema, TransactionSchema } from './schema';
 import { getTodaysDateAt0000 } from './helpers'
+import CheckpointManager from './checkpoints';  // eslint-disable-line
 
 export default class TransactionManager {
   static getInitialSetupData() {
@@ -13,6 +14,13 @@ export default class TransactionManager {
     return [first];
   }
 
+  /** @type {CheckpointManager} */
+  checkpointManager = null;
+
+  /**
+   * @param {import("dexie").Table} table
+   * @param {import("dexie").Dexie} db
+   */
   constructor(table, db) {
     this.table = table;
     this.db = db;
