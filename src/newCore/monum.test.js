@@ -37,6 +37,15 @@ test('isZero isNotZero', () => {
   expect(new Monum().isZero()).toBe(true)
 })
 
+test('isPositive isNegative', () => {
+  expect(cad1.isPositive()).toBe(true)
+  expect(cad1.isNegative()).toBe(false)
+  expect(cny1.isPositive()).toBe(true)
+  expect(cny1.neg().isNegative()).toBe(true)
+  expect(new Monum().isPositive()).toBe(false)
+  expect(new Monum().isNegative()).toBe(false)
+})
+
 test('fromJSON toJSON', () => {
   expect(Monum.fromJSON('||')).toMatchObject(new Monum())
   expect(Monum.fromJSON('|CAD 1|')).toMatchObject(new Monum('CAD', '1'))

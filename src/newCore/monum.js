@@ -5,6 +5,13 @@ const ITEM_SEPARATOR = '+';
 const SPACE = ' ';
 const BOUNDARY = '|'; // NOTES: Hard coded in some regex
 const PRECISION = 5;
+
+const CONVERSION_RATE_X_TO_USD = {
+  'CNY': 0.15,
+  'CAD': 0.79,
+  'USD': 1.0,
+}
+
 export default class Monum {
   static fromJSON(input) {
     const match = input.match(/^\|(.*)\|$/);
@@ -81,6 +88,24 @@ export default class Monum {
   }
 
   isNotZero() { return !this.isZero(); }
+
+  isPositive() {
+    if (this.isZero()) return false;
+    if (Object.keys(this).length === 1) return Object.values(this)[0] > 0;
+
+    let total = 0.0;
+    for (let [key, value] of Object.entries(this)) {
+      const conversionRate = CONVERSION_RATE_X_TO_USD[key];
+      if (conversionRate === undefined) throw new Error('Encountered unknown currency when estimating sign');
+      total += conversionRate * value;
+    }
+    return total > 0;
+  }
+
+  isNegative() {
+    if (this.isZero()) return false;
+    return !this.isPositive();
+  }
 }
 
 function negateStringNumber(a) {
