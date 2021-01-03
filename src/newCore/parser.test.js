@@ -51,11 +51,11 @@ test('toRelativeDateRange past x', () => {
   expect(toRelativeDateRange('past', 'week', new Date('2021-01-01'))).toMatchObject([
     new Date('2020-12-25'), new Date('2021-01-01')
   ])
-  // expect(toRelativeDateRange('past', 'month', new Date('2021-01-01'))).toMatchObject([
-  //   new Date('2020-12-01'), new Date('2021-01-01')
-  // ])
+  expect(toRelativeDateRange('past', 'month', new Date('2021-01-01'))).toMatchObject([
+    new Date('2020-12-02'), new Date('2021-01-01')
+  ])
   expect(toRelativeDateRange('past', 'year', new Date('2021-01-01'))).toMatchObject([
-    new Date('2020-01-01'), new Date('2021-01-01')
+    new Date('2020-01-02'), new Date('2021-01-01')
   ])
 })
 
