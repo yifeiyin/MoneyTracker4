@@ -142,3 +142,106 @@ LATER:
 - better import rules
 - balance
 
+
+
+## Rule-based processor
+
+```json
+{
+  "name/id": "",
+  "group": "",
+  "comments": "",
+  "if": "***",
+  "then": "***",
+}
+```
+
+### Example
+```json
+{
+  "if": "time.isBetween(2021-02-03, 2021-03-02)",
+  "if": "title.contains(transfer)",
+  "if": "otherSide.is(unknown expense)",
+  "if": "customFunction",
+  "then": "update(title, Superstore)",
+  "then": "addTag(important)",
+  "then": "dealWithUnknownCategory",
+  "then": "skip"
+}
+```
+
+### What actually happens
+```json
+// Same for "if" and "then"
+{
+  "field/subject": "time  or  extras.category.name",
+  "op": "isBetween  or  is  or  <  or  =",
+  "arguments": ["2021-02-07"],
+}
+
+{
+  "field/subject": null,
+  "op": "customFunction",
+  "arguments": [],
+}
+```
+
+### Alternative formats
+
+```json
+{
+  "if": "time == 2020",
+
+  "if": "title contains transfer",
+  "if": "title ~= transfer",
+
+  "if": "otherSide == 'unknown expense'",
+
+  "if": "@customFunction",
+
+  "then": "title := Superstore",
+
+  "then": "tags.add(important)",
+  "then": "tags.push(important)",
+  "then": "tags.append(important)",
+  "then": "tags += important",
+
+  "then": "[dealWithUnknownCategory]",
+  "then": "@dealWithUnknownCategory"
+}
+```
+
+### Code setup
+```js
+processor = new Processor({
+  rules: [rule1, rule2, rule3],
+  functions: {
+    customFunction: (object) => true,
+    dealWithUnknownCategory: async () => "addTag(important)",
+    dealWithUnknownCategory2: async (object) => resultObject,
+  }
+})
+
+const { resultEntry, rulesTriggered, resultExplained } = processor.process(entry)
+rulesTriggered = [{
+  name/id: '',
+  before?: {},
+  after?: {},
+  modifiedFields: [key],
+  addedFields: [key],
+  removedFields: [key],
+}]
+
+resultExplained = {
+  'key': {
+    finalValue: '1',
+    initialValue: '',
+    intermediates: [
+      { by: '<original>?', newValue: '' },
+      { by: 'name/id', newValue: '' },
+      { by: 'name/id', newValue: '' },
+    ]
+  }
+}
+```
+
