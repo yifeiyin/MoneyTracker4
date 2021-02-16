@@ -1,3 +1,50 @@
+export class Processor {
+  constructor({ actions, conditions, rules }) {
+    this.actions = actions;
+    this.conditions = conditions;
+    this.rules = rules;
+  }
+
+  async process(source) {
+    let result = {};
+    const rulesMatched = [];
+    for (let rule of this.rules) {
+      if (await rule.matches(source, this.conditions)) {
+        rulesMatched.push(rule);
+        result = await rule.act(result, source, this.actions);
+      }
+    }
+
+    return { result, source, rulesMatched }
+  }
+}
+
+
+
+export class Rule {
+  constructor({ if: if_, then }) {
+    this.if = if_
+    this.then = then
+  }
+
+  async matches(object, conditions) {
+    const func = conditions[this.if.func];
+    if (!func) throw new Error('did not receive condition named ' + this.if.func);
+    const result = await func(object, this.if);
+    if (typeof result !== 'boolean')
+      throw new Error('condition function should give boolean result, got ' + typeof result);
+    return result;
+  }
+
+  async act(result, source, actions) {
+    const func = actions[this.then.func];
+    if (!func) throw new Error('did not receive action named ' + this.then.func);
+    return await func(result, this.then, source);
+  }
+}
+
+
+
 export class Statement {
   constructor(string) {
     this.internal = {};
@@ -25,6 +72,7 @@ export class Statement {
   get func() { return this.internal.func; }
   get args() { return this.internal.args; }
 }
+
 
 export function basicStringify(statement) {
   const { subj, func, args } = statement;
