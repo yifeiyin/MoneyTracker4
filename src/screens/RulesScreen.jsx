@@ -1,5 +1,5 @@
 import React from 'react';
-import { Accordion, AccordionSummary, AccordionDetails, Typography, Input, TextField, FormGroup, IconButton, Button } from '@material-ui/core'
+import { Accordion, AccordionSummary, AccordionDetails, TextField, IconButton, Button } from '@material-ui/core'
 import { connect } from '../overmind'
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
 import DeleteIcon from '@material-ui/icons/Delete'

@@ -111,7 +111,7 @@ global.getReady = async () => {
 }
 
 /** Overmind */
-const overmind = createOvermind(config, { devtools: true });
+const overmind = createOvermind(config, { devtools: false });
 
 ReactDOM.render(
   <React.StrictMode>
