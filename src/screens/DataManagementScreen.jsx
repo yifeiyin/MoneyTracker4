@@ -12,6 +12,7 @@ import {
   TableRow,
 } from '@material-ui/core';
 import { withSnackbar } from 'notistack';
+import { connect } from '../overmind'
 
 import {
   Delete as DeleteIcon,
@@ -47,6 +48,7 @@ class DataManagementScreen extends React.Component {
   getAllDataSet = async () => {
     const currentData = {};
     currentData.fileList = parse(localStorage.fileList || '[]');
+    currentData.rules = await this.props.overmind.state.rules;
     currentData.a = await global.accountManager.exportData();
     currentData.t = await global.transactionManager.exportData();
 
@@ -232,6 +234,9 @@ class DataManagementScreen extends React.Component {
           case 'fileList':
             localStorage.setItem('fileList', JSON.stringify(newData.fileList));
             break;
+          case 'rules':
+            this.props.overmind.saveRules(newData.rules);
+            break;
 
           case 'm': case 's':
             throw new Error('TODO: Unsupported action')
@@ -295,7 +300,7 @@ class DataManagementScreen extends React.Component {
   }
 }
 
-export default withSnackbar(DataManagementScreen);
+export default withSnackbar(connect(DataManagementScreen));
 
 function DataSetCard({
   isTheCurrentOne,
@@ -357,6 +362,7 @@ function DataSetDetails({
       case 'a': row = ['Accounts', value.length]; break;
       // case 'm': row = ['Accepted Currencies', Object.values(value.acceptableCurrencies).join(', ')]; break;
       case 'fileList': row = ['Files', value.length]; break;
+      case 'rules': row = ['Rules', `${value.flat().length} rule(s) in ${value.length} group(s)`]; break;
       default: row = ['Unknown type: ' + key, JSON.stringify(value).substr(0, 30)];
     }
     dataTable.push([...row, key]);

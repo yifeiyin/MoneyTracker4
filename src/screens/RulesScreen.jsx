@@ -1,48 +1,75 @@
 import React from 'react';
 import { Accordion, AccordionSummary, AccordionDetails, Typography, Input, TextField, FormGroup, IconButton, Button } from '@material-ui/core'
+import { connect } from '../overmind'
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
 import DeleteIcon from '@material-ui/icons/Delete'
+import { withSnackbar } from 'notistack';
 
-export default class RulesScreen extends React.Component {
+class RulesScreen extends React.Component {
 
   state = {
     groups: [],
   }
 
   componentDidMount() {
-    this.setState({
-      groups: [{
-        id: 'test',
-        rules: [{
-          if: '1', then: '2'
-        }]
-      }]
-    })
+    this.load();
   }
 
   load = () => {
-
+    const { rules } = this.props.overmind.state;
+    this.setState({ groups: rules })
   }
 
   save = () => {
+    let groups = deepCopy(this.state.groups)
+      .map(({ id, newId, rules }) => ({ id: newId ?? id, rules }))
+      .sort((a, b) => a.id === b.id ? 0 : a.id < b.id ? -1 : 1);
 
+    for (let group of groups) {
+      group.rules = group.rules.map((rule, index) => {
+        if (rule.index < 0)
+          return false
+
+        rule.index = Number(rule.index ?? (index + 1) * 2);
+        return rule
+      })
+        .filter(Boolean)
+        .sort((a, b) => a.index - b.index)
+        .map(rule => {
+          delete rule.index;
+          return rule;
+        })
+    }
+
+    // Validation
+
+    const { saveRules } = this.props.overmind.actions;
+    saveRules(groups);
+    this.load();
+    this.props.enqueueSnackbar('Saved.', { variant: 'success' });
+  }
+
+  onChangeGroupId = (groupId, newId) => {
+    const newGroups = deepCopy(this.state.groups);
+    newGroups.filter(group => group.id === groupId)[0].newId = newId;
+    this.setState({ groups: newGroups });
   }
 
   onChange = (groupId, index, key, newValue) => {
-    const newGroups = this.state.groups;
+    const newGroups = deepCopy(this.state.groups);
     newGroups.filter(group => group.id === groupId)[0].rules[index][key] = newValue;
     this.setState({ groups: newGroups });
   }
 
   addItem = (groupId) => {
-    const newGroups = this.state.groups;
+    const newGroups = deepCopy(this.state.groups);
     const newRule = { if: '', then: '' };
     newGroups.filter(group => group.id === groupId)[0].rules.push(newRule);
     this.setState({ groups: newGroups })
   }
 
   deleteItem = (groupId, index) => {
-    const newGroups = this.state.groups;
+    const newGroups = deepCopy(this.state.groups);
     const deletedRule = { index: -1, if: '', then: '' };
     newGroups.filter(group => group.id === groupId)[0].rules[index] = deletedRule;
     this.setState({ groups: newGroups })
@@ -63,14 +90,14 @@ export default class RulesScreen extends React.Component {
         <Button variant="outlined" color="primary" onClick={() => this.load()}>Reload</Button>
         <Button variant="outlined" color="primary" onClick={() => this.save()}>Save</Button>
         {
-          this.state.groups.map(({ id, rules }) =>
+          this.state.groups.map(({ id, newId, rules }) =>
             <Accordion key={id} defaultExpanded>
               <AccordionSummary
                 expandIcon={<ExpandMoreIcon />}
                 aria-controls={`${id}-content`}
                 id={`${id}-header`}
               >
-                <TextField label="Group Id" value={id} className="monospace-input" />
+                <TextField label="Group Id" value={newId ?? id} onChange={(e) => { this.onChangeGroupId(id, e.target.value) }} className="monospace-input" />
               </AccordionSummary>
               <AccordionDetails>
                 <div className="rules-container">
@@ -95,7 +122,13 @@ export default class RulesScreen extends React.Component {
       </div>)
   }
 }
+export default withSnackbar(connect(RulesScreen))
+
 
 function getRandomGroupId() {
-  return 'Group ' + String(Math.random() * 10000).substr(0, 4);
+  return 'Group ' + String(Math.random()).substr(2, 4);
+}
+
+function deepCopy(o) {
+  return JSON.parse(JSON.stringify(o))
 }
