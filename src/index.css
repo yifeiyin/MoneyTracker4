@@ -43,3 +43,17 @@ code {
 .transaction-row [data-type="debit"] { flex: 3; }
 .transaction-row [data-type="credit"] { flex: 3; }
 .transaction-row [data-type="amount"] { flex: 2; }
+
+.monospace-input input {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+.rules-container {
+  /* flex-wrap: wrap; */
+  width: 100%;
+}
+
+.if-then-container {
+  display: flex;
+  width: 100%;
+}

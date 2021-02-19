@@ -17,6 +17,7 @@ import ImportExportScreen from './screens/ImportExportScreen';
 import AccountsScreen from './screens/AccountsScreen';
 import TransactionsScreen from './screens/TransactionsScreen';
 import DataManagementScreen from './screens/DataManagementScreen';
+import RulesScreen from './screens/RulesScreen';
 import { useActions, useState } from './overmind';
 
 const routes = [
@@ -24,6 +25,7 @@ const routes = [
   ['/data-management', DataManagementScreen, 'Data Management'],
   ['/import-export', ImportExportScreen, 'Import/Export'],
   ['/transactions', TransactionsScreen, 'Transactions'],
+  ['/rules', RulesScreen, 'Rules'],
 ];
 
 function App() {
