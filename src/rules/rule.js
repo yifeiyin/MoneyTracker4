@@ -1,8 +1,25 @@
 export class Processor {
+
   constructor({ actions, conditions, rules }) {
     this.actions = actions;
     this.conditions = conditions;
     this.rules = rules;
+  }
+
+  /**
+   * Sanity check: all rules contains known actions and conditions
+   */
+  async getErrors() {
+    const errors = [];
+    for (let rule of this.rules) {
+      if (!(rule.if.func in this.conditions))
+        errors.push(`cannot find condition '${rule.if.func}' from '${rule}'`)
+
+      if (!(rule.then.func in this.actions))
+        errors.push(`cannot find action '${rule.then.func}' from '${rule}'`)
+    }
+
+    return errors;
   }
 
   async process(source) {
@@ -40,6 +57,10 @@ export class Rule {
     const func = actions[this.then.func];
     if (!func) throw new Error('did not receive action named ' + this.then.func);
     return await func(result, this.then, source);
+  }
+
+  toString() {
+    return `${this.if} -> ${this.then}`
   }
 }
 
