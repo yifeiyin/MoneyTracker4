@@ -103,12 +103,20 @@ export function basicStringify(statement) {
       if (typeof str === 'string' && str.includes(nope))
         throw new Error('Cannot stringify due to potentially ambiguous characters')
 
+  if (args.length === 1 && /[~!@#$%^&*()_+-=><]{1,3}/.exec(func))
+    return `${subj} ${func} ${args}`
+
   return (subj ? subj + '.' : '') + func + '(' + args.join(', ') + ')';
 }
 
 
 export function parseStatement(input) {
-  const { func, args } = _tokenizeWithoutSupportForSubject(input)
+  let match;
+  if ((match = /^([\w.]+) ([~!@#$%^&*()_+-=><]{1,3}) (.+?)$/.exec(input))) {
+    return { subj: match[1], func: match[2], args: [sniffAndConvertType(match[3])] }
+  }
+
+  const { func, args } = _tokenizeWithoutSubjectWithoutShorthand(input)
   if (!func.includes('.'))
     return { func, args }
 
@@ -116,7 +124,7 @@ export function parseStatement(input) {
   return { subj, func: funcNew, args }
 }
 
-function _tokenizeWithoutSupportForSubject(input) {
+function _tokenizeWithoutSubjectWithoutShorthand(input) {
   let func = '';
   let args = [];
 
@@ -125,8 +133,8 @@ function _tokenizeWithoutSupportForSubject(input) {
 
     if (func.includes(')'))
       throw new Error('input contains extra closing parenthesis')
-    if (func.length === 0)
-      throw new Error('function name cannot be empty')
+
+    ensureLegalFuncNameWithDots(func)
 
     return { func, args }
   }
@@ -141,14 +149,23 @@ function _tokenizeWithoutSupportForSubject(input) {
 
   args = args.map((arg) => {
     arg = arg.trim()
-    if (!Number.isNaN(+arg) && arg !== '')
-      arg = Number(arg)
+    arg = sniffAndConvertType(arg)
 
     return arg
   })
 
-  if (func.length === 0)
-    throw new Error('function name cannot be empty')
+  ensureLegalFuncNameWithDots(func)
 
   return { func, args }
+}
+
+function ensureLegalFuncNameWithDots(func) {
+  if (!/^[\w.]+$/.exec(func) && !/[~!@#$%^&*()_+-=><]{1,3}/.exec(func))
+    throw new Error('illegal function name: ' + func)
+}
+
+function sniffAndConvertType(arg) {
+  if (!Number.isNaN(+arg) && arg !== '')
+    return Number(arg)
+  return arg
 }

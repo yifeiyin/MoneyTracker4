@@ -29,10 +29,17 @@ test('parseStatement error', () => {
 
 test('parseStatement subject', () => {
   expect(parseStatement('time.delete')).toMatchObject({ subj: 'time', func: 'delete', args: [] })
+  expect(parseStatement('time = 2021-01-03')).toMatchObject({ subj: 'time', func: '=', args: ['2021-01-03'] })
   expect(parseStatement('time.=(2021-01-03)')).toMatchObject({ subj: 'time', func: '=', args: ['2021-01-03'] })
+  expect(parseStatement('time > 1')).toMatchObject({ subj: 'time', func: '>', args: [1] })
   expect(parseStatement('time.>(1)')).toMatchObject({ subj: 'time', func: '>', args: [1] })
   expect(parseStatement('title.update(Purchase)')).toMatchObject({ subj: 'title', func: 'update', args: ['Purchase'] })
 })
+
+test('parseStatement simplified', () => {
+  expect(parseStatement('desc ~= hi')).toMatchObject({ subj: 'desc', func: '~=', args: ['hi'] })
+})
+
 
 test('basicStringify', () => {
   const examples = [
@@ -41,6 +48,11 @@ test('basicStringify', () => {
     'title.action(hi, there)',
     'title.action(-1, 1)',
     'action(-1, 1)',
+    'a < -1',
+    'a > hi',
+    'a = hi',
+    'a @= hi',
+    'a +> hi there',
   ]
 
   examples.forEach((ex) => {
