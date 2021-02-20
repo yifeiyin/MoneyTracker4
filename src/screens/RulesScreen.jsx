@@ -4,6 +4,7 @@ import { connect } from '../overmind'
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
 import DeleteIcon from '@material-ui/icons/Delete'
 import { withSnackbar } from 'notistack';
+import { Statement } from '../rules';
 
 class RulesScreen extends React.Component {
 
@@ -40,8 +41,6 @@ class RulesScreen extends React.Component {
           return rule;
         })
     }
-
-    // Validation
 
     const { saveRules } = this.props.overmind.actions;
     saveRules(groups);
@@ -106,8 +105,8 @@ class RulesScreen extends React.Component {
                       <div key={index} className="if-then-container">
                         <IconButton size='small' onClick={() => this.deleteItem(id, index)}><DeleteIcon /></IconButton>
                         <TextField label="Order" value={String(rule.index ?? (index + 1) * 2)} onChange={(e) => this.onChange(id, index, 'index', e.target.value)} className="monospace-input" />
-                        <TextField fullWidth label="if" value={String(rule.if)} onChange={(e) => this.onChange(id, index, 'if', e.target.value)} className="monospace-input" />
-                        <TextField fullWidth label="then" value={String(rule.then)} onChange={(e) => this.onChange(id, index, 'then', e.target.value)} className="monospace-input" />
+                        <TextField fullWidth label="if" error={isValidStatement(rule.if)} value={String(rule.if)} onChange={(e) => this.onChange(id, index, 'if', e.target.value)} className="monospace-input" />
+                        <TextField fullWidth label="then" error={isValidStatement(rule.then)} value={String(rule.then)} onChange={(e) => this.onChange(id, index, 'then', e.target.value)} className="monospace-input" />
                       </div>
                     )
                   }
@@ -131,4 +130,13 @@ function getRandomGroupId() {
 
 function deepCopy(o) {
   return JSON.parse(JSON.stringify(o))
+}
+
+function isValidStatement(s) {
+  try {
+    new Statement(s)
+    return false
+  } catch {
+    return true
+  }
 }

@@ -1,4 +1,4 @@
-import { Statement, Rule, Processor } from './rule'
+import { Statement, Rule, Processor } from './index'
 
 export const conditions = {
   '=': (source, { subj, args }) => {

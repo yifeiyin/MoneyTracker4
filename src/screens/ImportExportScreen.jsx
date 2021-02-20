@@ -188,7 +188,6 @@ export default class ImportExportScreen extends React.Component {
     if (currentFileType === 'Commit Transactions 2') {
       try {
         for (let t of await BMOCredit(inputFileContent))
-          // (() => { })()
           await global.transactionManager.create(t);
 
       } catch (error) {

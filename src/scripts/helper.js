@@ -28,11 +28,8 @@ export const AC_ALL_EXPENSE = [
   AC_OTHER_EXPENSE,
 ];
 
-export async function postProcess(inputs) {
-  const raw = inputs;
-
+export async function postProcess(raw) {
   let { type, thisSide, otherSide, amount } = raw;
-  otherSide = otherSide || AC_UNKNOWN_EXPENSE;
 
   const thisSideAcc = await global.accountManager.fromNameToId(thisSide);
   const otherSideAcc = await global.accountManager.fromNameToId(otherSide);

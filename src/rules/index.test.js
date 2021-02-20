@@ -1,4 +1,4 @@
-import { parseStatement, basicStringify, Statement } from './rule'
+import { parseStatement, basicStringify, Statement } from './index'
 
 test('parseStatement basics', () => {
   expect(parseStatement('hi')).toMatchObject({ func: 'hi', args: [] })
