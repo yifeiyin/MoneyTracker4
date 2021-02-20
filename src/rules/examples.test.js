@@ -43,8 +43,8 @@ const rules = [
     then: new Statement('initialize'),
   }),
   new Rule({
-    if: new Statement('a.>(5)'),
-    then: new Statement('aGT5.=(1)'),
+    if: new Statement('a > 5'),
+    then: new Statement('aGT5 = 1'),
   }),
   new Rule({
     if: new Statement('sumGT(10)'),
