@@ -175,7 +175,7 @@ class ImportExportScreen extends React.Component {
 
     if (currentFileType === 'Commit Transactions') {
       try {
-        for (let t of await BMODebit(inputFileContent))
+        for (let t of await BMODebit(inputFileContent, this.props.overmind))
           await global.transactionManager.create(t);
 
       } catch (error) {

@@ -1,3 +1,6 @@
+import { getAdditionalAttributesFromAPI } from './bmoCredit'
+import { debitCardETransfer } from './bmoDebit'
+
 export const CONDITIONS = {
   'true': () => true,
   'false': () => false,
@@ -53,7 +56,15 @@ export const ACTIONS = {
     result.$title = args[0]
     result.otherSide = args[1] ?? 'Unknown Income/Expense'
     return result
-  }
+  },
+
+  async masterCardGetAdditionalAttributesFromAPI(result, _, source) {
+    return Object.assign(result, await getAdditionalAttributesFromAPI(source))
+  },
+
+  debitCardETransfer(result, { args }, source) {
+    return debitCardETransfer(result, { args }, source)
+  },
 }
 
 

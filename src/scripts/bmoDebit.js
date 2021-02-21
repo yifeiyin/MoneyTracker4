@@ -1,20 +1,29 @@
 import bmoDebitCodeToReadableType from './bmoDebitCodeToReadable';
-import { assert, getNowDateTimeString, toTitleCase } from '../newCore/helpers'
+import { getNowDateTimeString, toTitleCase } from '../newCore/helpers'
 
 import {
   postProcess,
   $CR,
   $DR,
-  AC_CHEQUING,
-  AC_MASTER_CARD,
-  AC_SAVING,
-  AC_OTHER_EXPENSE,
+  processTransaction,
 } from './helper'
 
-export default async function csvToTransactions(input) {
+export default async function csvToTransactions(input, overmind) {
+  const result = [];
   const tag = 'import/debit@' + getNowDateTimeString();
-  const transformed = transformStatement(input, tag).map(generateTransaction).map(postProcess);
-  return await Promise.all(transformed);
+  const transformed = transformStatement(input, tag);
+  for (let transaction of transformed) {
+    try {
+      transaction = await processTransaction({ groupsToUse: ['dc0', 'dc1'], groupToAppend: 'dc1' }, transaction, overmind);
+      result.push(await postProcess(transaction));
+    } catch (error) {
+      if (!window.confirm(`ERROR: ${error}\n\nContinue?`)) {
+        break;
+      }
+    }
+  }
+  alert('Done!')
+  return result;
 }
 
 
@@ -31,77 +40,44 @@ function transformStatement(originalStatement, tag) {
     const type = crDr === 'DEBIT' ? $CR : $DR;  // Reversed
     const $time = new Date(date.substr(0, 4), date.substr(4, 2), date.substr(6, 2));
     const amount = amount0.replace(/-/, '');
-    const rawDesc = desc;
+
+    // This can be done in a separate rule
+    let code = desc.substr(1, 2);
+    let _bmoTransType = bmoDebitCodeToReadableType[code] + ' (' + code + ')';
+    const rawDesc = desc.substr(4).trim();
 
     result.push({
-      type, $time, amount, rawDesc, $tags: [tag]
+      $time,
+      $title: null,
+      thisSide: 'BMO Chequing',
+      otherSide: null,
+      type,
+      amount,
+      _rawDesc: rawDesc,
+      _bmoTransType,
+      $tags: [tag],
     });
   }
 
   return result;
 }
 
+export function debitCardETransfer(result, { args }, source) {
 
-function generateTransaction(inputs) {
-  const { type, $time, amount, rawDesc, ...unusedProperties } = inputs;
+  const newAttributes = {}
+  newAttributes._emtParty = toTitleCase(source._rawDesc.substr(25, 25).trim());
+  newAttributes._emtRefNumber = source._rawDesc.substr(50, 17);
 
-  const result = { $time, amount, type, _rawDesc: rawDesc, ...unusedProperties };
-  let $title = 'Untitled', thisSide, otherSide;
-  thisSide = AC_CHEQUING;
+  if (args[0] === 'sent') {
+    newAttributes.$title = `e-transfer to ${newAttributes._emtParty}`
 
-  let code = rawDesc.substr(1, 2);
-  result._bmoTransType = bmoDebitCodeToReadableType[code] + ' (' + code + ')';
-  const desc = rawDesc.substr(4);
+  } else if (args[0] === 'received') {
+    newAttributes.$title = `e-transfer from ${newAttributes._emtParty}`
 
-  switch (code) {
-    case 'CW':
-      if (desc.includes('INTERAC ETRNSFR')) {
-        const emtParty = toTitleCase(desc.substr(25, 25).trim());
-        result._emtOtherParty = emtParty;
-        result._emtRefNumber = desc.substr(50, 17);
-        if (desc.includes('SENT')) {
-          $title = 'e-transfer to ' + emtParty;
-          assert(type === $CR);
-
-        } else {
-          $title = 'e-transfer from ' + emtParty;
-          assert(type === $DR);
-        }
-
-      } else if (rawDesc.includes(' TF ')) {
-        let toFrom = desc.substr(4).trim();
-        if (toFrom.includes('3373')) {
-          toFrom = 'credit card';
-          otherSide = AC_MASTER_CARD;
-        } else if (toFrom.includes('2986#8831')) {
-          toFrom = 'saving';
-          otherSide = AC_SAVING;
-        }
-        $title = 'Bank transfer ' + (type === $DR ? 'from' : 'to') + ' ' + toTitleCase(toFrom);
-      }
-
-      break;
-
-    case 'PR':
-      $title = 'Purchase at ' + toTitleCase(desc);
-      break;
-
-    case 'SC':
-      otherSide = AC_OTHER_EXPENSE;
-
-      if (desc.includes('PREMIUM PLAN')) {
-        $title = 'Premium plan banking fee';
-
-      } else if (desc.includes('FULL PLAN FEE REBATE')) {
-        $title = 'Premium Plan banking fee refund';
-      }
-
-      break;
-
-    default:
+  } else {
+    throw new Error('Unexpected argument: ' + args[0])
   }
 
-  Object.assign(result, { thisSide, otherSide, $title });
-
-  return result;
+  return { ...result, ...newAttributes }
 }
+
