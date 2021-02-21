@@ -2,6 +2,7 @@ import React from 'react';
 import { Button, ButtonGroup, Card, CardContent, CardActions, Typography, IconButton } from '@material-ui/core';
 import Editor from 'react-simple-code-editor';
 import { highlight, languages } from 'prismjs/components/prism-core';
+import { connect } from '../overmind'
 import 'prismjs/themes/prism.css';
 import 'prismjs/components/prism-clike';
 import 'prismjs/components/prism-javascript';
@@ -33,7 +34,7 @@ const fileTypes = {
 };
 
 
-export default class ImportExportScreen extends React.Component {
+class ImportExportScreen extends React.Component {
 
   state = {
     fileList: [],
@@ -187,7 +188,7 @@ export default class ImportExportScreen extends React.Component {
 
     if (currentFileType === 'Commit Transactions 2') {
       try {
-        for (let t of await BMOCredit(inputFileContent))
+        for (let t of await BMOCredit(inputFileContent, this.props.overmind))
           await global.transactionManager.create(t);
 
       } catch (error) {
@@ -379,6 +380,8 @@ export default class ImportExportScreen extends React.Component {
     );
   }
 }
+
+export default connect(ImportExportScreen)
 
 // function addCode(js) {
 //   var e = document.createElement('script');

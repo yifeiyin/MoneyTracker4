@@ -235,7 +235,7 @@ class DataManagementScreen extends React.Component {
             localStorage.setItem('fileList', JSON.stringify(newData.fileList));
             break;
           case 'rules':
-            this.props.overmind.saveRules(newData.rules);
+            this.props.overmind.actions.saveRules(newData.rules);
             break;
 
           case 'm': case 's':
@@ -362,7 +362,7 @@ function DataSetDetails({
       case 'a': row = ['Accounts', value.length]; break;
       // case 'm': row = ['Accepted Currencies', Object.values(value.acceptableCurrencies).join(', ')]; break;
       case 'fileList': row = ['Files', value.length]; break;
-      case 'rules': row = ['Rules', `${value.flat().length} rule(s) in ${value.length} group(s)`]; break;
+      case 'rules': row = ['Rules', `${value.map(v => v.rules).flat().length} rule(s) in ${value.length} group(s)`]; break;
       default: row = ['Unknown type: ' + key, JSON.stringify(value).substr(0, 30)];
     }
     dataTable.push([...row, key]);

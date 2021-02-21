@@ -34,9 +34,9 @@ const conditionsBasics = {
     return regex.test(source[subj])
   },
 
-  unknownOtherSide(source) {
-    return source.otherSide === null
-  }
+  // unknownOtherSide(source) {
+  //   return source.otherSide === null
+  // }
 }
 
 
@@ -49,27 +49,35 @@ const actionsBasics = {
     return result
   },
 
+  tc(result, { args }) {
+    result.$title = args[0]
+    result.otherSide = args[1] ?? 'Other Income/Expense'
+    return result
+  }
+
   // addTag(result, { args }) {
   //   ensureOneArgument(args)
   //   result.tags = (result.tags ?? []).push(args[0])
   //   return result
   // },
 
-  initializeFields(result, { args: [thisSide, tag] }) {
-    return {
-      thisSide,
-      $tags: [tag],
-      $time: result.time,
-      type: result.type,
-      amount: result.amount,
-      otherSide: null,
-      title: null,
-    }
-  },
+  // initializeFields(result) {
+  //   ensureDefined(result, ['tag', 'thisSide', '$time', 'type', 'amount', '_rawDesc'])
+  //   return {
+  //     $tags: [result.tag],
+  //     thisSide: result.thisSide,
+  //     $time: result.$time,
+  //     type: result.type,
+  //     amount: result.amount,
+  //     otherSide: null,
+  //     title: null,
+  //     _rawDesc: result._rawDesc,
+  //   }
+  // },
 
-  postProcess(result) {
-    return postProcess(result)
-  }
+  // postProcess(result) {
+  //   return postProcess(result)
+  // }
 }
 
 
@@ -88,6 +96,13 @@ export const actions = {
 
 function ensureOneArgument(args) {
   if (args.length !== 1) throw new Error('Expect 1 argument, got ' + args.length)
+}
+
+function ensureDefined(obj, fields) {
+  for (let field of fields) {
+    if (obj[field] === undefined)
+      throw new Error(`field ${field} in ${JSON.stringify(obj)} must be defined`)
+  }
 }
 
 /*

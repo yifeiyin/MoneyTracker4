@@ -169,7 +169,7 @@ export default class AccountManager {
       throw new Error(`No matches for account name ${name}`);
     }
 
-    return result[0]
+    return Number(result[0])
   }
 
   fuzzyFindGetPath(name) {

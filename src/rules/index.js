@@ -42,6 +42,10 @@ export class Rule {
   constructor({ if: if_, then }) {
     this.if = if_
     this.then = then
+    if (!(this.if instanceof Statement))
+      this.if = new Statement(this.if)
+    if (!(this.then instanceof Statement))
+      this.then = new Statement(this.then)
   }
 
   async matches(object, conditions) {

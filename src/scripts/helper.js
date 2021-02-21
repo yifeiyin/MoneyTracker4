@@ -31,8 +31,8 @@ export const AC_ALL_EXPENSE = [
 export async function postProcess(raw) {
   let { type, thisSide, otherSide, amount } = raw;
 
-  const thisSideAcc = await global.accountManager.fromNameToId(thisSide);
-  const otherSideAcc = await global.accountManager.fromNameToId(otherSide);
+  const thisSideAcc = await global.accountManager.fuzzyFindGetId(thisSide);
+  const otherSideAcc = await global.accountManager.fuzzyFindGetId(otherSide);
   assert(thisSideAcc !== undefined, thisSide + ' not found');
   assert(otherSideAcc !== undefined, otherSide + ' not found');
   const thisSideCrDr = { acc: thisSideAcc, amt: new Monum('CAD', amount) };
