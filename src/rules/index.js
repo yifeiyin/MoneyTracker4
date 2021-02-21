@@ -63,6 +63,10 @@ export class Rule {
     return await func(result, this.then, source);
   }
 
+  toJSON() {
+    return { if: this.if.toJSON(), then: this.then.toJSON() }
+  }
+
   toString() {
     return `${this.if} -> ${this.then}`
   }

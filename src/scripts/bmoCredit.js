@@ -1,16 +1,12 @@
-import { toTitleCase, assert, getNowDateTimeString } from '../newCore/helpers'
+import { toTitleCase, getNowDateTimeString, formatDate, assert } from '../newCore/helpers'
 
-import { Processor, Statement, Rule } from '../rules'
-import { actions, conditions } from './rules'
+import { Processor, Rule } from '../rules'
+import { ACTIONS, CONDITIONS } from './rules'
 
 import {
   postProcess,
   $CR,
   $DR,
-  AC_CHEQUING,
-  AC_MASTER_CARD,
-  AC_UNKNOWN_EXPENSE,
-  AC_ALL_EXPENSE,
 } from './helper'
 
 export default async function csvToTransactions(input, overmind) {
@@ -27,66 +23,115 @@ export default async function csvToTransactions(input, overmind) {
       }
     }
   }
+  alert('Done!')
   return result;
 }
 
 async function processTransaction(transaction, overmind) {
-  const { rules } = overmind.state, { saveRules } = overmind.actions;
+  const { rules: overmindRules } = overmind.state, { saveRules: overmindSaveRules } = overmind.actions;
 
-  let details = await fetchDetails(transaction._rawDesc)
-  if (details !== null) {
-    const { address, merchantCategory, merchantDbaName, matchConfidenceScore } = details;
+  // Fetch and add the new fields
+  Object.assign(transaction, await getAdditionalAttributesFromAPI(transaction._rawDesc))
 
-    transaction._address = toReadableAddress(address);
-    transaction._category = toTitleCase(merchantCategory);
-    transaction._merchantName = toTitleCase(merchantDbaName);
-    transaction._masterCardAPIConfidence = matchConfidenceScore;
-  }
-
-  // Rules
-  const rulesUnGrouped = ungroupAndParse(rules)
-  const processor = new Processor({ actions, conditions, rules: rulesUnGrouped })
-
+  // Apply the rules
+  const rulesUngrouped = ungroupAndParse(overmindRules)
+  const processor = new Processor({ actions: ACTIONS, conditions: CONDITIONS, rules: rulesUngrouped })
   const { result } = await processor.process(transaction)
-  transaction = { ...transaction, ...result }
+  Object.assign(transaction, result)
 
+  // If otherSide is still null, ask user to identify
   if (transaction.otherSide === null) {
-    // ask
-    const message = constructMessage(transaction)
-    const default_ = `_category ~= ${transaction._category} -> tc(  ,  )`
-    let result = prompt(message, default_)
-    if (result.includes('->')) {
-      const [if_, then] = result.split('->').map(s => s.trim())
-      const newRule = { if: if_, then }
-
-      Object.assign(transaction, await new Rule(newRule).act({}, transaction, actions))
-
-      const newRules = deepCopy(rules)
-      newRules.filter(rule => rule.id === 'bmoMasterCard')[0].rules.push(newRule)
-      saveRules(newRules)
-
-
-    } else {
-      const [title, category = 'unknown income/expense'] = result.split(',').map(s => s.trim())
-      transaction.title = title
-      transaction.otherSide = category
-    }
+    await askToIdentify(transaction, { overmindRules, overmindSaveRules })
   }
+
+  assert(transaction.$title && transaction.otherSide, 'title or otherSide is still falsy')
 
   return transaction;
-}
 
-function ungroupAndParse(rules) {
-  return rules.map(rule => rule.rules).flat().map(({ if: if_, then }) => new Rule({ if: if_, then: then }))
-}
-
-function constructMessage(transaction) {
-  let message = ''
-  for (let f in transaction) {
-    message += `${f} - ${transaction[f]}\n`
+  function ungroupAndParse(rules) {
+    return rules.map(rule => rule.rules).flat().map(({ if: if_, then }) => new Rule({ if: if_, then: then }))
   }
-  return message
 }
+
+/**
+ * Ask user to create a rule, or enter a one-time title & category (aka otherSide)
+ * for the transaction.
+ *
+ * The rule will be validated: it must apply to the transaction, and it must
+ * not give error when applied. (However, account name resolution is handled in
+ * postProcess and therefore cannot be validated here).
+ *
+ * This function modifies transaction IN PLACE and therefore does not have return
+ * value.
+ */
+async function askToIdentify(transaction, { overmindRules, overmindSaveRules }) {
+  const message = constructMessage(transaction)
+  let default_ = `_rawDesc ~= ${transaction._rawDesc} -> tc(  ,  )`
+  let result
+
+  while (true) {
+    result = prompt(message, default_)
+    if (!result) {
+      throw new Error('Empty input')
+    }
+    default_ = result
+
+    try {
+      if (result.includes('->')) {
+        const [if_, then] = result.split('->').map(s => s.trim())
+        const newRuleRaw = { if: if_, then }
+        const newRule = new Rule(newRuleRaw)
+
+        if (!await newRule.matches(transaction, CONDITIONS))
+          throw new Error('The rule you entered does not apply to the transaction')
+
+        let newProperties
+        try {
+          newProperties = await newRule.act({}, transaction, ACTIONS)
+        } catch (error) {
+          throw new Error(`Error when processing the new rule: ${error}`)
+        }
+
+        Object.assign(transaction, newProperties)
+
+        if (transaction.otherSide === null)
+          throw new Error('otherSide is still null; the rules will not be saved')
+
+        const newRules = deepCopy(overmindRules)
+        newRules.filter(rule => rule.id === 'bmoMasterCard')[0].rules.push(newRule.toJSON())
+        overmindSaveRules(newRules)
+
+      } else {
+        // A one-time $title & category
+        const [$title, category = 'unknown income/expense'] = result.split(',').map(s => s.trim())
+        transaction.$title = $title
+        transaction.otherSide = category
+      }
+
+    } catch (error) {
+      result = prompt(`Error: ${error}\n\n` + message, default_)
+      continue;
+    }
+
+    break;
+  }
+
+
+  // Helper methods
+
+  function deepCopy(o) {
+    return JSON.parse(JSON.stringify(o))
+  }
+
+  function constructMessage(transaction) {
+    let message = ''
+    for (let f in transaction) {
+      message += `${f} - ${transaction[f] instanceof Date ? formatDate(transaction[f]) : transaction[f]}\n`
+    }
+    return message
+  }
+}
+
 
 
 function transformStatement(originalStatement, tag) {
@@ -106,96 +151,43 @@ function transformStatement(originalStatement, tag) {
     const amount = amount0.replace(/-/, '');
 
     result.push({
-      type,
       $time,
+      $title: null,
+      thisSide: 'BMO MasterCard',
+      otherSide: null,
+      type,
       amount,
       _rawDesc: desc,
       _postingDate,
       $tags: [tag],
-      thisSide: 'BMO MasterCard',
-      otherSide: null,
-      title: null,
     });
   }
 
   return result;
 }
 
-function deepCopy(o) {
-  return JSON.parse(JSON.stringify(o))
+
+
+// ====================================================
+
+
+
+async function getAdditionalAttributesFromAPI(desc) {
+  let details = await fetchDetails(desc)
+  const result = {}
+  if (details !== null) {
+    const { address, merchantCategory, merchantDbaName, matchConfidenceScore } = details;
+
+    result._address = toReadableAddress(address);
+    result._category = toTitleCase(merchantCategory);
+    result._merchantName = toTitleCase(merchantDbaName);
+    result._masterCardAPIConfidence = matchConfidenceScore;
+  }
+
+  return result
 }
 
-
-// async function generateTransaction(input) {
-//   const { type, rawDesc, ...unusedInputs } = input;
-//   let thisSide = AC_MASTER_CARD,
-//     otherSide = AC_UNKNOWN_EXPENSE,
-//     $title = 'Untitled',
-//     additionalFields = {};
-
-//   if (rawDesc.startsWith('TRSF FROM/DE ACCT/CPT 3877')) {
-//     assert(type === $DR);
-//     $title = 'Transfer from chequing account';
-//     otherSide = AC_CHEQUING;
-
-//   } else if (rawDesc === 'AUTOMATIC PYMT RECEIVED') {
-//     assert(type === $DR);
-//     $title = 'Automatic payment';
-//     otherSide = AC_CHEQUING;
-
-//   } else {
-//     const json = await fetchDetails(rawDesc);
-//     if (json !== null) {
-
-//       const { address, merchantCategory, merchantDbaName, matchConfidenceScore } = json;
-
-//       additionalFields._address = toReadableAddress(address);
-//       additionalFields._category = toTitleCase(merchantCategory);
-//       additionalFields._merchantName = toTitleCase(merchantDbaName);
-//       additionalFields._masterCardAPIConfidence = matchConfidenceScore;
-
-//       if (!(merchantCategory in global.categories)) {
-
-//         let result = prompt(
-//           `We have not seen this category before:
-// ${additionalFields._category}
-
-// Some info:
-// amt:  ${unusedInputs.amount}
-// desc: ${rawDesc}
-// cat:  ${additionalFields._category}
-// name: ${additionalFields._merchantName}
-// conf: ${additionalFields._masterCardAPIConfidence}
-
-// Choose a category:
-// ${AC_ALL_EXPENSE.map((v, i) => (i + 1) + ' ' + v).join('\n')}
-// `
-//         )
-
-//         if (result === 'stop') throw new Error('Stop');
-//         result = result || 1;
-
-//         global.categories[merchantCategory] = AC_ALL_EXPENSE[result - 1];
-//         localStorage.setItem('categories', JSON.stringify(global.categories))
-//       }
-
-//       otherSide = global.categories[merchantCategory];
-//       $title = 'Purchase at ' + toTitleCase(additionalFields._merchantName);
-//     }
-//   }
-
-//   return {
-//     thisSide,
-//     otherSide,
-//     type,
-//     $title,
-//     ...unusedInputs,
-//     ...additionalFields,
-//   }
-// }
-
 function toReadableAddress(address) {
-  // if (!address) return 'N/A'
   const {
     city, line1, line2,
     country: { name: countryName },
@@ -215,7 +207,6 @@ function toReadableAddress(address) {
 }
 
 async function fetchDetails(desc) {
-
   let response;
   try {
     response = await fetch('/get/' + encodeURIComponent(desc), { headers: { Accept: 'application/json' } });
@@ -237,5 +228,4 @@ async function fetchDetails(desc) {
     console.warn(result);
     return null;
   }
-
 }

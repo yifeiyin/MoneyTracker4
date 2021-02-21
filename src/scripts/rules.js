@@ -1,6 +1,4 @@
-import { postProcess } from "./helper"
-
-const conditionsBasics = {
+export const CONDITIONS = {
   'true': () => true,
   'false': () => false,
 
@@ -25,23 +23,25 @@ const conditionsBasics = {
   },
 
   /**
-   * String contains character, smart case
+   * String contains individual set of characters, smart case
    */
   '*=': (source, { subj, args }) => {
     ensureOneArgument(args)
     const caseSensitive = args[0].toLowerCase() !== args[0]
-    const regex = new RegExp(args[0], caseSensitive ? '' : 'i')
-    return regex.test(source[subj])
+    const subject = caseSensitive ? source[subj] : source[subj].toLowerCase()
+    const words = args[0].split(' ').map(s => s.trim()).filter(Boolean)
+    let nextSearchStartsFrom = 0;
+    for (let word of words) {
+      const index = subject.indexOf(word, nextSearchStartsFrom)
+      if (index === -1) return false
+      nextSearchStartsFrom = index + word.length
+    }
+    return true
   },
-
-  // unknownOtherSide(source) {
-  //   return source.otherSide === null
-  // }
 }
 
 
-
-const actionsBasics = {
+export const ACTIONS = {
   noop(result) { return result },
   ':=': (result, { subj, args }) => {
     ensureOneArgument(args)
@@ -51,84 +51,14 @@ const actionsBasics = {
 
   tc(result, { args }) {
     result.$title = args[0]
-    result.otherSide = args[1] ?? 'Other Income/Expense'
+    result.otherSide = args[1] ?? 'Unknown Income/Expense'
     return result
   }
-
-  // addTag(result, { args }) {
-  //   ensureOneArgument(args)
-  //   result.tags = (result.tags ?? []).push(args[0])
-  //   return result
-  // },
-
-  // initializeFields(result) {
-  //   ensureDefined(result, ['tag', 'thisSide', '$time', 'type', 'amount', '_rawDesc'])
-  //   return {
-  //     $tags: [result.tag],
-  //     thisSide: result.thisSide,
-  //     $time: result.$time,
-  //     type: result.type,
-  //     amount: result.amount,
-  //     otherSide: null,
-  //     title: null,
-  //     _rawDesc: result._rawDesc,
-  //   }
-  // },
-
-  // postProcess(result) {
-  //   return postProcess(result)
-  // }
-}
-
-
-
-export const conditions = {
-  ...conditionsBasics,
-}
-
-export const actions = {
-  ...actionsBasics,
 }
 
 
 // ==================================================
 
-
 function ensureOneArgument(args) {
   if (args.length !== 1) throw new Error('Expect 1 argument, got ' + args.length)
 }
-
-function ensureDefined(obj, fields) {
-  for (let field of fields) {
-    if (obj[field] === undefined)
-      throw new Error(`field ${field} in ${JSON.stringify(obj)} must be defined`)
-  }
-}
-
-/*
-NOTES: For credit card
-
-- transformStatement
-  - csv to array
-  - attach tag
-  - sanity check account number
-- generateTransaction
-  - default thisSide, otherSide, title
-  - check description for transfer
-  - check description for auto payment
-  - fetch details, transform & add new fields
-  - check merchantCategory
-  - ask if none matched
-- postProcess
-
-
-- transformStatement
-  - csv to array
-  - attach tag
-  - sanity check account number
-- generateTransaction
-  - default thisSide, otherSide, title
-  - check description for e-transfer
-- postProcess
-
- */
