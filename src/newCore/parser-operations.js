@@ -91,6 +91,11 @@ export class OP_WHERE extends OP {
     if (this.lhs.toLowerCase() === 'title' && this.op === 'has') {
       return item.title.toLowerCase().includes(this.rhs.toLowerCase())
     }
+
+    if (this.lhs === 'tag' && this.op === 'has') {
+      return item.tags.includes(this.rhs)
+    }
+
     throw new Error('Unsupported where clause');
   }
 }
