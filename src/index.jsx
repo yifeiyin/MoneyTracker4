@@ -89,9 +89,18 @@ db.checkpoints.hook('updating', function (modifications, primKey, obj, transacti
    * The outside should ensure the correctness of values of the checkpoints.
    */
   const additionalModifications = {};
-  if ('balances' in modifications) {
+
+  let balancesChanged = false;
+  for (let key in modifications)
+    if (key.startsWith('balances.')) {
+      balancesChanged = true;
+      break;
+    }
+
+  if (balancesChanged) {
     additionalModifications._accounts = obj.balances.map(balance => balance.acc);
   }
+
   return additionalModifications;
 });
 
