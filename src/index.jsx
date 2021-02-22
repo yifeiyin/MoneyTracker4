@@ -54,7 +54,17 @@ db.transactions.hook('creating', function (primKey, obj, transaction) {
 
 db.transactions.hook('updating', function (modifications, primKey, obj, transaction) {
   const additionalModifications = {};
-  if ('debits' in modifications || 'credits' in modifications) {
+
+  // NOTE: the changes look something like this
+  // { 'debits.0.acc': 117 }
+  let debitsOrCreditsChanged = false;
+  for (let key in modifications)
+    if (key.startsWith('debits.') || key.startsWith('credits.')) {
+      debitsOrCreditsChanged = true;
+      break;
+    }
+
+  if (debitsOrCreditsChanged) {
     additionalModifications._debits = (modifications.debits || obj.debits).map(({ acc }) => global.accountManager.getPath(acc));
     additionalModifications._credits = (modifications.credits || obj.credits).map(({ acc }) => global.accountManager.getPath(acc));
     additionalModifications._debitsCredits = [...additionalModifications._debits, additionalModifications._credits];
