@@ -24,8 +24,8 @@ class AccountsScreen extends React.Component {
     // this.onSelectAccount();
   }
 
-  reloadAccountTree = async () => {
-    this.setState({ treeData: await global.accountManager.getTreeData() });
+  reloadAccountTree = () => {
+    this.setState({ treeData: global.accountManager.getTreeData() });
   }
 
   resetModal = () => {

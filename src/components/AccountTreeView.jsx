@@ -27,35 +27,32 @@ export default function AccountTreeView(props) {
 }
 
 const renderTree = (nodes, onEdit, onClick, onDoubleClick) => (
-  (nodes instanceof Array) ?
-    nodes.map((node) => renderTree(node, onEdit, onClick, onDoubleClick))
-    :
-    <TreeItem
-      key={nodes.id}
-      nodeId={String(nodes.id)}
-      label={
-        <div
-          style={{
-            fontSize: 18, padding: 5, display: 'flex', alignItems: 'center',
-            fontWeight: nodes.isFolder ? 'bold' : 'normal',
-          }}
-          onDoubleClick={(e) => { e.stopPropagation(); onDoubleClick && onDoubleClick(nodes.id); }}
-          onClick={(e) => { e.target === e.currentTarget && onClick && onClick(nodes.id); }}
-        >
-          {nodes.name}
-          {
-            !onEdit ? null :
-              <IconButton
-                size='small'
-                style={{ alignSelf: 'flex-end', margin: 'auto', marginRight: 5 }}
-                onClick={(e) => { e.stopPropagation(); onEdit(nodes.id); }}
-              >
-                <EditIcon color="inherit" />
-              </IconButton>
-          }
-        </div>
-      }
-    >
-      {Array.isArray(nodes.children) ? nodes.children.map((node) => renderTree(node, onEdit, onClick, onDoubleClick)) : null}
-    </TreeItem>
+  <TreeItem
+    key={nodes.id}
+    nodeId={String(nodes.id)}
+    label={
+      <div
+        style={{
+          fontSize: 18, padding: 5, display: 'flex', alignItems: 'center',
+          fontWeight: nodes.isFolder ? 'bold' : 'normal',
+        }}
+        onDoubleClick={(e) => { e.stopPropagation(); onDoubleClick && onDoubleClick(nodes.id); }}
+        onClick={(e) => { e.target === e.currentTarget && onClick && onClick(nodes.id); }}
+      >
+        {nodes.name}
+        {
+          !onEdit ? null :
+            <IconButton
+              size='small'
+              style={{ alignSelf: 'flex-end', margin: 'auto', marginRight: 5 }}
+              onClick={(e) => { e.stopPropagation(); onEdit(nodes.id); }}
+            >
+              <EditIcon color="inherit" />
+            </IconButton>
+        }
+      </div>
+    }
+  >
+    {Array.isArray(nodes.children) ? nodes.children.map((node) => renderTree(node, onEdit, onClick, onDoubleClick)) : null}
+  </TreeItem>
 );

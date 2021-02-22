@@ -52,6 +52,12 @@ export default class AccountManager {
 
   async updateCache() {
     const data = await this.exportData();
+
+    // Clear cache
+    this._cacheByParentId = {};
+    this._cacheById = {};
+    this._cachePathById = {};
+
     for (let acc of data) {
       // this._cacheByName[acc.name] = acc;
       this._cacheById[acc.id] = acc;
