@@ -42,8 +42,8 @@ function transformStatement(originalStatement, tag) {
     if (!cardNumber.includes('51912')) throw new Error('Card number is different');
 
     const type = amount0.includes('-') ? $DR : $CR;
-    const $time = new Date(transactionDate.substr(0, 4), transactionDate.substr(4, 2), transactionDate.substr(6, 2));
-    const _postingDate = new Date(postingDate.substr(0, 4), postingDate.substr(4, 2), postingDate.substr(6, 2));
+    const $time = new Date(transactionDate.substr(0, 4), transactionDate.substr(4, 2) - 1, transactionDate.substr(6, 2));
+    const _postingDate = new Date(postingDate.substr(0, 4), postingDate.substr(4, 2) - 1, postingDate.substr(6, 2));
     const amount = amount0.replace(/-/, '');
 
     result.push({

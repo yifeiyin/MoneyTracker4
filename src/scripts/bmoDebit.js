@@ -38,7 +38,7 @@ function transformStatement(originalStatement, tag) {
     if (!accountNo.includes('0031717')) throw new Error('Card number is different');
 
     const type = crDr === 'DEBIT' ? $CR : $DR;  // Reversed
-    const $time = new Date(date.substr(0, 4), date.substr(4, 2), date.substr(6, 2));
+    const $time = new Date(date.substr(0, 4), date.substr(4, 2) - 1, date.substr(6, 2));
     const amount = amount0.replace(/-/, '');
 
     // This can be done in a separate rule
