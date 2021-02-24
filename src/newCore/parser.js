@@ -4,7 +4,7 @@ export function queryTableGetCollection(table, input) {
   const operations = constructOperationList(tokenize(input));
   let query = table;
   operations.forEach((operation) => {
-    query = buildQuery(table, operation);
+    query = buildQuery(query, operation);
   })
   return query;
 }
