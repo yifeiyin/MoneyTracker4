@@ -14,6 +14,28 @@ import AutoSizer from 'react-virtualized-auto-sizer';
 
 const PAGE_LIMIT = 80;
 
+/*
+This component has 3 important tasks
+
+Data Fetching
+  - Query parsing
+  - Retrieving
+  - Paging (needs to be redone: remove incremental retrieving)
+  - Nice to have: preset filters
+
+Display
+  - Format data for display
+  - Need to have a better display format
+
+Actions
+  - Create (modal form)
+  - Edit (modal form)
+  - Delete
+  - Select/Deselect (currently does nothing)
+  - Nice to have: edit some fields without opening the model
+*/
+
+
 export default class TransactionView extends React.Component {
   state = {
     data: [],
