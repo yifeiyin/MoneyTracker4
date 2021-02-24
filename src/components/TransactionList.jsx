@@ -50,7 +50,7 @@ export default class TransactionView extends React.Component {
     const startTime = new Date();
     try {
       const totalCount = await this.collection.clone().count();
-      const data = await this.collection.clone().offset(offset).limit(PAGE_LIMIT).sortBy('date');
+      const data = await this.collection.clone().offset(offset).limit(PAGE_LIMIT).sortBy('time');
 
       this.queryTime = new Date() - startTime;
       this.setState({ data, currentPage, totalCount, error: null });
@@ -239,7 +239,7 @@ function TransactionTableBodyCells({ transaction, onEdit, onRemove, isSelected, 
       <IconButton size='small' onClick={onEdit}><EditIcon /></IconButton>
       <IconButton size='small' onClick={onRemove}><DeleteIcon /></IconButton>
       <div data-type="id">{id}</div>
-      <div data-type="date">{formatDate(time, false)}</div>
+      <div data-type="time">{formatDate(time, false)}</div>
       <div data-type="title">{title}</div>
       <div data-type="debit">{readable[0]}</div>
       <div data-type="credit">{readable[1]}</div>
