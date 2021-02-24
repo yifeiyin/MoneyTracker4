@@ -10,7 +10,7 @@ import { TransactionCreateFormat, TransactionEditFormat } from '../ObjectEditor/
 import { deepCopy, getTodaysDateAt0000, sumOfAccountAndAmountList, formatDate } from '../newCore/helpers';
 import { queryTableGetCollection } from '../newCore/parser';
 import { FixedSizeList as List } from 'react-window';
-// import AutoSizer from 'react-virtualized-auto-sizer';
+import AutoSizer from 'react-virtualized-auto-sizer';
 
 const PAGE_LIMIT = 80;
 
@@ -195,30 +195,35 @@ export default class TransactionView extends React.Component {
         </Modal>
         <this.InformationLine />
         <this.ToolBar />
-        <List
-          height={800}
-          width={1300}
-          itemCount={this.state.data.length}
-          itemKey={(index) => String(this.state.data[index].id)}
-          itemSize={50}
-        >
-          {({ index, style }) => {
-            const transaction = this.state.data[index];
-            const id = transaction.id;
+        <AutoSizer style={{ height: 'calc(100vh - 360px)' }}>
+          {
+            ({ height, width }) =>
+              <List
+                height={height}
+                width={width}
+                itemCount={this.state.data.length}
+                itemKey={(index) => String(this.state.data[index].id)}
+                itemSize={50}
+              >
+                {({ index, style }) => {
+                  const transaction = this.state.data[index];
+                  const id = transaction.id;
 
-            return (
-              <div className={'transaction-row' + (index % 2 ? ' even' : '')} style={style}>
-                <TransactionTableBodyCells
-                  isSelected={this.isTransactionSelectedById(id)}
-                  onChangeSelect={(newValue) => this.onChangeSelect(id, newValue)}
-                  onEdit={() => this.onEdit(transaction)}
-                  onRemove={() => this.onRemove(id)}
-                  transaction={transaction}
-                />
-              </div>
-            )
-          }}
-        </List>
+                  return (
+                    <div className={'transaction-row' + (index % 2 ? ' even' : '')} style={style}>
+                      <TransactionTableBodyCells
+                        isSelected={this.isTransactionSelectedById(id)}
+                        onChangeSelect={(newValue) => this.onChangeSelect(id, newValue)}
+                        onEdit={() => this.onEdit(transaction)}
+                        onRemove={() => this.onRemove(id)}
+                        transaction={transaction}
+                      />
+                    </div>
+                  )
+                }}
+              </List>
+          }
+        </AutoSizer>
       </div>
     );
   }

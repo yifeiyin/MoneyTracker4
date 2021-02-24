@@ -26,14 +26,15 @@ class TransactionsScreen extends React.Component {
     return (
       <div>
         <Button variant='outlined' color='primary' onClick={() => this.TransactionView.promptToCreate()}>Create New Transaction</Button>
-        <div></div>
-        <Input fullWidth value={this.state.currentQuery} onChange={(e) => this.onChange(e.target.value)} />
-        <Button variant='outlined' color='primary' onClick={() => this.execute()}>Execute</Button>
+        <div style={{ display: 'flex' }}>
+          <Input fullWidth value={this.state.currentQuery} onChange={(e) => this.onChange(e.target.value)} />
+          <Button variant='outlined' color='primary' onClick={() => this.execute()}>Execute</Button>
+        </div>
 
         <TransactionList
           ref={(o) => this.TransactionView = o}
           enqueueSnackbar={this.props.enqueueSnackbar}
-          viewOnly={false}
+        // viewOnly={false}
         />
       </div>
     );
