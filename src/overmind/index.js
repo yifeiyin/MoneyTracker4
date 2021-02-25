@@ -33,6 +33,16 @@ export const config = {
   },
   effects: {
     storage: {
+      get(key, default_) {
+        try {
+          return JSON.parse(localStorage.getItem(key) ?? 'let parse throw')
+        } catch {
+          return default_
+        }
+      },
+      set(key, data) {
+        localStorage.setItem(key, JSON.stringify(data))
+      },
       getRules() {
         try {
           return JSON.parse(localStorage.getItem('rules') ?? 'let parse throw')

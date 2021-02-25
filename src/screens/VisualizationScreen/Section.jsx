@@ -15,38 +15,79 @@ export default class Section extends React.Component {
     transactionSummary: '',
   }
 
+  componentDidMount() {
+    if (this.props.initialAccountId)
+      this.onChange(this.props.initialAccountId)
+  }
+
   pick = async () => {
     const accountId = await this.AccountPicker.pick()
     if (accountId === null) return;
+    this.onChange(accountId);
+  }
 
-    const accountName = await global.accountManager.fromIdToName(accountId);
+
+  onChange = async (accountId) => {
+    if (this.props.onChange)
+      this.props.onChange(accountId);
+
+    const accountName = global.accountManager.fromIdToName(accountId);
     this.setState({ accountName });
 
     const date = '2021-01'
 
-    const transactions =
-      await queryTableGetCollection(
+    let transactions = [];
+    try {
+      transactions = await queryTableGetCollection(
         global.transactionManager.table,
         `${date} relate '${accountName}'`
-      ).toArray()
-    this.setState({ transactions })
+      ).toArray();
+    } catch (error) {
+      this.setState({ accountName: accountName + ` ERR: ${error}` });
+    }
 
-    const ba = new BalanceAccumulator(transactions)
-    const transactionSummary =
-      `CR ${ba.getAccountCredits(accountId).toReadable()}` +
-      ` -- DR ${ba.getAccountDebits(accountId).toReadable()}` +
-      ` -- ${ba.getAccountBalance(accountId).balance.toReadable()}`
+    this.setState({ transactions });
+
+    const ba = new BalanceAccumulator(transactions);
+
+    const creditReadable = ba.getAccountCredits(accountId).toReadable();
+    const debitReadable = ba.getAccountDebits(accountId).toReadable();
+    const { type, balance } = ba.getAccountBalance(accountId);
+
+    const accountType = global.accountManager.get(accountId).accountType;
+
+    const SEP = '\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0'
+    let transactionSummary = SEP + '(' + accountType + ')' + SEP;
+    if (accountType === 'credit') {
+      transactionSummary += '↑ ' + creditReadable
+      transactionSummary += SEP
+      transactionSummary += '↓ ' + debitReadable
+    } else {
+      transactionSummary += '↑ ' + debitReadable
+      transactionSummary += SEP
+      transactionSummary += '↓ ' + creditReadable
+    }
+
+    transactionSummary += SEP
+
+    if (type === accountType)
+      transactionSummary += balance.toReadable()
+    else
+      transactionSummary += balance.neg().toReadable()
+
+
     this.setState({ transactionSummary })
   }
 
   render() {
     return (
       <div>
+        {this.props.injectElement}
         <Button color="primary" variant="outlined" onClick={() => this.pick()}>{this.state.accountName}</Button>
         <span>{this.state.transactionSummary}</span>
         <AccountPicker ref={(ref) => this.AccountPicker = ref} />
         <details>
-          <summary>{this.state.transactions.length + ' transaction(s).'}</summary>
+          <summary style={{ padding: 10 }}>{this.state.transactions.length + ' transaction(s).'}</summary>
           <TransactionTableSimplified transactions={this.state.transactions} />
         </details>
       </div>
