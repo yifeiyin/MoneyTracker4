@@ -26,21 +26,24 @@ export default class Section extends React.Component {
     this.onChange(accountId);
   }
 
+  refresh = () => {
+    this.onChange(this.state.accountId)
+  }
 
   onChange = async (accountId) => {
     if (this.props.onChange)
       this.props.onChange(accountId);
 
+    this.setState({ accountId });
+
     const accountName = global.accountManager.fromIdToName(accountId);
     this.setState({ accountName });
-
-    const date = '2021-01'
 
     let transactions = [];
     try {
       transactions = await queryTableGetCollection(
         global.transactionManager.table,
-        `${date} relate '${accountName}'`
+        `${this.props.time} relate '${accountName}'`
       ).toArray();
     } catch (error) {
       this.setState({ accountName: accountName + ` ERR: ${error}` });
