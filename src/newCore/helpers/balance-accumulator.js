@@ -1,6 +1,6 @@
 import Monum from '../monum';
 
-export class BalanceAccumulator {
+export default class BalanceAccumulator {
   static CREDIT = 'credit'
   static DEBIT = 'debit'
 

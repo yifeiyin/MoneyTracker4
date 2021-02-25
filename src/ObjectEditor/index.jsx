@@ -7,8 +7,7 @@ import {
   Typography,
   InputLabel,
 } from '@material-ui/core';
-import { AccountTreeView } from '../components';
-import { Modal } from '../components';
+
 import DebitsCreditsEditor from './DebitsCreditsEditor';
 import ObjectEditorField from './ObjectEditorField';
 
@@ -16,19 +15,11 @@ import {
   Add as AddIcon,
 } from '@material-ui/icons';
 
+import AccountPicker from './AccountPicker'
+
 
 export default class ObjectEditor extends React.Component {
-  state = {
-    showingAccountModal: false,
-    accountTreeData: null,
-  }
-
-  accountModalCallBack = null;
-
-  async componentDidMount() {
-    const accountTreeData = await global.accountManager.getTreeData()
-    this.setState({ accountTreeData })
-  }
+  AccountPickerRef = null;
 
   onChange = (key, newValue) => {
     if (newValue === undefined)
@@ -38,14 +29,13 @@ export default class ObjectEditor extends React.Component {
     this.props.onChange(this.props.values);
   }
 
-  closeAccountModal = (id) => {
-    this.setState({ showingAccountModal: false });
-    if (!this.accountModalCallBack) console.error('this.accountModalCallBack is falsy');
-    if (id !== null) this.accountModalCallBack(id);
-  }
-
   accountModalControl = {
-    open: (callback) => { this.accountModalCallBack = callback; this.setState({ showingAccountModal: true }) }
+    open: (callback) => {
+      this.AccountPickerRef.pick().then((idOrNull) => {
+        if (idOrNull !== null)
+          callback(idOrNull)
+      });
+    }
   }
 
   render() {
@@ -133,12 +123,8 @@ export default class ObjectEditor extends React.Component {
         </FormGroup>
 
         {/* ======== Account Selection Modal ======== */}
-        <Modal open={this.state.showingAccountModal} onModalRequestClose={() => this.closeAccountModal(null)}>
-          <AccountTreeView
-            treeData={this.state.accountTreeData}
-            onDoubleClick={(id) => this.closeAccountModal(id)}
-          />
-        </Modal>
+        <AccountPicker ref={(ref) => this.AccountPickerRef = ref} />
+
 
         {/* ======== Actions ======== */}
         {

@@ -18,6 +18,7 @@ import AccountsScreen from './screens/AccountsScreen';
 import TransactionsScreen from './screens/TransactionsScreen';
 import DataManagementScreen from './screens/DataManagementScreen';
 import RulesScreen from './screens/RulesScreen';
+import VisualizationScreen from './screens/VisualizationScreen';
 import { useActions, useState } from './overmind';
 
 const routes = [
@@ -26,6 +27,7 @@ const routes = [
   ['/import-export', ImportExportScreen, 'Import/Export'],
   ['/transactions', TransactionsScreen, 'Transactions'],
   ['/rules', RulesScreen, 'Rules'],
+  ['/visualization', VisualizationScreen, 'Visualization'],
 ];
 
 function App() {

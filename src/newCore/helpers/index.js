@@ -1,6 +1,8 @@
 import Monum from '../monum';
 import { AccountAndAmountListSchema } from '../schema'
 
+export { default as BalanceAccumulator } from './balance-accumulator'
+
 export function reviver(k, v) {
   if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z/.test(v)) {
     return new Date(v);
