@@ -5,6 +5,7 @@ import { connect } from '../../overmind';
 import Section from './Section'
 
 import { Pie } from 'react-chartjs-2'
+import 'chartjs-plugin-colorschemes';
 
 class VisualizationScreen extends React.Component {
   state = {
@@ -13,6 +14,7 @@ class VisualizationScreen extends React.Component {
   }
 
   sectionRefs = []
+  chartData = []
 
   componentDidMount() {
     this.storage = this.props.overmind.effects.storage
@@ -44,6 +46,26 @@ class VisualizationScreen extends React.Component {
     })
   }
 
+  updateData = (index, data) => {
+    this.chartData[index] = data;
+  }
+
+  get realChartData() {
+    const { chartData } = this.state;
+
+    if (!chartData) {
+      return {
+        labels: ['1', '2', '3'],
+        datasets: [{ data: [1, 2, 3] }],
+      }
+    }
+
+    return {
+      labels: chartData.map(data => data.label),
+      datasets: [{ data: chartData.map(data => data.value) }],
+    }
+  }
+
   render() {
     return (
       <div>
@@ -60,13 +82,27 @@ class VisualizationScreen extends React.Component {
               initialAccountId={accountId}
               onChange={(newAccountId) => this.onChange(index, newAccountId)}
               time={this.state.time}
+              updateData={(data) => this.updateData(index, data)}
             />
             <hr />
           </div>
         ))}
 
         <IconButton onClick={() => this.addNew()}><Add /></IconButton>
-        <Pie />
+        <IconButton onClick={() => this.setState({ chartData: this.chartData })}><Add /></IconButton>
+        <Pie
+          data={this.realChartData}
+          options={{
+            title: {
+              display: true,
+            },
+            plugins: {
+              colorschemes: {
+                scheme: 'tableau.ClassicCyclic13'
+              }
+            }
+          }}
+        />
       </div>
     )
   }

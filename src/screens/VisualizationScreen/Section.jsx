@@ -55,7 +55,7 @@ export default class Section extends React.Component {
 
     const creditReadable = ba.getAccountCredits(accountId).toReadable();
     const debitReadable = ba.getAccountDebits(accountId).toReadable();
-    const { type, balance } = ba.getAccountBalance(accountId);
+    let { type, balance } = ba.getAccountBalance(accountId);
 
     const accountType = global.accountManager.get(accountId).accountType;
 
@@ -73,13 +73,18 @@ export default class Section extends React.Component {
 
     transactionSummary += SEP
 
-    if (type === accountType)
-      transactionSummary += balance.toReadable()
-    else
-      transactionSummary += balance.neg().toReadable()
+    if (type !== accountType)
+      balance = balance.neg()
 
+    transactionSummary += balance.toReadable()
 
     this.setState({ transactionSummary })
+
+    this.props.updateData({
+      // id: accountId,
+      label: accountName,
+      value: balance.castToNumberInCurrency('CAD')
+    })
   }
 
   render() {

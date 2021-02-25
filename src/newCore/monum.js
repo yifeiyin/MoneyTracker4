@@ -102,6 +102,20 @@ export default class Monum {
     return total > 0;
   }
 
+  castToNumberInCurrency(currency) {
+    let total = 0.0;
+
+    for (let [key, value] of Object.entries(this)) {
+      const conversionRate = CONVERSION_RATE_X_TO_USD[key];
+      if (conversionRate === undefined) throw new Error('Encountered unknown currency when estimating sign');
+      total += conversionRate * value;
+    }
+
+    const conversionRate = CONVERSION_RATE_X_TO_USD[currency];
+    if (conversionRate === undefined) throw new Error('Encountered unknown currency when estimating sign');
+    return total / conversionRate;
+  }
+
   isNegative() {
     if (this.isZero()) return false;
     return !this.isPositive();
