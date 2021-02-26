@@ -1,5 +1,5 @@
 import Monum from '../monum'
-import { BalanceAccumulator } from './balance-accumulator'
+import BalanceAccumulator from './balance-accumulator'
 
 function generateFakeSide(account, amount) {
   return [{ acc: account, amt: new Monum('CAD', amount) }]

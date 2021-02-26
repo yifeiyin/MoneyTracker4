@@ -19,8 +19,8 @@ testSchema(MonumCurrencySchema, null, false);
 testing('MonumValueSchema')
 const tests = {
   'v': ['-1.2', '0', -1.2, 0, NaN, null, undefined],
-  's': [true, true, false, false, false, false, false],
-  'n': [true, true, true, true, false, true, true],
+  's': [true, true, false, false, false, false, false], // Strict
+  'n': [true, true, true, true, false, true, true], // Non-strict
 }
 
 for (let i = 0; i < tests.v.length; i++) {
@@ -153,6 +153,15 @@ function testing(newName) {
   count = 1;
 }
 
+/**
+ * A way to simplify code for testing schema.
+ *
+ * When expectedState is ..., it means ...
+ * - undefined or true: <input> is valid <schema>
+ * - false: <input> is invalid <schema>
+ * - others: <input> must match <expectedState> after being validated by schema
+ *
+ */
 function testSchema(schema, input, expectedState) {
   test(`Test ${name} #${count++} (${typeof (input)}) ${input} -> (${typeof (expectedState)}) ${expectedState}`, () => {
     if (expectedState === undefined) {
