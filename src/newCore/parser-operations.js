@@ -53,11 +53,11 @@ export class OP_FUZZY_ACCOUNT extends OP {
   filter(item) {
     switch (this.type) {
       case 'debit':
-        return item.debits.map(({ acc }) => acc).includes(identifierToId(this.identifier));
+        return item.debits.map(({ acc }) => acc).map(idToPath).some((path) => path.startsWith(identifierToPath(this.identifier)));
       case 'credit':
-        return item.credits.map(({ acc }) => acc).includes(identifierToId(this.identifier));
+        return item.credits.map(({ acc }) => acc).map(idToPath).some((path) => path.startsWith(identifierToPath(this.identifier)));
       case 'any':
-        return [...item.debits, ...item.credits].map(({ acc }) => acc).includes(identifierToId(this.identifier));
+        return [...item.debits, ...item.credits].map(({ acc }) => acc).map(idToPath).some((path) => path.startsWith(identifierToPath(this.identifier)));
       default:
         throw new Error('Unreachable');
     }
@@ -142,6 +142,10 @@ function identifierToPath(name) {
   return global.accountManager.fuzzyFindGetPath(name);
 }
 
-function identifierToId(name) {
-  return global.accountManager.fuzzyFindGetId(name);
+// function identifierToId(name) {
+//   return global.accountManager.fuzzyFindGetId(name);
+// }
+
+function idToPath(id) {
+  return global.accountManager.getPath(id);
 }

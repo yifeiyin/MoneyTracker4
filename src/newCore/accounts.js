@@ -158,6 +158,16 @@ export default class AccountManager {
     if (name.match(/^[\d-]*$/))
       throw new Error('Invalid account name');
 
+    // Use `id(10)` to directly inject id. This function will validate the id.
+    let match;
+    if ((match = name.match(/^id\((\d+)\)$/))) {
+      const id = Number(match[1])
+      if (id in this._cacheById)
+        return id
+      else
+        throw new Error(`id(${id}) does not exist`)
+    }
+
     const result = []
     for (let [id, account] of Object.entries(this._cacheById)) {
       if (account.name.toLowerCase().includes(name.toLowerCase())) {
@@ -185,5 +195,9 @@ export default class AccountManager {
 
   getAllNonFolderAccounts() {
     return Object.values(this._cacheById).filter(account => !account.isFolder)
+  }
+
+  getChildrenIds(id) {
+    return Object.values(this._cacheById).filter(account => account.parentId === id).map(account => account.id)
   }
 }
