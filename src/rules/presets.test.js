@@ -1,4 +1,4 @@
-import { CONDITIONS } from './rules'
+import { CONDITIONS } from '../scripts/rules'
 
 
 test('~=', () => {

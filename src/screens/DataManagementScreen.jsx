@@ -17,10 +17,8 @@ import { connect } from '../overmind'
 import {
   Delete as DeleteIcon,
   FileCopy as FileCopyIcon,
-  // SaveAlt as SaveAltIcon,
   AssignmentReturned as AssignmentReturnedIcon,
   Add as AddIcon,
-  // RotateLeft as RotateLeftIcon,
   PlusOne as PlusOneIcon,
   Gavel as GavelIcon,
 } from '@material-ui/icons';
@@ -265,8 +263,6 @@ class DataManagementScreen extends React.Component {
           <div>
             <Button color='primary' variant='outlined' startIcon={<AddIcon />} onClick={this.createEmptyDataSet}>Create Empty</Button>
             <Button color='primary' variant='outlined' startIcon={<AssignmentReturnedIcon />} onClick={this.pasteDataSet}>Paste</Button>
-            {/* <Button color='primary' variant='outlined' startIcon={<SaveAltIcon />} onClick={this.downloadAll}>Download All</Button> */}
-            {/* <Button color='primary' variant='outlined' startIcon={<RotateLeftIcon />} onClick={this.downloadAll}>Reset All Using Paste Board</Button> */}
           </div>
           {this.state.allDataSet.map((data, index) =>
             <DataSetCard
@@ -392,9 +388,6 @@ function DataSetDetails({
           }
         </TableBody>
       </Table>
-      {/* <details open style={{ fontSize: 18 }}>
-        <pre style={{ overflow: 'auto', maxWidth: '70vw', maxHeight: '48vh' }}>{JSON.stringify(data, null, 4)}</pre>
-      </details> */}
     </div>
   );
 }

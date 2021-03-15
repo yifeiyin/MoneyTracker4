@@ -1,6 +1,3 @@
-import { getAdditionalAttributesFromAPI } from './bmoCredit'
-import { debitCardETransfer } from './bmoDebit'
-
 export const CONDITIONS = {
   'true': () => true,
   'false': () => false,
@@ -47,29 +44,33 @@ export const CONDITIONS = {
 export const ACTIONS = {
   noop(result) { return result },
 
+  /**
+   * Property assignment
+   */
   ':=': (result, { subj, args }) => {
     ensureOneArgument(args)
     result[subj] = args[0]
     return result
   },
 
+  /**
+   * Title and category (aka otherSide)
+   */
   tc(result, { args }) {
     result.$title = args[0]
     result.otherSide = args[1] ?? 'Unknown Income/Expense'
     return result
   },
 
-  async masterCardGetAdditionalAttributesFromAPI(result, _, source) {
-    return Object.assign(result, await getAdditionalAttributesFromAPI(source))
-  },
+  // async masterCardGetAdditionalAttributesFromAPI(result, _, source) {
+  //   return Object.assign(result, await getAdditionalAttributesFromAPI(source))
+  // },
 
-  debitCardETransfer(result, { args }, source) {
-    return debitCardETransfer(result, { args }, source)
-  },
+  // debitCardETransfer(result, { args }, source) {
+  //   return debitCardETransfer(result, { args }, source)
+  // },
 }
 
-
-// ==================================================
 
 function ensureOneArgument(args) {
   if (args.length !== 1) throw new Error('Expect 1 argument, got ' + args.length)

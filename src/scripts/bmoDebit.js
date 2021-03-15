@@ -14,7 +14,12 @@ export default async function csvToTransactions(input, overmind) {
   const transformed = transformStatement(input, tag);
   for (let transaction of transformed) {
     try {
-      transaction = await processTransaction({ groupsToUse: ['dc0', 'dc1'], groupToAppend: 'dc1' }, transaction, overmind);
+      transaction = await processTransaction(
+        { groupsToUse: ['dc0', 'dc1'], groupToAppend: 'dc1' },
+        { debitCardETransfer },
+        transaction,
+        overmind
+      );
       result.push(await postProcess(transaction));
     } catch (error) {
       if (!window.confirm(`ERROR: ${error}\n\nContinue?`)) {

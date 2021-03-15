@@ -1,43 +1,17 @@
 import Monum from '../newCore/monum';
 import { assert, formatDate } from '../newCore/helpers'
-import { ACTIONS, CONDITIONS } from './rules'
+import { ACTIONS, CONDITIONS } from '../rules/presets'
 import { Rule, Processor } from '../rules'
 
 export const $CR = 'credit';
 export const $DR = 'debit';
 
-// export const AC_CHEQUING = 'BMO Chequing';
-// export const AC_SAVING = 'BMO Saving';
-// export const AC_MASTER_CARD = 'BMO MasterCard';
-
-// export const AC_GROCERY_EXPENSE = 'Grocery Expense';
-// export const AC_TRANSPORTATION_EXPENSE = 'Transportation Expense';
-// export const AC_SOCIAL_EXPENSE = 'Social Expense';
-// export const AC_HOBBY_EXPENSE = 'Hobby Expense';
-// export const AC_DINING_EXPENSE = 'Dining Expense';
-// export const AC_SUBSCRIPTION_EXPENSE = 'Subscription Expense';
-// export const AC_UNKNOWN_EXPENSE = 'Unknown Income/Expense';
-// export const AC_OTHER_EXPENSE = 'Other Income/Expense';
-
-// export const AC_ALL_EXPENSE = [
-//   AC_UNKNOWN_EXPENSE,
-//   AC_TRANSPORTATION_EXPENSE,
-//   AC_GROCERY_EXPENSE,
-//   AC_SOCIAL_EXPENSE,
-//   AC_HOBBY_EXPENSE,
-//   AC_DINING_EXPENSE,
-//   AC_SUBSCRIPTION_EXPENSE,
-//   AC_OTHER_EXPENSE,
-// ];
-
-
-
-export async function processTransaction({ groupsToUse, groupToAppend }, transaction, overmind) {
+export async function processTransaction({ groupsToUse, groupToAppend }, additionalActions, transaction, overmind) {
   const { rules: overmindRules } = overmind.state, { saveRules: overmindSaveRules } = overmind.actions;
 
   // Apply the rules
   const rulesUngrouped = ungroupAndParse(groupsToUse, overmindRules)
-  const processor = new Processor({ actions: ACTIONS, conditions: CONDITIONS, rules: rulesUngrouped })
+  const processor = new Processor({ actions: { ...ACTIONS, ...additionalActions }, conditions: CONDITIONS, rules: rulesUngrouped })
   const { result } = await processor.process(transaction)
   Object.assign(transaction, result)
 

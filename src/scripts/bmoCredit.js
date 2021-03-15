@@ -15,6 +15,7 @@ export default async function csvToTransactions(input, overmind) {
     try {
       transaction = await processTransaction(
         { groupsToUse: ['mc0', 'mc1'], groupToAppend: 'mc1' },
+        { masterCardGetAdditionalAttributesFromAPI },
         transaction,
         overmind
       );
@@ -66,8 +67,11 @@ function transformStatement(originalStatement, tag) {
 
 // ====================================================
 
+async function masterCardGetAdditionalAttributesFromAPI(result, _, source) {
+  return Object.assign(result, await getAdditionalAttributesFromAPI(source))
+}
 
-export async function getAdditionalAttributesFromAPI(desc) {
+async function getAdditionalAttributesFromAPI(desc) {
   let details = await fetchDetails(desc)
   const result = {}
   if (details !== null) {

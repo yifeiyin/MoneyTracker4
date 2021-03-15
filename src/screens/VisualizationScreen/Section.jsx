@@ -1,148 +1,93 @@
 import React from 'react'
-import { Button } from '@material-ui/core'
-import { formatDate, sumOfAccountAndAmountList, BalanceAccumulator } from '../../newCore/helpers'
-import { queryTableGetCollection } from '../../newCore/parser'
+import { HorizontalBar } from 'react-chartjs-2'
+import { BalanceAccumulator } from '../../newCore/helpers'
 
-import AccountPicker from '../../ObjectEditor/AccountPicker'
 
 export default class Section extends React.Component {
-  AccountPicker = null;
 
-  state = {
-    accountId: null,
-    accountName: 'Please select',
-    transactions: [],
-    transactionSummary: '',
-  }
+  get chartData() {
+    const childrenIds = global.accountManager.getChildrenIds(this.props.accountId)
+    const ba = new BalanceAccumulator(this.props.transactions)
 
-  componentDidMount() {
-    if (this.props.initialAccountId)
-      this.onChange(this.props.initialAccountId)
-  }
+    const result = []
 
-  pick = async () => {
-    const accountId = await this.AccountPicker.pick()
-    if (accountId === null) return;
-    this.onChange(accountId);
-  }
-
-  refresh = () => {
-    this.onChange(this.state.accountId)
-  }
-
-  onChange = async (accountId) => {
-    if (this.props.onChange)
-      this.props.onChange(accountId);
-
-    this.setState({ accountId });
-
-    const accountName = global.accountManager.fromIdToName(accountId);
-    this.setState({ accountName });
-
-    let transactions = [];
-    try {
-      transactions = await queryTableGetCollection(
-        global.transactionManager.table,
-        `${this.props.time} relate '${accountName}'`
-      ).toArray();
-    } catch (error) {
-      this.setState({ accountName: accountName + ` ERR: ${error}` });
+    for (let childrenId of childrenIds) {
+      result.push({
+        label: global.accountManager.get(childrenId).name,
+        data: [
+          ba.getAccountCredits(childrenId).castToNumberInCurrency('CAD'),
+          ba.getAccountDebits(childrenId).castToNumberInCurrency('CAD'),
+        ]
+      })
     }
 
-    this.setState({ transactions });
+    return result
+  }
 
-    const ba = new BalanceAccumulator(transactions);
+  get chartData2() {
+    const ba = new BalanceAccumulator(this.props.transactions)
 
-    const creditReadable = ba.getAccountCredits(accountId).toReadable();
-    const debitReadable = ba.getAccountDebits(accountId).toReadable();
-    let { type, balance } = ba.getAccountBalance(accountId);
+    const result = []
 
-    const accountType = global.accountManager.get(accountId).accountType;
-
-    const SEP = '\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0'
-    let transactionSummary = SEP + '(' + accountType + ')' + SEP;
-    if (accountType === 'credit') {
-      transactionSummary += '↑ ' + creditReadable
-      transactionSummary += SEP
-      transactionSummary += '↓ ' + debitReadable
-    } else {
-      transactionSummary += '↑ ' + debitReadable
-      transactionSummary += SEP
-      transactionSummary += '↓ ' + creditReadable
+    // TODO: Temporary solution
+    for (let childrenId of new Set(ba.internal.map(({ accountId }) => accountId))) {
+      if (childrenId === this.props.accountId) continue;
+      result.push({
+        label: global.accountManager.get(childrenId).name,
+        backgroundColor: 'grey',
+        data: [
+          ba.getAccountCredits(childrenId).castToNumberInCurrency('CAD'),
+          ba.getAccountDebits(childrenId).castToNumberInCurrency('CAD'),
+        ]
+      })
     }
 
-    transactionSummary += SEP
+    return result
+  }
 
-    if (type !== accountType)
-      balance = balance.neg()
-
-    transactionSummary += balance.toReadable()
-
-    this.setState({ transactionSummary })
-
-    this.props.updateData({
-      // id: accountId,
-      label: accountName,
-      value: balance.castToNumberInCurrency('CAD')
-    })
+  get account() {
+    return global.accountManager.get(this.props.accountId)
   }
 
   render() {
     return (
       <div>
-        {this.props.injectElement}
-        <Button color="primary" variant="outlined" onClick={() => this.pick()}>{this.state.accountName}</Button>
-        <span>{this.state.transactionSummary}</span>
-        <AccountPicker ref={(ref) => this.AccountPicker = ref} />
-        <details>
-          <summary style={{ padding: 10 }}>{this.state.transactions.length + ' transaction(s).'}</summary>
-          <TransactionTableSimplified transactions={this.state.transactions} />
-        </details>
+        <h2>{this.account.name}</h2>
+        {
+          this.account.isFolder ? <ChartWrapper chartData={this.chartData} /> : <ChartWrapper chartData={this.chartData2} />
+        }
       </div>
     )
   }
 }
 
-
-function TransactionTableSimplified({ transactions }) {
-  return transactions.map(transaction =>
-    <TransactionTableBodyCells key={transaction.id} transaction={transaction} />
-  )
-}
-
-function TransactionTableBodyCells({ transaction }) {
-  const { id, time, title, debits, credits } = transaction;
-  const readable = [stringifyAccountsAndAmounts(debits), stringifyAccountsAndAmounts(credits)]
-
+function ChartWrapper({ chartData }) {
   return (
-    <div className="transaction-row">
-      <div data-type="id">{id}</div>
-      <div data-type="time">{formatDate(time, false)}</div>
-      <div data-type="title">{title}</div>
-      <div data-type="debit">{readable[0]}</div>
-      <div data-type="credit">{readable[1]}</div>
-      <div data-type="amount">{sumOfAccountAndAmountList(debits).toReadable()}</div>
-    </div>
-  );
-}
+    <HorizontalBar
+      data={{
+        labels: ['CR', 'DR'],
+        datasets: chartData,
+      }}
+      options={{
+        tooltips: {
+          mode: 'point',
+          intersect: false
+        },
+        scales: {
+          xAxes: [{
+            stacked: true,
+            ticks: {
+              suggestedMin: 0,
+              suggestedMax: 3000,
+              stepSize: 100,
+            }
+          }],
+          yAxes: [{
+            stacked: true,
+          }],
+        }
+      }}
+    />
 
-function stringifyAccountsAndAmounts(side) {
-  const accountManager = global.accountManager;
-
-  if (side.length === 0) { return '-'; }
-  if (side.length === 1) {
-    const { acc } = side[0];
-    return accountManager.fromIdToName(acc);
-  }
-
-  const accountNames = side.map(({ acc }) => accountManager.fromIdToName(acc));
-
-  return side.map(({ acc, amt }, index) =>
-    <span key={String(index)}>
-      {(index === 0 ? null : <br />)}
-      <span>
-        {accountNames[index] + ' – ' + amt.toReadable()}
-      </span>
-    </span>
   )
 }

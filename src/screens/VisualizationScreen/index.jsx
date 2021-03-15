@@ -1,7 +1,7 @@
 import { Button, TextField } from '@material-ui/core';
 import React from 'react';
 import { connect } from '../../overmind';
-import Section2 from './Section2'
+import Section from './Section'
 
 import 'chartjs-plugin-colorschemes';
 
@@ -16,6 +16,7 @@ class VisualizationScreen extends React.Component {
   _transactionsGrouped = {};
 
   componentDidMount() {
+    // TODO: Save and load from storage
     this.storage = this.props.overmind.effects.storage
     // this.setState({
     //   accountIds: this.storage.get('visualization', [])
@@ -49,7 +50,7 @@ class VisualizationScreen extends React.Component {
         <Button onClick={() => this.refresh()}>Update</Button>
         {
           this.state.accountIds.map(accountId =>
-            <Section2 key={String(accountId)} accountId={accountId} transactions={this._transactionsGrouped[accountId]} />
+            <Section key={String(accountId)} accountId={accountId} transactions={this._transactionsGrouped[accountId]} />
           )
         }
         {/* <Bar

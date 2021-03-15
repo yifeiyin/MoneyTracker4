@@ -8,8 +8,6 @@ import 'prismjs/components/prism-clike';
 import 'prismjs/components/prism-javascript';
 import 'prismjs/components/prism-json';
 
-// import bmoDebitCodeToReadableType from '../scripts/bmoDebitCodeToReadable';
-
 import { BMODebit, BMOCredit } from '../scripts'
 
 import { DropzoneArea } from 'material-ui-dropzone';
@@ -158,11 +156,9 @@ class ImportExportScreen extends React.Component {
   }
 
   run = async () => {
-    // Prepare input
     const currentFileType = this.state.fileList[this.state.currentEditingFileIndex].type;
     const currentFileTypeInfo = fileTypes[currentFileType];
     const inputFileType = currentFileTypeInfo.inputs[0];
-    // const outputFileType = currentFileTypeInfo.outputs === undefined ? null : 'JSON';  // hack
     const inputFileName = this.state.objectEditorRunValues.inputFile;
     let inputFileContent = this.state.fileList.filter(f => f.name === inputFileName)[0].content;
     if (inputFileType === 'JSON') {
@@ -173,112 +169,23 @@ class ImportExportScreen extends React.Component {
       inputFileContent = JSON.parse(inputFileContent, reviver);
     }
 
-    if (currentFileType === 'Commit Transactions') {
-      try {
-        for (let t of await BMODebit(inputFileContent, this.props.overmind))
-          await global.transactionManager.create(t);
+    let handler;
+    if (currentFileType === 'Commit Transactions')
+      handler = BMODebit;
+    else if (currentFileType === 'Commit Transactions 2')
+      handler = BMOCredit;
+    else
+      return alert('Cannot run current file')
 
-      } catch (error) {
-        alert(error);
-        console.error(error);
-      }
-
-      return;
+    try {
+      for (let t of await handler(inputFileContent, this.props.overmind))
+        await global.transactionManager.create(t);
+    } catch (error) {
+      alert(error);
+      console.error(error);
     }
-
-    if (currentFileType === 'Commit Transactions 2') {
-      try {
-        for (let t of await BMOCredit(inputFileContent, this.props.overmind))
-          await global.transactionManager.create(t);
-
-      } catch (error) {
-        alert(error);
-        console.error(error);
-      }
-
-      return;
-    }
-
-    // // Prepare arguments
-    // const accounts = Object.keys(global.accountManager._accountNodes).map(id => ({ id, ...(global.accountManager._accountNodes[id]) }));
-    // const accountsMap = {};
-    // accounts.filter(account => account.isFolder === false).forEach(account => accountsMap[account.name] = account.id);
-
-
-    // const args = [[inputFileContent], {
-    //   Monum: global.Monum,
-    //   accountNameToId: accountsMap,
-    //   console,
-    //   $DR: '$DR', $CR: '$CR',
-    //   bmoDebitCodeToReadableType,
-    // }];
-    // console.log('Arguments: ', args[0], args[1]);
-
-    // // Preprocess code
-    // const lines = this.state.currentEditorContent.split('\n');
-    // let start, end;
-    // lines.forEach((line, index) => {
-    //   if (line.includes('==== start')) start = index;
-    //   if (line.includes('==== end')) end = index;
-    // });
-
-    // const codeOfInterest = lines.slice(start + 1, end).join('\n');
-
-    // // Compile
-    // let functionToRun;
-    // try {
-    //   functionToRun = new Function('inputs', 'utils', codeOfInterest);  // eslint-disable-line no-new-func
-    // } catch (error) {
-    //   alert('Compile Error: ' + error);
-    //   console.error(error);
-    //   return;
-    // }
-
-    // // Run
-    // let result;
-
-    // if (currentFileTypeInfo.iterative) {
-    //   if (!(inputFileContent instanceof Array)) return alert('Input file is not an array.');
-    //   result = [];
-    //   // eslint-disable-next-line no-unused-vars
-    //   const [arg1, ...rest] = args;
-    //   try {
-    //     inputFileContent.forEach((inputFilePiece, index) => {
-    //       try {
-    //         result.push(functionToRun(inputFilePiece, ...rest));
-    //       } catch (error) {
-    //         alert(`Encountered error at ${index} element: ` + error);
-    //         console.error(error);
-    //         throw new Error('ABORTED');
-    //       }
-    //     });
-    //   } catch (error) {
-    //     if (error.message === 'ABORTED') return;
-    //     alert('Unexpected error: ' + error);
-    //     console.error(error);
-    //   }
-
-    // } else {
-    //   try {
-    //     result = functionToRun(...args);
-    //   } catch (error) {
-    //     alert('Run Time Error: ' + error);
-    //     console.error(error);
-    //     return;
-    //   }
-    // }
-
-    // // Process and store result
-    // if (outputFileType === 'JSON' && result instanceof Object) {
-    //   this.createNewFile({
-    //     name: 'Result ' + getTimeAsString(),
-    //     content: JSON.stringify(result, null, 4),
-    //     type: 'JSON',
-    //   });
-    // } else {
-    //   console.warn('Ignoring output: ', outputFileType, result);
-    // }
   }
+
 
   handleHighLight = (code) => {
     switch (this.state.currentEditorType) {
@@ -334,8 +241,6 @@ class ImportExportScreen extends React.Component {
           currentFile === null ? null :
             <div>
               <ButtonGroup style={{ margin: 5 }}>
-                {/* <Button variant='outlined' color='primary' onClick={this.resetCode}>Reset</Button>
-            <Button variant='outlined' color='primary' onClick={this.loadCode}>Reload</Button> */}
                 <Button variant='contained' color='primary' onClick={this.onFileEditSave}>Save</Button>
               </ButtonGroup>
               {
@@ -383,41 +288,10 @@ class ImportExportScreen extends React.Component {
 
 export default connect(ImportExportScreen)
 
-// function addCode(js) {
-//   var e = document.createElement('script');
-//   e.type = 'text/javascript';
-//   e.src = 'data:text/javascript;charset=utf-8,' + escape(js);
-//   document.body.appendChild(e);
-// }
-
-
 function getTimeAsString() {
   return (new Date()).toLocaleString();
 }
 
 function getNewFileContent(type) {
-  // if (['Commit Transactions', 'JSON', 'Plain Text'].includes(type)) {
   return '\n// ' + type + '\n\n\n\n\n\n';
-  // }
-
-  // const table = {
-  //   'Transform Statement': ['TransformStatement', 'originalStatement'],
-  //   'Generate Transactions': ['GenerateTransactions', 'transformedStatementItem'],
-  //   'Post-Process Transactions': ['PostProcessTransactions', 'transactionItem'],
-  // }
-  // let names = table[type];
-
-  // return (
-  //   `\n` +
-  //   `// ${type} \n` +
-  //   `// Created on ${getTimeAsString()} \n` +
-  //   `\n` +
-  //   `function ${names[0]}(inputs, utils) { // ==== start ====\n` +
-  //   `  const [ ${names[1]} ] = inputs;\n` +
-  //   `  const { console, Monum, accountNameToId, $DR, $CR } = utils;\n` +
-  //   `\n` +
-  //   `\n` +
-  //   `} // ==== end ====\n` +
-  //   `\n\n\n\n`
-  // );
 }
