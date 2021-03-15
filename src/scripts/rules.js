@@ -46,6 +46,7 @@ export const CONDITIONS = {
 
 export const ACTIONS = {
   noop(result) { return result },
+
   ':=': (result, { subj, args }) => {
     ensureOneArgument(args)
     result[subj] = args[0]

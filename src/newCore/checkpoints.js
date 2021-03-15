@@ -204,7 +204,7 @@ export default class CheckpointManager {
 
   async get(time) {
     const result = await this.table.get(time);
-    if (result === undefined) throw new Error('Item not found')
+    if (result === undefined) throw new Error(`Item not found: ${time}`)
     return result;
   }
 }

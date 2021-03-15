@@ -53,7 +53,7 @@ export default class TransactionManager {
 
   async get(id) {
     const result = await this.table.get(id);
-    if (result === undefined) throw new Error('Item not found')
+    if (result === undefined) throw new Error(`Item not found: ${id}`)
     return result;
   }
 

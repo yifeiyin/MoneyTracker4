@@ -119,7 +119,7 @@ export default class AccountManager {
 
   get(id) {
     const result = this._cacheById[id];
-    if (result === undefined) throw new Error('Item not found')
+    if (result === undefined) throw new Error(`Item not found: ${id}`)
     return result;
   }
 
@@ -198,6 +198,6 @@ export default class AccountManager {
   }
 
   getChildrenIds(id) {
-    return Object.values(this._cacheById).filter(account => account.parentId === id).map(account => account.id)
+    return (this._cacheByParentId[id] ?? []).map(({ id }) => id)
   }
 }
