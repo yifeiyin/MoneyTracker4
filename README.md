@@ -2,12 +2,12 @@
 
 ## Features
 
-- 💵 Multi-currency support
+- 💵 Multi-currency support; no conversions
     - `0.1 CAD + 0.2 CAD === 0.3 CAD` ✅
     - `42 USD + 10.01 CAD + 0.01 USD === 42.01 USD + 10.01 CAD` ✅
 - 💳 Supports import transactions from any machine-readable data source
     - Doesn't support yours? Write your own parser
-- ⚙️ Create rules to categorize transactions
+- ⚙️ Create arbitrary rules to categorize transactions
 - 📊 Visualize income and expense over arbitrary time frame
 
 ### Similar Projects
