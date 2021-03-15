@@ -10,8 +10,8 @@ import {
   KeyboardDateTimePicker,
 } from '@material-ui/pickers';
 
-import Monum from '../newCore/monum'
-import { getTodaysDateAt0000 } from '../newCore/helpers'
+import Monum from '_core/monum'
+import { getTodaysDateAt0000 } from '_core/helpers'
 
 export default function ObjectEditorField(props) {
   // eslint-disable-next-line no-unused-vars

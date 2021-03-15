@@ -1,6 +1,6 @@
 import React from 'react'
 import { HorizontalBar } from 'react-chartjs-2'
-import { BalanceAccumulator } from '../../newCore/helpers'
+import { BalanceAccumulator } from '_core/helpers'
 
 
 export default class Section extends React.Component {

@@ -9,9 +9,9 @@ import { Delete as DeleteIcon } from '@material-ui/icons'
 
 import ObjectEditorField from './ObjectEditorField';
 
-import Monum from '../newCore/monum';
+import Monum from '_core/monum';
 
-import { sumOfAccountAndAmountList, debitsMinusCredits } from '../newCore/helpers'
+import { sumOfAccountAndAmountList, debitsMinusCredits } from '_core/helpers'
 
 export default function DebitsCreditsEditor(props) {
   // eslint-disable-next-line no-unused-vars

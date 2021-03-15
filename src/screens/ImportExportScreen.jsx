@@ -8,7 +8,7 @@ import 'prismjs/components/prism-clike';
 import 'prismjs/components/prism-javascript';
 import 'prismjs/components/prism-json';
 
-import { BMODebit, BMOCredit } from '../scripts'
+import { BMODebit, BMOCredit } from '_core/extendedRules'
 
 import { DropzoneArea } from 'material-ui-dropzone';
 

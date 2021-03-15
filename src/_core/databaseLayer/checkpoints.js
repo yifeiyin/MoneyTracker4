@@ -1,7 +1,7 @@
-import { CheckpointDatabaseSchema, CheckpointSchema } from "./schema";
-import TransactionManager from "./transactions"; // eslint-disable-line
-import AccountManager from "./accounts"; // eslint-disable-line
-import Monum from './monum';
+import { CheckpointDatabaseSchema, CheckpointSchema } from '../schema';
+import TransactionManager from './transactions'; // eslint-disable-line
+import AccountManager from './accounts'; // eslint-disable-line
+import Monum from '../monum';
 
 export default class CheckpointManager {
   static getInitialSetupData() {

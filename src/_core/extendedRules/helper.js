@@ -1,7 +1,7 @@
-import Monum from '../newCore/monum';
-import { assert, formatDate } from '../newCore/helpers'
-import { ACTIONS, CONDITIONS } from '../rules/presets'
-import { Rule, Processor } from '../rules'
+import Monum from '_core/monum';
+import { assert, formatDate } from '_core/helpers'
+import { ACTIONS, CONDITIONS } from '_core/rules/presets'
+import { Rule, Processor } from '_core/rules'
 
 export const $CR = 'credit';
 export const $DR = 'debit';

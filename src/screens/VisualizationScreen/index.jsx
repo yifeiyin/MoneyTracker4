@@ -5,7 +5,7 @@ import Section from './Section'
 
 import 'chartjs-plugin-colorschemes';
 
-import { queryTableGetCollection } from '../../newCore/parser';
+import { queryTableGetCollection } from '_core/transactionQueryParser';
 
 class VisualizationScreen extends React.Component {
   state = {

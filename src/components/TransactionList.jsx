@@ -7,8 +7,8 @@ import DeleteIcon from '@material-ui/icons/Delete';
 
 import ObjectEditor from '../ObjectEditor/index';
 import { TransactionCreateFormat, TransactionEditFormat } from '../ObjectEditor/ObjectFormats';
-import { deepCopy, getTodaysDateAt0000, sumOfAccountAndAmountList, formatDate } from '../newCore/helpers';
-import { queryTableGetCollection } from '../newCore/parser';
+import { deepCopy, getTodaysDateAt0000, sumOfAccountAndAmountList, formatDate } from '_core/helpers';
+import { queryTableGetCollection } from '_core/transactionQueryParser';
 import { FixedSizeList as List } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
 

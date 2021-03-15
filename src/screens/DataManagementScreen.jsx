@@ -23,7 +23,7 @@ import {
   Gavel as GavelIcon,
 } from '@material-ui/icons';
 
-import { parse, deepCopy } from "../newCore/helpers";
+import { parse, deepCopy } from "_core/helpers";
 
 
 class DataManagementScreen extends React.Component {

@@ -23,10 +23,10 @@ import { config } from './overmind'
 import Dexie from "dexie";
 
 /** Core */
-import AccountManager from './newCore/accounts';
-import TransactionManager from './newCore/transactions';
-import Monum from './newCore/monum';
-import CheckpointManager from './newCore/checkpoints';
+import AccountManager from './_core/databaseLayer/accounts';
+import TransactionManager from './_core/databaseLayer/transactions';
+import Monum from '_core/monum';
+import CheckpointManager from './_core/databaseLayer/checkpoints';
 
 /** Database setup */
 const db = new Dexie('MyDatabase');

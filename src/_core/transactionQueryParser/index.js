@@ -1,4 +1,4 @@
-import { OP_DATE_RANGE, OP_FUZZY_ACCOUNT, OP_HAS_TAG, OP_LIMIT, OP_OFFSET, OP_WHERE } from './parser-operations'
+import { OP_DATE_RANGE, OP_FUZZY_ACCOUNT, OP_HAS_TAG, OP_LIMIT, OP_OFFSET, OP_WHERE } from './operations'
 
 export function queryTableGetCollection(table, input) {
   const operations = constructOperationList(tokenize(input));

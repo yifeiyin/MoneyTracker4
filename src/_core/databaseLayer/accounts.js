@@ -1,4 +1,4 @@
-import { AccountDatabaseSchema, AccountSchema } from './schema'
+import { AccountDatabaseSchema, AccountSchema } from '../schema'
 
 export default class AccountManager {
   static getInitialSetupData() {

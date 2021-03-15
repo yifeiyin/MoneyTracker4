@@ -4,7 +4,7 @@ import { connect } from '../overmind'
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
 import DeleteIcon from '@material-ui/icons/Delete'
 import { withSnackbar } from 'notistack';
-import { Statement } from '../rules';
+import { Statement } from '_core/rules';
 
 class RulesScreen extends React.Component {
 

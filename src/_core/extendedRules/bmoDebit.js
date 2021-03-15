@@ -1,5 +1,5 @@
 import bmoDebitCodeToReadableType from './bmoDebitCodeToReadable';
-import { getNowDateTimeString, toTitleCase } from '../newCore/helpers'
+import { getNowDateTimeString, toTitleCase } from '_core/helpers'
 
 import {
   postProcess,

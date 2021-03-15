@@ -1,4 +1,4 @@
-import { CONDITIONS } from '../scripts/rules'
+import { CONDITIONS } from '_core/extendedRules'
 
 
 test('~=', () => {
