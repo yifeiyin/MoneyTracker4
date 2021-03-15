@@ -1,5 +1,5 @@
-import { tokenize, constructOperationList, consumeOperation, toDate, toDateRange, toRelativeDateRange } from './parser'
-import { OP_DATE_RANGE, OP_FUZZY_ACCOUNT, OP_WHERE } from './parser-operations'
+import { tokenize, constructOperationList, consumeOperation, toDate, toDateRange, toRelativeDateRange } from '.'
+import { OP_DATE_RANGE, OP_FUZZY_ACCOUNT, OP_WHERE } from './operations'
 
 test('tokenize', () => {
   expect(tokenize('')).toMatchObject([])
