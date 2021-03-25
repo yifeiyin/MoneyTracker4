@@ -52,18 +52,22 @@ export default class Section extends React.Component {
 
   render() {
     return (
-      <div>
-        <h2>
-          <ColorStripSpan account={this.account} />
-          {this.account.name + (this.account.isFolder ? ' 📂' : ' 📄')}
-        </h2>
-        {
-          this.account.isFolder ?
-            <ChartWrapper chartData={this.folderAccountDistributionChartData} />
-            :
-            <ChartWrapper chartData={this.accountInOutChartData} />
-        }
-        <details>
+      <div style={{ marginBlockEnd: 80 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+          <h2 style={{ width: '25%' }}>
+            <ColorStripSpan account={this.account} />
+            {this.account.name + (this.account.isFolder ? ' 📂' : ' 📄')}
+          </h2>
+          <div style={{ flex: 1 }}>
+            {
+              this.account.isFolder ?
+                <ChartWrapper chartData={this.folderAccountDistributionChartData} />
+                :
+                <ChartWrapper chartData={this.accountInOutChartData} />
+            }
+          </div>
+        </div>
+        <details open>
           <summary>{this.props.transactions.length + ' transaction(s)'}</summary>
           <TransactionTableSimplified transactions={this.props.transactions} />
         </details>
@@ -123,7 +127,10 @@ function ChartWrapper({ chartData }) {
                 .replace('BMO Chequing', 'Cheq')
                 .replace('BMO MasterCard', 'MC')
                 .replace('Telecom', 'Tel')
-              return label + '\n' + Math.round(value)
+              if (value > 1000)
+                return label + ' ' + Math.round(value)
+              else
+                return label + '\n' + Math.round(value)
             },
           }
         },
@@ -133,15 +140,15 @@ function ChartWrapper({ chartData }) {
 }
 
 function TransactionTableSimplified({ transactions }) {
-  return transactions.map(transaction =>
-    <TransactionTableBodyCells key={transaction.id} transaction={transaction} />
+  return transactions.map((transaction, index) =>
+    <TransactionTableBodyCells key={transaction.id} transaction={transaction} isEvenRow={(index + 1) % 2} />
   )
 }
-function TransactionTableBodyCells({ transaction }) {
+function TransactionTableBodyCells({ transaction, isEvenRow }) {
   const { id, time, title, debits, credits } = transaction;
   const readable = [stringifyAccountsAndAmounts(debits), stringifyAccountsAndAmounts(credits)]
   return (
-    <div className="transaction-row">
+    <div className={`transaction-row ${isEvenRow ? 'even' : ''}`}>
       <div data-type="id">{id}</div>
       <div data-type="time">{formatDate(time, false)}</div>
       <div data-type="title">{title}</div>

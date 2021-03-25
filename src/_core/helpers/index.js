@@ -86,8 +86,9 @@ export function getAccountColor(accountOrId) {
   }
 
   const hue = (id * 3 % 40) * 9
+  // const hue = (id * 7 % 60) * 6
   if (isNaN(hue)) return 'black'
-  return `hsla(${hue}, 75%, 40%, 0.75)`
+  return `hsla(${hue}, 80%, 40%, 0.7)`
 }
 
 export function ColorStripSpan({ id, account }) {
