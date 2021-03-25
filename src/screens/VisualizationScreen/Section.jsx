@@ -1,6 +1,6 @@
 import React from 'react'
 import { HorizontalBar } from 'react-chartjs-2'
-import { BalanceAccumulator } from '_core/helpers'
+import { BalanceAccumulator, getAccountColor } from '_core/helpers'
 
 
 export default class Section extends React.Component {
@@ -14,6 +14,7 @@ export default class Section extends React.Component {
     for (let childrenId of childrenIds) {
       result.push({
         label: global.accountManager.get(childrenId).name,
+        backgroundColor: getAccountColor(childrenId),
         data: [
           ba.getAccountCredits(childrenId).castToNumberInCurrency('CAD'),
           ba.getAccountDebits(childrenId).castToNumberInCurrency('CAD'),
@@ -34,7 +35,7 @@ export default class Section extends React.Component {
       if (childrenId === this.props.accountId) continue;
       result.push({
         label: global.accountManager.get(childrenId).name,
-        backgroundColor: 'grey',
+        backgroundColor: getAccountColor(childrenId),
         data: [
           ba.getAccountCredits(childrenId).castToNumberInCurrency('CAD'),
           ba.getAccountDebits(childrenId).castToNumberInCurrency('CAD'),
@@ -52,7 +53,10 @@ export default class Section extends React.Component {
   render() {
     return (
       <div>
-        <h2>{this.account.name}</h2>
+        <h2>
+          <span style={{ backgroundColor: getAccountColor(this.account) }}>&nbsp;&nbsp;</span>&nbsp;
+          {this.account.name + (this.account.isFolder ? ' 📂' : ' 📄')}
+        </h2>
         {
           this.account.isFolder ? <ChartWrapper chartData={this.chartData} /> : <ChartWrapper chartData={this.chartData2} />
         }
@@ -64,6 +68,7 @@ export default class Section extends React.Component {
 function ChartWrapper({ chartData }) {
   return (
     <HorizontalBar
+      height={25}
       data={{
         labels: ['CR', 'DR'],
         datasets: chartData,
@@ -71,7 +76,7 @@ function ChartWrapper({ chartData }) {
       options={{
         tooltips: {
           mode: 'point',
-          intersect: false
+          intersect: false,
         },
         scales: {
           xAxes: [{
@@ -79,15 +84,43 @@ function ChartWrapper({ chartData }) {
             ticks: {
               suggestedMin: 0,
               suggestedMax: 3000,
-              stepSize: 100,
+              stepSize: 500,
             }
           }],
           yAxes: [{
             stacked: true,
           }],
-        }
+        },
+        legend: {
+          display: false,
+        },
+        plugins: {
+          datalabels: {
+            textAlign: 'center',
+            color: ({ dataIndex, dataset }) => {
+              if (dataset.data[dataIndex] === 0)
+                return 'transparent'
+              else
+                return 'black'
+            },
+            formatter(value, context) {
+              console.log(context.chart.data);
+              let label = context.chart.data.datasets[context.datasetIndex].label;
+              label = label
+                // Temporarily shortening account names
+                .replace('Other Income/Expense', 'Other')
+                .replace(' Expense', '')
+                .replace(' Income', '')
+                .replace('Subscription', 'Sub')
+                .replace('Banking Fee', 'Bank')
+                .replace('BMO Chequing', 'Cheq')
+                .replace('BMO MasterCard', 'MC')
+                .replace('Telecom', 'Tel')
+              return label + '\n' + Math.round(value)
+            },
+          }
+        },
       }}
     />
-
   )
 }

@@ -28,6 +28,11 @@ import TransactionManager from './_core/databaseLayer/transactions';
 import Monum from '_core/monum';
 import CheckpointManager from './_core/databaseLayer/checkpoints';
 
+/** Chart.js Setup */
+import { Chart } from 'chart.js';
+import ChartDataLabels from 'chartjs-plugin-datalabels'
+Chart.plugins.register(ChartDataLabels);
+
 /** Database setup */
 const db = new Dexie('MyDatabase');
 db.version(11).stores({
@@ -156,3 +161,4 @@ ReactDOM.render(
 // unregister() to register() below. Note this comes with some pitfalls.
 // Learn more about service workers: https://bit.ly/CRA-PWA
 serviceWorker.unregister();
+

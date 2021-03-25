@@ -74,3 +74,18 @@ export function toTitleCase(str) {
 export function assert(condition, message) {
   if (!condition) throw new Error(message || "Assertion failed")
 }
+
+export function getAccountColor(accountOrId) {
+  if (!accountOrId) return 'black'
+
+  let id;
+  if (accountOrId.id) {
+    id = accountOrId.id
+  } else {
+    id = accountOrId
+  }
+
+  const hue = (id * 3 % 40) * 9
+  if (isNaN(hue)) return 'black'
+  return `hsla(${hue}, 75%, 40%, 0.75)`
+}

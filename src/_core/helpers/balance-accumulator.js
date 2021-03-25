@@ -1,4 +1,5 @@
 import Monum from '../monum';
+import { assert } from '_core/helpers';
 
 export default class BalanceAccumulator {
   static CREDIT = 'credit'
@@ -59,8 +60,4 @@ export default class BalanceAccumulator {
       return { type: this.constructor.CREDIT, balance: drMinusCr.neg() }
     return { type: this.constructor.DEBIT, balance: drMinusCr }
   }
-}
-
-function assert(condition, message) {
-  if (!condition) throw new Error(message || "Assertion failed")
 }
