@@ -1,11 +1,11 @@
 import React from 'react'
 import { HorizontalBar } from 'react-chartjs-2'
-import { BalanceAccumulator, getAccountColor } from '_core/helpers'
+import { BalanceAccumulator, getAccountColor, formatDate, sumOfAccountAndAmountList, ColorStripSpan } from '_core/helpers'
 
 
 export default class Section extends React.Component {
 
-  get chartData() {
+  get folderAccountDistributionChartData() {
     const childrenIds = global.accountManager.getChildrenIds(this.props.accountId)
     const ba = new BalanceAccumulator(this.props.transactions)
 
@@ -25,7 +25,7 @@ export default class Section extends React.Component {
     return result
   }
 
-  get chartData2() {
+  get accountInOutChartData() {
     const ba = new BalanceAccumulator(this.props.transactions)
 
     const result = []
@@ -54,12 +54,19 @@ export default class Section extends React.Component {
     return (
       <div>
         <h2>
-          <span style={{ backgroundColor: getAccountColor(this.account) }}>&nbsp;&nbsp;</span>&nbsp;
+          <ColorStripSpan account={this.account} />
           {this.account.name + (this.account.isFolder ? ' 📂' : ' 📄')}
         </h2>
         {
-          this.account.isFolder ? <ChartWrapper chartData={this.chartData} /> : <ChartWrapper chartData={this.chartData2} />
+          this.account.isFolder ?
+            <ChartWrapper chartData={this.folderAccountDistributionChartData} />
+            :
+            <ChartWrapper chartData={this.accountInOutChartData} />
         }
+        <details>
+          <summary>{this.props.transactions.length + ' transaction(s)'}</summary>
+          <TransactionTableSimplified transactions={this.props.transactions} />
+        </details>
       </div>
     )
   }
@@ -122,5 +129,43 @@ function ChartWrapper({ chartData }) {
         },
       }}
     />
+  )
+}
+
+function TransactionTableSimplified({ transactions }) {
+  return transactions.map(transaction =>
+    <TransactionTableBodyCells key={transaction.id} transaction={transaction} />
+  )
+}
+function TransactionTableBodyCells({ transaction }) {
+  const { id, time, title, debits, credits } = transaction;
+  const readable = [stringifyAccountsAndAmounts(debits), stringifyAccountsAndAmounts(credits)]
+  return (
+    <div className="transaction-row">
+      <div data-type="id">{id}</div>
+      <div data-type="time">{formatDate(time, false)}</div>
+      <div data-type="title">{title}</div>
+      <div data-type="debit">{readable[0]}</div>
+      <div data-type="credit">{readable[1]}</div>
+      <div data-type="amount">{sumOfAccountAndAmountList(debits).toReadable()}</div>
+    </div>
+  );
+}
+function stringifyAccountsAndAmounts(side) {
+  const accountManager = global.accountManager;
+  if (side.length === 0) { return '-'; }
+  if (side.length === 1) {
+    const { acc } = side[0];
+    return <span><ColorStripSpan id={acc} />{accountManager.fromIdToName(acc)}</span>;
+  }
+  const accountNames = side.map(({ acc }) => accountManager.fromIdToName(acc));
+  return side.map(({ acc, amt }, index) =>
+    <span key={String(index)}>
+      {(index === 0 ? null : <br />)}
+      <span>
+        <ColorStripSpan id={acc} />
+        {accountNames[index] + ' – ' + amt.toReadable()}
+      </span>
+    </span>
   )
 }

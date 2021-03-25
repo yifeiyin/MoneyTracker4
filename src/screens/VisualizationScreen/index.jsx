@@ -50,7 +50,7 @@ class VisualizationScreen extends React.Component {
         <Button onClick={() => this.refresh()}>Update</Button>
         {
           this.state.accountIds.map(accountId =>
-            <Section key={String(accountId)} accountId={accountId} transactions={this._transactionsGrouped[accountId]} />
+            <Section key={String(accountId)} accountId={accountId} transactions={this._transactionsGrouped[accountId] ?? []} />
           )
         }
         {/* <Bar

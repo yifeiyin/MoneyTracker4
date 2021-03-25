@@ -89,3 +89,7 @@ export function getAccountColor(accountOrId) {
   if (isNaN(hue)) return 'black'
   return `hsla(${hue}, 75%, 40%, 0.75)`
 }
+
+export function ColorStripSpan({ id, account }) {
+  return <><span style={{ backgroundColor: getAccountColor(id ?? account) }}>&nbsp;&nbsp;</span>&nbsp;</>
+}

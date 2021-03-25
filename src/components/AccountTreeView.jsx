@@ -6,7 +6,7 @@ import { TreeView, TreeItem } from '@material-ui/lab';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import EditIcon from '@material-ui/icons/Edit';
-import { getAccountColor } from '_core/helpers';
+import { ColorStripSpan } from '_core/helpers';
 
 
 export default function AccountTreeView(props) {
@@ -40,7 +40,7 @@ const renderTree = (nodes, onEdit, onClick, onDoubleClick) => (
         onDoubleClick={(e) => { e.stopPropagation(); onDoubleClick && onDoubleClick(nodes.id); }}
         onClick={(e) => { e.target === e.currentTarget && onClick && onClick(nodes.id); }}
       >
-        <span style={{ backgroundColor: getAccountColor(nodes.id) }}>&nbsp;&nbsp;</span>&nbsp;
+        <ColorStripSpan id={nodes.id} />
         {nodes.name}
         {
           !onEdit ? null :

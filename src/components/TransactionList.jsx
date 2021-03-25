@@ -7,7 +7,7 @@ import DeleteIcon from '@material-ui/icons/Delete';
 
 import ObjectEditor from '../ObjectEditor/index';
 import { TransactionCreateFormat, TransactionEditFormat } from '../ObjectEditor/ObjectFormats';
-import { deepCopy, getTodaysDateAt0000, sumOfAccountAndAmountList, formatDate } from '_core/helpers';
+import { deepCopy, getTodaysDateAt0000, sumOfAccountAndAmountList, formatDate, ColorStripSpan } from '_core/helpers';
 import { queryTableGetCollection } from '_core/transactionQueryParser';
 import { FixedSizeList as List } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
@@ -273,19 +273,17 @@ function TransactionTableBodyCells({ transaction, onEdit, onRemove, isSelected, 
 
 function stringifyAccountsAndAmounts(side) {
   const accountManager = global.accountManager;
-
   if (side.length === 0) { return '-'; }
   if (side.length === 1) {
     const { acc } = side[0];
-    return accountManager.fromIdToName(acc);
+    return <span><ColorStripSpan id={acc} />{accountManager.fromIdToName(acc)}</span>;
   }
-
   const accountNames = side.map(({ acc }) => accountManager.fromIdToName(acc));
-
   return side.map(({ acc, amt }, index) =>
     <span key={String(index)}>
       {(index === 0 ? null : <br />)}
       <span>
+        <ColorStripSpan id={acc} />
         {accountNames[index] + ' – ' + amt.toReadable()}
       </span>
     </span>
