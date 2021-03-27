@@ -12,7 +12,7 @@ import { queryTableGetCollection } from '_core/transactionQueryParser';
 import { FixedSizeList as List } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
 
-const PAGE_LIMIT = 80;
+// const PAGE_LIMIT = 80;
 
 /*
 This component has 3 important tasks
@@ -40,7 +40,7 @@ export default class TransactionView extends React.Component {
   state = {
     data: [],
     totalCount: 0,
-    currentPage: 0,
+    // currentPage: 0,
     currentTransactionId: null,
     currentTransactionValue: {},
     error: null,
@@ -64,18 +64,18 @@ export default class TransactionView extends React.Component {
       return;
     }
 
-    await this.loadDataAtPage(0);
+    await this.loadData();
   }
 
-  loadDataAtPage = async (currentPage) => {
-    const offset = currentPage * PAGE_LIMIT;
+  loadData = async () => {
+    // const offset = currentPage * PAGE_LIMIT;
     const startTime = new Date();
     try {
       const totalCount = await this.collection.clone().count();
-      const data = await this.collection.clone().offset(offset).limit(PAGE_LIMIT).sortBy('time');
+      const data = await this.collection.clone().sortBy('time');
 
       this.queryTime = new Date() - startTime;
-      this.setState({ data, currentPage, totalCount, error: null });
+      this.setState({ data, totalCount, error: null });
 
     } catch (error) {
       this.setState({ error: 'Query runtime error: ' + error.message });
@@ -91,37 +91,37 @@ export default class TransactionView extends React.Component {
         </Typography>
       )
 
-    const { totalCount, currentPage, data } = this.state;
-    let pageText = totalCount + ' item' + (totalCount === 1 ? '' : 's');
-    if (totalCount > PAGE_LIMIT) {
-      pageText = `${currentPage * PAGE_LIMIT + 1} - ${currentPage * PAGE_LIMIT + data.length} / ${pageText}`;
-    }
+    // const { totalCount, currentPage, data } = this.state;
+    // let pageText = totalCount + ' item' + (totalCount === 1 ? '' : 's');
+    // if (totalCount > PAGE_LIMIT) {
+    //   pageText = `${currentPage * PAGE_LIMIT + 1} - ${currentPage * PAGE_LIMIT + data.length} / ${pageText}`;
+    // }
 
     const selectedCount = Object.values(this.state.selectedTransactionMap).filter(Boolean).length;
 
     return (
       <div style={{ display: 'flex', margin: '10px' }}>
-        <Typography color='textPrimary' style={{ width: '160px', marginRight: '25px' }}>
+        {/* <Typography color='textPrimary' style={{ width: '160px', marginRight: '25px' }}>
           {pageText}
-        </Typography>
+        </Typography> */}
         <Typography color='textPrimary' style={{ width: '100px', marginRight: '25px' }}>
           {selectedCount === 0 ? '' : selectedCount + ' selected'}
         </Typography>
         <Typography color='textSecondary' style={{ width: '120px', marginRight: '25px' }}>
           {'took ' + this.queryTime + ' ms'}
         </Typography>
-        {
+        {/* {
           Array.from({ length: Math.ceil((totalCount - 1) / PAGE_LIMIT) }).map((v, index) =>
             <Button
               key={String(index)}
               size="small"
               variant={(index === currentPage) ? "outlined" : "text"}
-              onClick={() => this.loadDataAtPage(index)}
+              onClick={() => this.loadData(index)}
             >
               {index + 1}
             </Button>
           )
-        }
+        } */}
       </div>
     )
   }
@@ -186,7 +186,7 @@ export default class TransactionView extends React.Component {
 
     this.props.enqueueSnackbar('Done', { variant: 'success' });
     this.closeModal();
-    this.loadDataAtPage(this.state.currentPage);
+    this.loadData();
   }
 
   onRemove = async (id) => {
@@ -195,7 +195,7 @@ export default class TransactionView extends React.Component {
     } catch (error) { alert(error); return; }
 
     this.props.enqueueSnackbar('Deleted!', { variant: 'success' });
-    this.loadDataAtPage(this.state.currentPage);
+    this.loadData();
   }
 
   isTransactionSelectedById(id) { return this.state.selectedTransactionMap[id]; }
