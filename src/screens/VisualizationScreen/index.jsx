@@ -9,7 +9,7 @@ import { queryTableGetCollection } from '_core/transactionQueryParser';
 
 class VisualizationScreen extends React.Component {
   state = {
-    accountIds: [114, 113, 112, 124, 122],
+    accountIds: [114, 113, 110, 112, 124, 122, 123],
     time: '2021-01',
     transactions: [],
   }
@@ -36,7 +36,6 @@ class VisualizationScreen extends React.Component {
       this._transactionsGrouped[accountId] = trans
     }
 
-    console.log(this._transactionsGrouped);
     this.setState({ transactions });
   }
 

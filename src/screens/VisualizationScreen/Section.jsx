@@ -11,6 +11,7 @@ export default class Section extends React.Component {
 
     const result = []
 
+    // NOTE: Current implementation skips nested accounts
     for (let childrenId of childrenIds) {
       result.push({
         label: global.accountManager.get(childrenId).name,
@@ -61,9 +62,9 @@ export default class Section extends React.Component {
           <div style={{ flex: 1 }}>
             {
               this.account.isFolder ?
-                <ChartWrapper chartData={this.folderAccountDistributionChartData} />
+                <ChartWrapper title='Distribution' chartData={this.folderAccountDistributionChartData} />
                 :
-                <ChartWrapper chartData={this.accountInOutChartData} />
+                <ChartWrapper title='From/To' chartData={this.accountInOutChartData} />
             }
           </div>
         </div>
@@ -76,10 +77,10 @@ export default class Section extends React.Component {
   }
 }
 
-function ChartWrapper({ chartData }) {
+function ChartWrapper({ chartData, title }) {
   return (
     <HorizontalBar
-      height={25}
+      height={30}
       data={{
         labels: ['CR', 'DR'],
         datasets: chartData,
@@ -104,6 +105,11 @@ function ChartWrapper({ chartData }) {
         },
         legend: {
           display: false,
+        },
+        title: {
+          text: title,
+          display: true,
+          position: 'left',
         },
         plugins: {
           datalabels: {
