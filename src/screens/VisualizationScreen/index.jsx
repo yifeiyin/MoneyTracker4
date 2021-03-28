@@ -2,9 +2,6 @@ import { Button, TextField } from '@material-ui/core';
 import React from 'react';
 import { connect } from '../../overmind';
 import Section from './Section'
-
-import 'chartjs-plugin-colorschemes';
-
 import { queryTableGetCollection } from '_core/transactionQueryParser';
 
 class VisualizationScreen extends React.Component {
