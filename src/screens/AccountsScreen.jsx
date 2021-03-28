@@ -1,6 +1,5 @@
 import React from 'react';
 import { Button, Typography } from '@material-ui/core';
-import { ArrowDropDown as ArrowDropDownIcon, ArrowDropUp as ArrowDropUpIcon } from '@material-ui/icons';
 
 import ObjectEditor from '../ObjectEditor/index';
 import { AccountTreeView, Modal } from '../components';

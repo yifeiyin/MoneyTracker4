@@ -75,10 +75,16 @@ export default class TransactionView extends React.Component {
   loadData = async () => {
     const startTime = new Date();
     try {
-      const data = await this.collection.clone().sortBy('time');
+      let data = await this.collection.clone().sortBy('time');
+      // NOTE: 'account relates' query returns duplicated entries.
+      //       Removing the duplicates by id here.
+      let uniqueData = [];
+      for (let transaction of data)
+        if (!uniqueData.map(trans => trans.id).includes(transaction.id))
+          uniqueData.push(transaction);
 
       this.queryTime = new Date() - startTime;
-      this.setState({ data, error: null });
+      this.setState({ data: uniqueData, error: null });
 
     } catch (error) {
       this.setState({ error: 'Query runtime error: ' + error.message });
