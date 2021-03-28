@@ -7,6 +7,7 @@ import { AccountTreeView, Modal } from '../components';
 import { withSnackbar } from 'notistack';
 
 import { AccountEditFormat, AccountCreateFormat } from '../ObjectEditor/ObjectFormats';
+import TransactionsScreen from './TransactionsScreen';
 
 class AccountsScreen extends React.Component {
   state = {
@@ -85,8 +86,16 @@ class AccountsScreen extends React.Component {
     this.resetModal();
   }
 
-  onSelectAccount = (selectedAccountId) => {
-    this.setState({ selectedAccountId })
+  onSelectAccount = async (selectedAccountId) => {
+    const selectedAccountName = (await global.accountManager.get(selectedAccountId)).name;
+    this.setState({ selectedAccountId, selectedAccountName });
+
+    // Update query
+    let currentQuery = this.transactionScreen.state.currentQuery;
+    if (currentQuery.includes('relates'))
+      currentQuery = currentQuery.substr(0, currentQuery.indexOf('relates')).trim()
+    currentQuery += ' relates "' + selectedAccountName + '"'
+    this.transactionScreen.onChange(currentQuery)
   }
 
   render() {
@@ -119,7 +128,7 @@ class AccountsScreen extends React.Component {
         <div style={{ flex: 3 }}>
           <Typography variant='h4' align='center'>{this.state.selectedAccountName}</Typography>
 
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          {/* <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 <ArrowDropUpIcon style={{ color: 'green' }} />
@@ -134,9 +143,9 @@ class AccountsScreen extends React.Component {
             <div style={{ fontSize: 26 }}>
               {String(this.state.selectedTransactionsSummary.final)}
             </div>
-          </div>
+          </div> */}
 
-          {/* <TransactionList /> */}
+          <TransactionsScreen ref={ref => this.transactionScreen = ref} />
         </div>
       </div>
     );

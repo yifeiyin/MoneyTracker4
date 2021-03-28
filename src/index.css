@@ -37,7 +37,7 @@ code {
   text-transform: none;
 }
 
-.transaction-row [data-type="id"] { flex: 1; }
+.transaction-row [data-type="id"] { flex: 0.5; }
 .transaction-row [data-type="time"] { flex: 1; }
 .transaction-row [data-type="title"] { flex: 5; }
 .transaction-row [data-type="debit"] { flex: 3; }

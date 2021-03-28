@@ -46,10 +46,13 @@ export default class TransactionView extends React.Component {
   collection = null;
   queryTime = null;
 
+  get selectedTransactionIds() {
+    return Object.entries(this.state.selectedTransactionMap).filter(([k, v]) => v).map(([k, v]) => Number(k))
+  }
+
   componentDidMount() {
     if (this.props.initialQuery)
       this.setQuery(this.props.initialQuery);
-    console.log('did mount');
   }
 
   setQuery = async (query) => {
@@ -91,7 +94,7 @@ export default class TransactionView extends React.Component {
         </Typography>
       )
 
-    const selectedCount = Object.values(this.state.selectedTransactionMap).filter(Boolean).length;
+    const selectedCount = this.selectedTransactionIds.length;
 
     return (
       <div style={{ display: 'flex', margin: '10px' }}>
@@ -110,6 +113,10 @@ export default class TransactionView extends React.Component {
         <Button size="small" variant="outlined" onClick={() => this.deselectAll()}>
           Deselect All
         </Button>
+        <Button size="small" variant="outlined" onClick={() => this.removeSelected()}>
+          <DeleteIcon size="small" />
+          Remove
+        </Button>
       </div>
     )
   }
@@ -121,6 +128,18 @@ export default class TransactionView extends React.Component {
     this.setState({ selectedTransactionMap: map });
   }
   deselectAll = () => { this.setState({ selectedTransactionMap: {} }); }
+  removeSelected = async () => {
+    if (!global.confirm(`Are you sure to delete ${this.selectedTransactionIds.length} transaction(s)?`))
+      return;
+
+    for (let id of this.selectedTransactionIds)
+      try {
+        await global.transactionManager.remove(id);
+      } catch (error) { return alert(error); }
+
+    this.props.enqueueSnackbar('Deleted!', { variant: 'success' });
+    this.loadData();
+  }
 
 
   promptToCreate = (defaultValues = {}) => {
@@ -153,11 +172,10 @@ export default class TransactionView extends React.Component {
     const id = this.state.currentTransactionId;
 
     try {
-      if (id === 'new') {
+      if (id === 'new')
         await global.transactionManager.create(newValue);
-      } else {
+      else
         await global.transactionManager.update(id, newValue);
-      }
     } catch (error) { alert(error); return; }
 
     this.props.enqueueSnackbar('Done', { variant: 'success' });
@@ -165,14 +183,6 @@ export default class TransactionView extends React.Component {
     this.loadData();
   }
 
-  onRemove = async (id) => {
-    try {
-      await global.transactionManager.remove(id);
-    } catch (error) { alert(error); return; }
-
-    this.props.enqueueSnackbar('Deleted!', { variant: 'success' });
-    this.loadData();
-  }
 
   isTransactionSelectedById(id) { return this.state.selectedTransactionMap[id]; }
   onChangeSelect = (id, newValue) => {
@@ -212,7 +222,6 @@ export default class TransactionView extends React.Component {
                         isSelected={this.isTransactionSelectedById(id)}
                         onChangeSelect={(newValue) => this.onChangeSelect(id, newValue)}
                         onEdit={() => this.onEdit(transaction)}
-                        onRemove={() => this.onRemove(id)}
                         transaction={transaction}
                       />
                     </div>
@@ -226,7 +235,7 @@ export default class TransactionView extends React.Component {
   }
 }
 
-function TransactionTableBodyCells({ transaction, onEdit, onRemove, isSelected, onChangeSelect }) {
+function TransactionTableBodyCells({ transaction, onEdit, isSelected, onChangeSelect }) {
   const { id, time, title, debits, credits } = transaction;
   const readable = [stringifyAccountsAndAmounts(debits), stringifyAccountsAndAmounts(credits)]
 
@@ -234,8 +243,7 @@ function TransactionTableBodyCells({ transaction, onEdit, onRemove, isSelected, 
     <>
       <Checkbox checked={isSelected} onChange={(e) => onChangeSelect(e.target.checked)} />
       <IconButton size='small' onClick={onEdit}><EditIcon /></IconButton>
-      <IconButton size='small' onClick={onRemove}><DeleteIcon /></IconButton>
-      <div data-type="id">{id}</div>
+      <div data-type="id" style={{ color: 'gray', fontSize: '50%' }}>{id}</div>
       <div data-type="time">{formatDate(time, false)}</div>
       <div data-type="title">{title}</div>
       <div data-type="debit">{readable[0]}</div>
