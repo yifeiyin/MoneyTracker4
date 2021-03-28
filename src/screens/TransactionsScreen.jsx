@@ -22,6 +22,10 @@ class TransactionsScreen extends React.Component {
     this.TransactionView.setQuery(this.state.currentQuery);
   }
 
+  componentDidMount() {
+    this.execute();
+  }
+
   render() {
     return (
       <div>
@@ -34,7 +38,7 @@ class TransactionsScreen extends React.Component {
         <TransactionList
           ref={(o) => this.TransactionView = o}
           enqueueSnackbar={this.props.enqueueSnackbar}
-        // viewOnly={false}
+          height='calc(100vh - 300px)'
         />
       </div>
     );

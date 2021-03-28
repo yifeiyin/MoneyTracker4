@@ -1,9 +1,16 @@
 import React from 'react'
 import { HorizontalBar } from 'react-chartjs-2'
-import { BalanceAccumulator, getAccountColor, formatDate, sumOfAccountAndAmountList, ColorStripSpan } from '_core/helpers'
+import { TransactionList } from 'components'
+import { BalanceAccumulator, getAccountColor, ColorStripSpan } from '_core/helpers'
 
 
 export default class Section extends React.Component {
+
+  componentDidMount() { this.transactionList.setData(this.props.transactions) }
+  componentDidUpdate() {
+    // TODO: using componentDidUpdate & componentDidMount is not a long term solution
+    this.transactionList.setData(this.props.transactions)
+  }
 
   get folderAccountDistributionChartData() {
     const childrenIds = global.accountManager.getChildrenIds(this.props.accountId)
@@ -69,8 +76,10 @@ export default class Section extends React.Component {
           </div>
         </div>
         <details open>
-          <summary>{this.props.transactions.length + ' transaction(s)'}</summary>
-          <TransactionTableSimplified transactions={this.props.transactions} />
+          <TransactionList
+            ref={(ref) => this.transactionList = ref}
+            height={310}
+          />
         </details>
       </div>
     )
@@ -121,7 +130,6 @@ function ChartWrapper({ chartData, title }) {
                 return 'black'
             },
             formatter(value, context) {
-              console.log(context.chart.data);
               let label = context.chart.data.datasets[context.datasetIndex].label;
               label = label
                 // Temporarily shortening account names
@@ -142,43 +150,5 @@ function ChartWrapper({ chartData, title }) {
         },
       }}
     />
-  )
-}
-
-function TransactionTableSimplified({ transactions }) {
-  return transactions.map((transaction, index) =>
-    <TransactionTableBodyCells key={transaction.id} transaction={transaction} isEvenRow={(index + 1) % 2} />
-  )
-}
-function TransactionTableBodyCells({ transaction, isEvenRow }) {
-  const { id, time, title, debits, credits } = transaction;
-  const readable = [stringifyAccountsAndAmounts(debits), stringifyAccountsAndAmounts(credits)]
-  return (
-    <div className={`transaction-row ${isEvenRow ? 'even' : ''}`}>
-      <div data-type="id">{id}</div>
-      <div data-type="time">{formatDate(time, false)}</div>
-      <div data-type="title">{title}</div>
-      <div data-type="debit">{readable[0]}</div>
-      <div data-type="credit">{readable[1]}</div>
-      <div data-type="amount">{sumOfAccountAndAmountList(debits).toReadable()}</div>
-    </div>
-  );
-}
-function stringifyAccountsAndAmounts(side) {
-  const accountManager = global.accountManager;
-  if (side.length === 0) { return '-'; }
-  if (side.length === 1) {
-    const { acc } = side[0];
-    return <span><ColorStripSpan id={acc} />{accountManager.fromIdToName(acc)}</span>;
-  }
-  const accountNames = side.map(({ acc }) => accountManager.fromIdToName(acc));
-  return side.map(({ acc, amt }, index) =>
-    <span key={String(index)}>
-      {(index === 0 ? null : <br />)}
-      <span>
-        <ColorStripSpan id={acc} />
-        {accountNames[index] + ' – ' + amt.toReadable()}
-      </span>
-    </span>
   )
 }

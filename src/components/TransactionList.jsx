@@ -12,8 +12,6 @@ import { queryTableGetCollection } from '_core/transactionQueryParser';
 import { FixedSizeList as List } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
 
-// const PAGE_LIMIT = 80;
-
 /*
 This component has 3 important tasks
 
@@ -39,8 +37,6 @@ Actions
 export default class TransactionView extends React.Component {
   state = {
     data: [],
-    totalCount: 0,
-    // currentPage: 0,
     currentTransactionId: null,
     currentTransactionValue: {},
     error: null,
@@ -51,7 +47,9 @@ export default class TransactionView extends React.Component {
   queryTime = null;
 
   componentDidMount() {
-    this.setQuery(this.props.initialQuery || '');
+    if (this.props.initialQuery)
+      this.setQuery(this.props.initialQuery);
+    console.log('did mount');
   }
 
   setQuery = async (query) => {
@@ -67,15 +65,17 @@ export default class TransactionView extends React.Component {
     await this.loadData();
   }
 
+  setData = (transactions) => {
+    this.setState({ data: transactions });
+  }
+
   loadData = async () => {
-    // const offset = currentPage * PAGE_LIMIT;
     const startTime = new Date();
     try {
-      const totalCount = await this.collection.clone().count();
       const data = await this.collection.clone().sortBy('time');
 
       this.queryTime = new Date() - startTime;
-      this.setState({ data, totalCount, error: null });
+      this.setState({ data, error: null });
 
     } catch (error) {
       this.setState({ error: 'Query runtime error: ' + error.message });
@@ -91,37 +91,25 @@ export default class TransactionView extends React.Component {
         </Typography>
       )
 
-    // const { totalCount, currentPage, data } = this.state;
-    // let pageText = totalCount + ' item' + (totalCount === 1 ? '' : 's');
-    // if (totalCount > PAGE_LIMIT) {
-    //   pageText = `${currentPage * PAGE_LIMIT + 1} - ${currentPage * PAGE_LIMIT + data.length} / ${pageText}`;
-    // }
-
     const selectedCount = Object.values(this.state.selectedTransactionMap).filter(Boolean).length;
 
     return (
       <div style={{ display: 'flex', margin: '10px' }}>
-        {/* <Typography color='textPrimary' style={{ width: '160px', marginRight: '25px' }}>
-          {pageText}
-        </Typography> */}
         <Typography color='textPrimary' style={{ width: '100px', marginRight: '25px' }}>
           {selectedCount === 0 ? '' : selectedCount + ' selected'}
         </Typography>
-        <Typography color='textSecondary' style={{ width: '120px', marginRight: '25px' }}>
-          {'took ' + this.queryTime + ' ms'}
+        <Typography color='textSecondary' style={{ width: '100px', marginRight: '25px' }}>
+          {this.state.data.length + ' item' + (this.state.data.length === 1 ? '' : 's')}
         </Typography>
-        {/* {
-          Array.from({ length: Math.ceil((totalCount - 1) / PAGE_LIMIT) }).map((v, index) =>
-            <Button
-              key={String(index)}
-              size="small"
-              variant={(index === currentPage) ? "outlined" : "text"}
-              onClick={() => this.loadData(index)}
-            >
-              {index + 1}
-            </Button>
-          )
-        } */}
+        <Typography color='textSecondary' style={{ width: '120px', marginRight: '25px' }}>
+          {this.queryTime && ('took ' + this.queryTime + ' ms')}
+        </Typography>
+        <Button size="small" variant="outlined" onClick={() => this.selectAll()}>
+          Select All
+        </Button>
+        <Button size="small" variant="outlined" onClick={() => this.deselectAll()}>
+          Deselect All
+        </Button>
       </div>
     )
   }
@@ -134,18 +122,6 @@ export default class TransactionView extends React.Component {
   }
   deselectAll = () => { this.setState({ selectedTransactionMap: {} }); }
 
-  ToolBar = () => {
-    return (
-      <div style={{ display: 'flex', margin: '10px' }}>
-        <Button variant="outlined" onClick={() => this.selectAll()}>
-          Select All
-        </Button>
-        <Button variant="outlined" onClick={() => this.deselectAll()}>
-          Deselect All
-        </Button>
-      </div>
-    )
-  }
 
   promptToCreate = (defaultValues = {}) => {
     defaultValues.time = getTodaysDateAt0000();
@@ -206,7 +182,7 @@ export default class TransactionView extends React.Component {
 
   render() {
     return (
-      <div style={{ padding: 5 }}>
+      <div style={{ padding: 5, display: 'flex', flexDirection: 'column', height: this.props.height ?? 280 }}>
         <Modal open={this.state.currentTransactionId !== null} onModalRequestClose={() => this.onSaveTransaction(true)}>
           <ObjectEditor
             format={this.state.currentTransactionId === 'new' ? TransactionCreateFormat : TransactionEditFormat}
@@ -216,8 +192,7 @@ export default class TransactionView extends React.Component {
           />
         </Modal>
         <this.InformationLine />
-        <this.ToolBar />
-        <AutoSizer style={{ height: 'calc(100vh - 360px)' }}>
+        <AutoSizer style={{ flex: 1 }}>
           {
             ({ height, width }) =>
               <List
@@ -225,7 +200,7 @@ export default class TransactionView extends React.Component {
                 width={width}
                 itemCount={this.state.data.length}
                 itemKey={(index) => String(this.state.data[index].id)}
-                itemSize={50}
+                itemSize={30}
               >
                 {({ index, style }) => {
                   const transaction = this.state.data[index];
