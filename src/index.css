@@ -37,6 +37,12 @@ code {
   text-transform: none;
 }
 
+.transaction-row {
+  transition: .1s;
+}
+.transaction-row:hover {
+  background-color:rgba(173, 216, 230, 0.5);
+}
 .transaction-row [data-type="id"] { flex: 0.5; }
 .transaction-row [data-type="time"] { flex: 1; }
 .transaction-row [data-type="title"] { flex: 5; }
