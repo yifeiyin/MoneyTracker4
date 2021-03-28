@@ -57,3 +57,13 @@ code {
   display: flex;
   width: 100%;
 }
+
+/* Hides the twisties in <details>. See */
+/* https://developer.mozilla.org/en-US/docs/Web/HTML/Element/details#customizing_the_disclosure_widget */
+details > summary::-webkit-details-marker {
+  display: none;
+}
+
+summary {
+  list-style: none;
+}

@@ -6,19 +6,28 @@ import { queryTableGetCollection } from '_core/transactionQueryParser';
 
 class VisualizationScreen extends React.Component {
   state = {
-    accountIds: [114, 113, 110, 112, 124, 122, 123],
-    time: '2021-01',
+    accountIds: [],
+    time: '',
     transactions: [],
   }
   _transactionsGrouped = {};
 
   componentDidMount() {
-    // TODO: Save and load from storage
     this.storage = this.props.overmind.effects.storage
-    // this.setState({
-    //   accountIds: this.storage.get('visualization', [])
-    // })
-    this.refresh();
+
+    let baseAccounts = [103, 113, 114, 115];
+    let accountIds = [];
+    for (let acc of baseAccounts) {
+      accountIds.push(acc);
+      accountIds.push(...global.accountManager.getChildrenIds(acc));
+    }
+
+    this.setState({
+      time: this.storage.get('visualization', '2021-01'),
+      accountIds,
+    }, () => {
+      this.refresh();
+    });
   }
 
   refresh = async () => {
@@ -26,6 +35,7 @@ class VisualizationScreen extends React.Component {
       global.transactionManager.table,
       `${this.state.time}`
     ).toArray();
+    this.storage.set('visualization', this.state.time)
 
     this._transactionsGrouped = {};
     for (let accountId of this.state.accountIds) {
@@ -39,21 +49,19 @@ class VisualizationScreen extends React.Component {
   render() {
     return (
       <div>
-        <TextField
-          onChange={(e) => this.setState({ time: e.target.value })}
-          onKeyPress={(e) => e.key === 'Enter' && this.refresh()}
-        />
-        <Button onClick={() => this.refresh()}>Update</Button>
+        <div style={{ position: 'sticky', top: 0 }}>
+          <TextField
+            value={this.state.time}
+            onChange={(e) => this.setState({ time: e.target.value })}
+            onKeyPress={(e) => e.key === 'Enter' && this.refresh()}
+          />
+          <Button onClick={() => this.refresh()}>Update</Button>
+        </div>
         {
           this.state.accountIds.map(accountId =>
             <Section key={String(accountId)} accountId={accountId} transactions={this._transactionsGrouped[accountId] ?? []} />
           )
         }
-        {/* <Bar
-          data={data}
-          options={options}
-        /> */}
-
       </div>
     )
   }

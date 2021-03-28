@@ -4,12 +4,12 @@ import { TransactionList } from 'components'
 import { BalanceAccumulator, getAccountColor, ColorStripSpan } from '_core/helpers'
 
 
-export default class Section extends React.Component {
-
-  componentDidMount() { this.transactionList.setData(this.props.transactions) }
+export default class Section extends React.PureComponent {
+  componentDidMount() { this.componentDidUpdate() }
   componentDidUpdate() {
     // TODO: using componentDidUpdate & componentDidMount is not a long term solution
-    this.transactionList.setData(this.props.transactions)
+    if (this.transactionList)
+      this.transactionList.setData(this.props.transactions)
   }
 
   get folderAccountDistributionChartData() {
@@ -58,30 +58,54 @@ export default class Section extends React.Component {
     return global.accountManager.get(this.props.accountId)
   }
 
-  render() {
+  get totalAmountString() {
     return (
-      <div style={{ marginBlockEnd: 80 }}>
-        <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-          <h2 style={{ width: '25%' }}>
-            <ColorStripSpan account={this.account} />
-            {this.account.name + (this.account.isFolder ? ' 📂' : ' 📄')}
-          </h2>
-          <div style={{ flex: 1 }}>
-            {
-              this.account.isFolder ?
-                <ChartWrapper title='Distribution' chartData={this.folderAccountDistributionChartData} />
-                :
-                <ChartWrapper title='From/To' chartData={this.accountInOutChartData} />
-            }
+      new BalanceAccumulator(this.props.transactions)
+        .getAccountBalance(this.props.accountId)
+        .balance
+        .toReadable()
+    )
+  }
+
+  render() {
+    const isFolder = this.account.isFolder ? true : null;
+    const isEmpty = this.props.transactions.length === 0 ? true : null;
+    const height = Math.min(260, this.props.transactions.length * 30 + 10)
+    return (
+      <details>
+        <summary>
+          <div style={{ marginBlockStart: isFolder ? 80 : 0, marginLeft: isFolder ? 0 : 20 }}>
+            <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+              <h2 style={{ width: isFolder ? '25%' : '100%', opacity: isEmpty ? 0.4 : 1 }}>
+                <ColorStripSpan account={this.account} />
+                {this.account.name + (isFolder ? ' 📂' : ' 📄')}
+                {` ${this.props.transactions.length} item` + (this.props.transactions.length === 1 ? '' : 's')}
+                {!isFolder && (' -- ' + this.totalAmountString)}
+              </h2>
+              {
+                isFolder &&
+                <div style={{ flex: 1 }}>
+                  {
+                    isFolder ?
+                      <ChartWrapper title='Distribution' chartData={this.folderAccountDistributionChartData} />
+                      :
+                      <ChartWrapper title='From/To' chartData={this.accountInOutChartData} />
+                  }
+                </div>
+              }
+            </div>
           </div>
-        </div>
-        <details open>
-          <TransactionList
-            ref={(ref) => this.transactionList = ref}
-            height={310}
-          />
-        </details>
-      </div>
+        </summary>
+        {
+          !isEmpty && !isFolder &&
+          <div style={{ height: height + 80 }}>
+            <TransactionList
+              ref={(ref) => this.transactionList = ref}
+              height={height}
+            />
+          </div>
+        }
+      </details>
     )
   }
 }
