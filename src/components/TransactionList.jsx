@@ -4,6 +4,8 @@ import { Modal } from '.';
 import { Typography, IconButton, Checkbox, Button } from '@material-ui/core'
 import EditIcon from '@material-ui/icons/Edit';
 import DeleteIcon from '@material-ui/icons/Delete';
+import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
+import ArrowDownwardIcon from '@material-ui/icons/ArrowDownward';
 
 import ObjectEditor from '../ObjectEditor/index';
 import { TransactionCreateFormat, TransactionEditFormat } from '../ObjectEditor/ObjectFormats';
@@ -41,6 +43,7 @@ export default class TransactionView extends React.Component {
     currentTransactionValue: {},
     error: null,
     selectedTransactionMap: {},
+    shouldShowReverse: false,
   }
 
   collection = null;
@@ -113,6 +116,14 @@ export default class TransactionView extends React.Component {
         <Typography color='textSecondary' style={{ width: '120px', marginRight: '25px' }}>
           {this.queryTime && ('took ' + this.queryTime + ' ms')}
         </Typography>
+        <Button size="small" variant="outlined" onClick={() => this.reverseList()}>
+          {
+            this.state.shouldShowReverse ?
+              <><ArrowUpwardIcon />Recent First</>
+              :
+              <><ArrowDownwardIcon />Chronological</>
+          }
+        </Button>
         <Button size="small" variant="outlined" onClick={() => this.selectAll()}>
           Select All
         </Button>
@@ -125,6 +136,10 @@ export default class TransactionView extends React.Component {
         </Button>
       </div>
     )
+  }
+
+  reverseList = () => {
+    this.setState({ shouldShowReverse: !this.state.shouldShowReverse });
   }
 
   selectAll = async () => {
@@ -217,9 +232,14 @@ export default class TransactionView extends React.Component {
                 itemCount={this.state.data.length}
                 itemKey={(index) => String(this.state.data[index].id)}
                 itemSize={30}
+                overscanCount={10}
               >
                 {({ index, style }) => {
-                  const transaction = this.state.data[index];
+                  let transaction;
+                  if (this.state.shouldShowReverse)
+                    transaction = this.state.data[this.state.data.length - index - 1];
+                  else
+                    transaction = this.state.data[index];
                   const id = transaction.id;
 
                   return (
