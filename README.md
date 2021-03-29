@@ -10,16 +10,27 @@
 - ⚙️ Create arbitrary rules to categorize transactions
 - 📊 Visualize income and expense over arbitrary time frame
 
-### Similar Projects
+
+## Screenshots
+<details>
+  
+![](./public/pic1.png)
+![](./public/pic2.png)
+![](./public/pic3.png)
+
+</details>
+
+
+## Similar Projects
 <details>
 
-#### Non-Open Source Products
+#### Non-Open Source
 - [Mint](https://mint.intuit.com)
 - [Microsoft: Money in Excel](https://www.microsoft.com/en-us/microsoft-365/blog/2020/06/15/introducing-money-excel-easier-manage-finances/)
 
 
 
-#### Open Source Products
+#### Open Source
 - https://akaunting.com (PHP)
 - [beancount/beancount: Beancount: Double-Entry Accounting from Text Files.](https://github.com/beancount/beancount) (Python)
 - [kresusapp/kresus: Get rich, or die codin'](https://github.com/kresusapp/kresus) (TypeScript)
