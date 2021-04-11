@@ -262,8 +262,23 @@ export default class TransactionView extends React.Component {
 }
 
 function TransactionTableBodyCells({ transaction, onEdit, isSelected, onChangeSelect }) {
-  const { id, time, title, debits, credits } = transaction;
+  const { id, time, title, debits, credits, tags } = transaction;
   const readable = [stringifyAccountsAndAmounts(debits), stringifyAccountsAndAmounts(credits)]
+
+  const showImport = true;
+  let tagToShow = tags.filter(tag => tag.startsWith('import/'))[0]
+  let tagColor;
+  if (tagToShow) {
+    tagToShow = tagToShow.replace('import/', '')
+    const tagNumber = tagToShow.split('@')[1].replaceAll('-', '')
+    // TODO: Not really working
+    tagColor = `hsla(${(tagNumber * 17 % 40) * 9}, 80%, 40%, 0.7)`
+  }
+  else {
+    tagToShow = 'N/A'
+    tagColor = `hsla(${(100 * 3 % 40) * 9}, 80%, 40%, 0.7)`
+  }
+
 
   return (
     <>
@@ -272,6 +287,7 @@ function TransactionTableBodyCells({ transaction, onEdit, isSelected, onChangeSe
       <div data-type="id" style={{ color: 'gray', fontSize: '50%' }}>{id}</div>
       <div data-type="time">{formatDate(time, false)}</div>
       <div data-type="title">{title}</div>
+      {showImport && <div style={{ color: tagColor }}>{tagToShow}</div>}
       <div data-type="debit">{readable[0]}</div>
       <div data-type="credit">{readable[1]}</div>
       <div data-type="amount">{sumOfAccountAndAmountList(debits).toReadable()}</div>
