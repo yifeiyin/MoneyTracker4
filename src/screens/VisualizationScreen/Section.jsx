@@ -70,7 +70,6 @@ export default class Section extends React.PureComponent {
   render() {
     const isFolder = this.account.isFolder ? true : null;
     const isEmpty = this.props.transactions.length === 0 ? true : null;
-    const height = Math.min(260, this.props.transactions.length * 30 + 10)
     return (
       <details>
         <summary>
@@ -98,12 +97,10 @@ export default class Section extends React.PureComponent {
         </summary>
         {
           !isEmpty && !isFolder &&
-          <div style={{ height: height + 80 }}>
-            <TransactionList
-              ref={(ref) => this.transactionList = ref}
-              height={height}
-            />
-          </div>
+          <TransactionList
+            ref={(ref) => this.transactionList = ref}
+            maxHeight={300}
+          />
         }
       </details>
     )

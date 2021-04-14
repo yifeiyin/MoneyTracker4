@@ -12,17 +12,43 @@ code {
     monospace;
 }
 
-.transaction-row {
+
+.transaction-list-container {
+  padding: 5;
   display: flex;
-  align-items: center;
-  height: 100%;
+  flex-direction: column;
+
+  overflow: auto;
+}
+
+.transaction-list-info-line {
+  display: flex;
+  padding: 10px 0px;
+  position: sticky;
+  top: 0;
+  z-index: 1; /* For material ui icon */
   background-color: white;
 }
 
-/* .transaction-row.even { */
+.transaction-list-table {
+  border: none;
+  border-spacing: 0;
+}
+
+.transaction-row {
+  background-color: white;
+  transition: .1s;
+}
+
+.transaction-row:hover {
+  background-color:rgba(173, 216, 230, 0.5);
+}
+
 .transaction-row.even {
   background-color: #F8F8F8;
 }
+
+
 
 
 .custom-property-editor-header {
@@ -36,19 +62,6 @@ code {
 .main-form-components-container button {
   text-transform: none;
 }
-
-.transaction-row {
-  transition: .1s;
-}
-.transaction-row:hover {
-  background-color:rgba(173, 216, 230, 0.5);
-}
-.transaction-row [data-type="id"] { flex: 0.5; }
-.transaction-row [data-type="time"] { flex: 1; }
-.transaction-row [data-type="title"] { flex: 5; }
-.transaction-row [data-type="debit"] { flex: 3; }
-.transaction-row [data-type="credit"] { flex: 3; }
-.transaction-row [data-type="amount"] { flex: 2; }
 
 .monospace-input input {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;

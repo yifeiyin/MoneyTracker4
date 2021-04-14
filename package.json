@@ -28,8 +28,6 @@
     "react-router-dom": "^5.2.0",
     "react-scripts": "^4.0.3",
     "react-simple-code-editor": "^0.11.0",
-    "react-virtualized-auto-sizer": "github:yifeiyin/react-virtualized-auto-sizer",
-    "react-window": "^1.8.6",
     "yup": "^0.32.9"
   },
   "scripts": {

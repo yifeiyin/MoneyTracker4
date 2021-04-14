@@ -11,8 +11,6 @@ import ObjectEditor from '../ObjectEditor/index';
 import { TransactionCreateFormat, TransactionEditFormat } from '../ObjectEditor/ObjectFormats';
 import { deepCopy, getTodaysDateAt0000, sumOfAccountAndAmountList, formatDate, ColorStripSpan } from '_core/helpers';
 import { queryTableGetCollection } from '_core/transactionQueryParser';
-import { FixedSizeList as List } from 'react-window';
-import AutoSizer from 'react-virtualized-auto-sizer';
 
 /*
 This component has 3 important tasks
@@ -106,14 +104,14 @@ export default class TransactionView extends React.Component {
     const selectedCount = this.selectedTransactionIds.length;
 
     return (
-      <div style={{ display: 'flex', margin: '10px' }}>
-        <Typography color='textPrimary' style={{ width: '100px', marginRight: '25px' }}>
+      <>
+        <Typography color='textPrimary' style={{ width: '100px', paddingRight: '25px' }}>
           {selectedCount === 0 ? '' : selectedCount + ' selected'}
         </Typography>
-        <Typography color='textSecondary' style={{ width: '100px', marginRight: '25px' }}>
+        <Typography color='textSecondary' style={{ width: '100px', paddingRight: '25px' }}>
           {this.state.data.length + ' item' + (this.state.data.length === 1 ? '' : 's')}
         </Typography>
-        <Typography color='textSecondary' style={{ width: '120px', marginRight: '25px' }}>
+        <Typography color='textSecondary' style={{ width: '120px', paddingRight: '25px' }}>
           {this.queryTime && ('took ' + this.queryTime + ' ms')}
         </Typography>
         <Button size="small" variant="outlined" onClick={() => this.reverseList()}>
@@ -134,7 +132,7 @@ export default class TransactionView extends React.Component {
           <DeleteIcon size="small" />
           Remove
         </Button>
-      </div>
+      </>
     )
   }
 
@@ -205,7 +203,7 @@ export default class TransactionView extends React.Component {
   }
 
 
-  isTransactionSelectedById(id) { return this.state.selectedTransactionMap[id]; }
+  isTransactionSelectedById(id) { return Boolean(this.state.selectedTransactionMap[id]); }
   onChangeSelect = (id, newValue) => {
     if (newValue) this.setState({ selectedTransactionMap: { ...this.state.selectedTransactionMap, [id]: true } })
     else this.setState({ selectedTransactionMap: { ...this.state.selectedTransactionMap, [id]: false } })
@@ -213,7 +211,7 @@ export default class TransactionView extends React.Component {
 
   render() {
     return (
-      <div style={{ padding: 5, display: 'flex', flexDirection: 'column', height: this.props.height ?? 280 }}>
+      <div className='transaction-list-container' style={{ height: this.props.height, maxHeight: this.props.maxHeight }}>
         <Modal open={this.state.currentTransactionId !== null} onModalRequestClose={() => this.onSaveTransaction(true)}>
           <ObjectEditor
             format={this.state.currentTransactionId === 'new' ? TransactionCreateFormat : TransactionEditFormat}
@@ -222,40 +220,27 @@ export default class TransactionView extends React.Component {
             onSave={this.onSaveTransaction}
           />
         </Modal>
-        <this.InformationLine />
-        <AutoSizer style={{ flex: 1 }}>
-          {
-            ({ height, width }) =>
-              <List
-                height={height}
-                width={width}
-                itemCount={this.state.data.length}
-                itemKey={(index) => String(this.state.data[index].id)}
-                itemSize={30}
-                overscanCount={10}
-              >
-                {({ index, style }) => {
-                  let transaction;
-                  if (this.state.shouldShowReverse)
-                    transaction = this.state.data[this.state.data.length - index - 1];
-                  else
-                    transaction = this.state.data[index];
-                  const id = transaction.id;
 
-                  return (
-                    <div className={'transaction-row' + (index % 2 ? ' even' : '')} style={style}>
-                      <TransactionTableBodyCells
-                        isSelected={this.isTransactionSelectedById(id)}
-                        onChangeSelect={(newValue) => this.onChangeSelect(id, newValue)}
-                        onEdit={() => this.onEdit(transaction)}
-                        transaction={transaction}
-                      />
-                    </div>
-                  )
-                }}
-              </List>
-          }
-        </AutoSizer>
+        <div className='transaction-list-info-line'>
+          <this.InformationLine />
+        </div>
+
+        <table className='transaction-list-table'>
+          <tbody>
+            {
+              this.state.data.map((transaction, index) =>
+                <tr key={String(transaction.id)} className={'transaction-row' + (index % 2 ? ' even' : '')}>
+                  <TransactionTableBodyCells
+                    isSelected={this.isTransactionSelectedById(transaction.id)}
+                    onChangeSelect={(newValue) => this.onChangeSelect(transaction.id, newValue)}
+                    onEdit={() => this.onEdit(transaction)}
+                    transaction={transaction}
+                  />
+                </tr>
+              )[this.state.shouldShowReverse ? 'reverse' : 'map'](a => a) /* This works because reverse ignores the argument */
+            }
+          </tbody>
+        </table>
       </div>
     );
   }
@@ -282,15 +267,17 @@ function TransactionTableBodyCells({ transaction, onEdit, isSelected, onChangeSe
 
   return (
     <>
-      <Checkbox checked={isSelected} onChange={(e) => onChangeSelect(e.target.checked)} />
-      <IconButton size='small' onClick={onEdit}><EditIcon /></IconButton>
-      <div data-type="id" style={{ color: 'gray', fontSize: '50%' }}>{id}</div>
-      <div data-type="time">{formatDate(time, false)}</div>
-      <div data-type="title">{title}</div>
-      {showImport && <div style={{ color: tagColor }}>{tagToShow}</div>}
-      <div data-type="debit">{readable[0]}</div>
-      <div data-type="credit">{readable[1]}</div>
-      <div data-type="amount">{sumOfAccountAndAmountList(debits).toReadable()}</div>
+      <td>
+        <Checkbox checked={isSelected} onChange={(e) => onChangeSelect(e.target.checked)} />
+        <IconButton size='small' onClick={onEdit}><EditIcon /></IconButton>
+      </td>
+      <td data-type="id" style={{ color: 'gray', fontSize: '50%' }}>{id}</td>
+      <td data-type="time">{formatDate(time, false)}</td>
+      <td data-type="title">{title}</td>
+      {showImport && <td style={{ color: tagColor }}>{tagToShow}</td>}
+      <td data-type="debit">{readable[0]}</td>
+      <td data-type="credit">{readable[1]}</td>
+      <td data-type="amount">{sumOfAccountAndAmountList(debits).toReadable()}</td>
     </>
   );
 }
