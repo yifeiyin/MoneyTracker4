@@ -71,8 +71,8 @@ async function masterCardGetAdditionalAttributesFromAPI(result, _, source) {
   return Object.assign(result, await getAdditionalAttributesFromAPI(source))
 }
 
-async function getAdditionalAttributesFromAPI(desc) {
-  let details = await fetchDetails(desc)
+async function getAdditionalAttributesFromAPI(transaction) {
+  let details = await fetchDetails(transaction.desc)
   const result = {}
   if (details !== null) {
     const { address, merchantCategory, merchantDbaName, matchConfidenceScore } = details;
