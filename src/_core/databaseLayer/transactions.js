@@ -1,6 +1,7 @@
 import { TransactionDatabaseSchema, TransactionSchema } from '../schema';
 import { getTodaysDateAt0000 } from '_core/helpers'
 import CheckpointManager from './checkpoints';  // eslint-disable-line
+import StringSimilarity from 'string-similarity';
 
 export default class TransactionManager {
   static getInitialSetupData() {
@@ -59,5 +60,14 @@ export default class TransactionManager {
 
   async getAll() {
     return await this.table.toArray();
+  }
+
+  async findSimilar(arg) {
+    const allTransactions = await this.getAll();
+    const trans = allTransactions.filter(x => Boolean(x.rawDesc));
+
+    const { bestMatch, bestMatchIndex } = StringSimilarity.findBestMatch(arg, trans.map(x => x.rawDesc));
+    console.log(bestMatch);
+    console.log(trans[bestMatchIndex]);
   }
 }
