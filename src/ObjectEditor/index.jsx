@@ -83,44 +83,44 @@ export default class ObjectEditor extends React.Component {
                 </FormControl>
             )
           }
-
-          {/* ======== Custom Property Editor ======== */}
-          {
-            format.disableCustomProperties === true ? null :
-              <div className='custom-property-editor-container'>
-                <div className='custom-property-editor-header'>
-                  <Typography variant='h5' display='inline'>Custom Properties</Typography>
-
-                  <Button
-                    color='primary' variant='outlined' size='small' style={{ margin: 5 }} startIcon={<AddIcon />}
-                    onClick={() => {
-                      const newPair = global.prompt('Enter a key-value pair: (use space to separate)', 'key value');
-                      if (newPair === null) return;
-                      let [key, ...value] = newPair.split(' ');
-                      value = value.join(' ');
-                      if (value === undefined) { return alert('No value was detected!'); }
-                      this.onChange(key, value);
-                    }}
-                  >Add New</Button>
-                </div>
-                {
-                  Object.keys(values).filter(k => !format.fields.map(f => f.id).flat().includes(k)).map(key =>
-                    <ButtonGroup color='primary' size='small' style={{ margin: 5 }} key={key}>
-                      <Button onClick={() => {
-                        if (global.confirm(`Confirm delete key ${key}?`))
-                          this.onChange(key, undefined);
-                      }}>{key}</Button>
-
-                      <Button onClick={() => {
-                        const newValue = global.prompt(`Editing ${key}:`, ensureString(values[key]));
-                        if (newValue !== null) this.onChange(key, newValue);
-                      }}>{ensureString(values[key])}</Button>
-                    </ButtonGroup>
-                  )
-                }
-              </div>
-          }
         </FormGroup>
+
+        {/* ======== Custom Property Editor ======== */}
+        {
+          format.disableCustomProperties === true ? null :
+            <div className='custom-property-editor-container'>
+              <div className='custom-property-editor-header'>
+                <Typography variant='h5' display='inline'>Custom Properties</Typography>
+
+                <Button
+                  color='primary' variant='outlined' size='small' style={{ margin: 5 }} startIcon={<AddIcon />}
+                  onClick={() => {
+                    const newPair = global.prompt('Enter a key-value pair: (use space to separate)', 'key value');
+                    if (newPair === null) return;
+                    let [key, ...value] = newPair.split(' ');
+                    value = value.join(' ');
+                    if (value === undefined) { return alert('No value was detected!'); }
+                    this.onChange(key, value);
+                  }}
+                >Add New</Button>
+              </div>
+              {
+                Object.keys(values).filter(k => !format.fields.map(f => f.id).flat().includes(k)).map(key =>
+                  <ButtonGroup color='primary' size='small' style={{ margin: 5 }} key={key}>
+                    <Button onClick={() => {
+                      if (global.confirm(`Confirm delete key ${key}?`))
+                        this.onChange(key, undefined);
+                    }}>{key}</Button>
+
+                    <Button onClick={() => {
+                      const newValue = global.prompt(`Editing ${key}:`, ensureString(values[key]));
+                      if (newValue !== null) this.onChange(key, newValue);
+                    }}>{ensureString(values[key])}</Button>
+                  </ButtonGroup>
+                )
+              }
+            </div>
+        }
 
         {/* ======== Account Selection Modal ======== */}
         <AccountPicker ref={(ref) => this.AccountPickerRef = ref} />
