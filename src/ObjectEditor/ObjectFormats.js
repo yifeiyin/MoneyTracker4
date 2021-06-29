@@ -63,3 +63,17 @@ export const RunScriptFormat = (type, files) => {
     ]
   };
 };
+
+export const ImportFormat = {
+  title: '',
+  fields: [
+    { id: 'type', type: 'select', choices: ['debit', 'credit'] },
+    { id: 'thisSide', type: 'account' },
+    { id: 'otherSide', type: 'account' },
+    { id: 'amount', type: 'monum' },
+    { id: '$time', type: 'datetime' },
+    { id: '$title', type: 'input' },
+    { id: '$tags', type: 'array-of-string' },
+  ],
+  actions: [],
+};

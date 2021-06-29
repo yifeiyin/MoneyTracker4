@@ -1,4 +1,5 @@
 import { toTitleCase, getNowDateTimeString } from '_core/helpers'
+import Monum from '_core/monum';
 
 import {
   postProcess,
@@ -50,10 +51,10 @@ export function transformStatement(originalStatement, tag) {
     result.push({
       $time,
       $title: null,
-      thisSide: 'BMO MasterCard',
+      thisSide: 112,
       otherSide: null,
       type,
-      amount,
+      amount: new Monum('CAD', amount),
       _rawDesc: desc,
       _postingDate,
       $tags: [tag],
