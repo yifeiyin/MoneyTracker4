@@ -35,6 +35,8 @@ export function getTodaysDateAt0000() {
 }
 
 export function formatDate(date, withTimezone = true) {
+  if (!date) return 'Invalid Date';
+
   return (
     date.getFullYear() + '-' +
     TwoDigitPad(date.getMonth() + 1) + '-' +
