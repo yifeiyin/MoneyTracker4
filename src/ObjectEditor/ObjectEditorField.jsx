@@ -21,7 +21,7 @@ export default function ObjectEditorField(props) {
   useEffect(() => {
     if (type === 'monum') {
       if (monumInputValue === 'uninitialized')
-        setMonumInputValue(value.toReadable());
+        setMonumInputValue((value ?? new Monum()).toReadable());
     } else {
       setMonumInputValue('N/A');
     }
