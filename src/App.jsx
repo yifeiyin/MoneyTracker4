@@ -13,6 +13,7 @@ import {
   Button
 } from '@material-ui/core';
 
+import ImportScreen from './screens/ImportScreen';
 import ImportExportScreen from './screens/ImportExportScreen';
 import AccountsScreen from './screens/AccountsScreen';
 import TransactionsScreen from './screens/TransactionsScreen';
@@ -24,6 +25,7 @@ import { useActions, useState } from './overmind';
 const routes = [
   ['/accounts', AccountsScreen, 'Accounts'],
   ['/data-management', DataManagementScreen, 'Data Management'],
+  ['/import', ImportScreen, 'Import'],
   ['/import-export', ImportExportScreen, 'Import/Export'],
   ['/transactions', TransactionsScreen, 'Transactions'],
   ['/rules', RulesScreen, 'Rules'],

@@ -31,7 +31,7 @@ export default async function csvToTransactions(input, overmind) {
 }
 
 
-function transformStatement(originalStatement, tag) {
+export function transformStatement(originalStatement, tag) {
   const lines = originalStatement.split('\n');
 
   let result = [];
