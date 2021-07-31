@@ -2,7 +2,7 @@ import React from 'react';
 import { Button, Card, CardContent } from '@material-ui/core';
 import { connect } from '../overmind'
 
-import { formatDate, assert } from '_core/helpers'
+import { formatDate, assert, parse } from '_core/helpers'
 
 import { transformStatement as creditToItems } from '_core/extendedRules/bmoCredit'
 
@@ -49,8 +49,24 @@ class ImportScreen extends React.Component {
     canUpload: false,
     items: [{ state: PENDING, content: { _rawDesc: 'hi' }, id: '1' }],
     selectedItemId: null,
+    searchResult: [],
   };
   itemRefs = {};
+
+  componentDidMount() {
+    this.restoreItem();
+  }
+
+  storeItem = () => {
+    localStorage.setItem('import-screen', JSON.stringify(this.state.items));
+  }
+
+  restoreItem = () => {
+    const a = localStorage.getItem('import-screen');
+    if (a) {
+      this.setState({ items: parse(a) });
+    }
+  }
 
   get currentSelectedItem() {
     const tmp = this.state.items.filter(item => item.id === this.state.selectedItemId)
@@ -124,6 +140,11 @@ class ImportScreen extends React.Component {
 
   }
 
+  search = async () => {
+    const result = await global.transactionManager.findSimilar(this.currentFormValue._rawDesc);
+    this.setState({ searchResult: result });
+  }
+
   onSelectItem = (item) => {
     this.setState({ selectedItemId: item.id });
     this.itemRefs[item.id].scrollIntoView({ behavior: "auto", block: "nearest", inline: "nearest" });
@@ -153,6 +174,9 @@ class ImportScreen extends React.Component {
           </div>
           <Button variant='outlined' disabled={!this.state.canUpload} onClick={() => this.upload()}>Upload</Button>
           <Button variant='outlined' onClick={() => this.finalize()}>finalize</Button>
+          <Button variant='outlined' onClick={() => this.storeItem()}>Store Item</Button>
+          <Button variant='outlined' onClick={() => this.restoreItem()}>Restore Item</Button>
+          <Button variant='outlined' onClick={() => localStorage.removeItem('import-screen')}>Clear Stored Item</Button>
         </div>
 
         <div className="flex">
@@ -170,6 +194,18 @@ class ImportScreen extends React.Component {
             )}
           </div>
           <div className='flex flex-col' style={{ flex: 2, height: 'calc(100vh - 130px)' }}>
+            <Button variant='outlined' onClick={() => this.search()}>Search</Button>
+            <div className='bg-blue-400'>
+              {
+                this.state.searchResult.map(({ rating, target }, index) =>
+                  <div key={String(index)} className={index % 2 === 0 ? "bg-blue-300" : ""}>
+                    <div className="text-xl">{Math.round(rating * 100)}</div>
+                    <div className="text-base">{target.rawDesc}</div>
+                    <div className="text-sm"><pre>{JSON.stringify(target, null, 2)}</pre></div>
+                  </div>
+                )
+              }
+            </div>
             <div className='flex-auto'>
               {
                 this.currentFormValue &&
