@@ -47,7 +47,7 @@ class ImportScreen extends React.Component {
   state = {
     dropzonePromptText: '',
     canUpload: false,
-    items: [{ state: PENDING, content: { _rawDesc: 'hi', amount: 100 }, id: '1' }],
+    items: [{ state: PENDING, content: { _rawDesc: 'hi' }, id: '1' }],
     selectedItemId: null,
   };
   itemRefs = {};
@@ -203,7 +203,7 @@ class ImportScreen extends React.Component {
 
 function ListItem({ onRef, state, content, isFocused, onPress }) {
   let amountReadable = content?.amount;
-  if (amountReadable.toReadable) amountReadable = amountReadable.toReadable()
+  if (amountReadable?.toReadable) amountReadable = amountReadable.toReadable()
 
   const datetimeReadable = formatDate(content?.$time, false);
   const rawDescReadable = content?._rawDesc ?? '???';
