@@ -2,7 +2,7 @@ import React from 'react';
 import { Button } from '@material-ui/core';
 import { connect } from '../overmind'
 
-import { formatDate, assert, parse } from '_core/helpers'
+import { formatDate, assert, parse, getNowDateTimeString } from '_core/helpers'
 
 import { transformStatement as creditToItems } from '_core/extendedRules/bmoCredit'
 
@@ -18,6 +18,7 @@ import StateAdd1Icon from '@material-ui/icons/CheckCircleOutline';
 import StatePending1Icon from '@material-ui/icons/BlurCircular';
 // import StatePending2Icon from '@material-ui/icons/RadioButtonUnchecked';
 import { withSnackbar } from 'notistack';
+import { postProcess } from '_core/extendedRules/helper';
 
 const PENDING = 'pending';
 const ADD = 'add';
@@ -109,7 +110,7 @@ class ImportScreen extends React.Component {
       let rawFileContent = atob(reader.result.split('base64,')[1]);
       let newItems, errorText;
       try {
-        newItems = creditToItems(rawFileContent, 'TODO');
+        newItems = creditToItems(rawFileContent, 'import/credit@' + getNowDateTimeString());
       } catch (error) {
         this.props.enqueueSnackbar(String(error), { variant: 'error' });
         errorText = 'ERROR';
@@ -136,8 +137,30 @@ class ImportScreen extends React.Component {
     this.setState({ items: contents.map((content, index) => ({ state: PENDING, id: String(index), content })) });
   }
 
-  finalize = () => {
+  finalize = async () => {
+    const intermediates = [];
+    for (const input of this.state.items) {
+      if (input.state !== ADD) continue;
+      try {
+        intermediates.push(await postProcess(input.content));
+      } catch (error) {
+        alert('Error in postProcess: ' + error);
+        console.error(error);
+        return;
+      }
+    }
 
+    for (const t of intermediates) {
+      try {
+        await global.transactionManager.create(t);
+      } catch (error) {
+        alert('Error in create: ' + error);
+        console.error(error);
+        return;
+      }
+    }
+
+    alert('Done!');
   }
 
   autoSelectFirstIfSuitable = () => {

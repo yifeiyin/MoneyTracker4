@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import {
   Input,
   Select,
@@ -17,15 +17,24 @@ export default function ObjectEditorField(props) {
   // eslint-disable-next-line no-unused-vars
   const { id, value, type, label, propertyType, onChange } = props;
 
+  const monumPreviousValue = React.useRef(null);
   const [monumInputValue, setMonumInputValue] = React.useState('uninitialized');
-  useEffect(() => {
+  React.useEffect(() => {
     if (type === 'monum') {
       if (monumInputValue === 'uninitialized')
         setMonumInputValue((value ?? new Monum()).toReadable());
+
+      if (monumPreviousValue.current && monumPreviousValue.current.sub(value).isNotZero()) {
+        setMonumInputValue((value ?? new Monum()).toReadable());
+      }
+
+      monumPreviousValue.current = value;
     } else {
       setMonumInputValue('N/A');
     }
   }, [monumInputValue, type, value]);
+  // }, [value]);
+
 
   switch (type) {
     case 'input':

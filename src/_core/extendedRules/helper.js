@@ -113,12 +113,12 @@ export async function askToIdentify(groupToAppend, transaction, { overmindRules,
 export async function postProcess(raw) {
   let { type, thisSide, otherSide, amount } = raw;
 
-  const thisSideAcc = await global.accountManager.fuzzyFindGetId(thisSide);
-  const otherSideAcc = await global.accountManager.fuzzyFindGetId(otherSide);
+  const thisSideAcc = await global.accountManager.fuzzyFindGetId(`id(${thisSide})`);
+  const otherSideAcc = await global.accountManager.fuzzyFindGetId(`id(${otherSide})`);
   assert(thisSideAcc !== undefined, thisSide + ' not found');
   assert(otherSideAcc !== undefined, otherSide + ' not found');
-  const thisSideCrDr = { acc: thisSideAcc, amt: new Monum('CAD', amount) };
-  const otherSideCrDr = { acc: otherSideAcc, amt: new Monum('CAD', amount) };
+  const thisSideCrDr = { acc: thisSideAcc, amt: amount };
+  const otherSideCrDr = { acc: otherSideAcc, amt: amount };
   if (type === $CR) {
     raw.$credits = thisSideCrDr;
     raw.$debits = otherSideCrDr;

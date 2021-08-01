@@ -11,6 +11,7 @@ import ObjectEditor from '../ObjectEditor/index';
 import { TransactionCreateFormat, TransactionEditFormat } from '../ObjectEditor/ObjectFormats';
 import { deepCopy, getTodaysDateAt0000, sumOfAccountAndAmountList, formatDate, ColorStripSpan } from '_core/helpers';
 import { queryTableGetCollection } from '_core/transactionQueryParser';
+import { withSnackbar } from 'notistack';
 
 /*
 This component has 3 important tasks
@@ -34,7 +35,7 @@ Actions
 */
 
 
-export default class TransactionView extends React.Component {
+class TransactionView extends React.Component {
   state = {
     data: [],
     currentTransactionId: null,
@@ -281,6 +282,8 @@ function TransactionTableBodyCells({ transaction, onEdit, isSelected, onChangeSe
     </>
   );
 }
+
+export default withSnackbar(TransactionView);
 
 
 function stringifyAccountsAndAmounts(side) {
