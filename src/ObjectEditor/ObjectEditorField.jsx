@@ -122,7 +122,7 @@ export default function ObjectEditorField(props) {
 }
 
 function ensureDefined(value) {
-  return value === undefined ? '' : value
+  return value ?? ''
 }
 
 function isValidMonum(input) {

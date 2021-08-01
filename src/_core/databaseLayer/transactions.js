@@ -63,18 +63,23 @@ export default class TransactionManager {
   }
 
   async findSimilar(rawDesc) {
-    const allTransactions = await this.getAll();
-    const trans = allTransactions.filter(x => Boolean(x.rawDesc));
+    const allTransactions = (await this.getAll()).reverse();
 
-    const { ratings } = StringSimilarity.findBestMatch(rawDesc, trans.map(x => x.rawDesc));
+    return allTransactions
+      .map(tran => {
+        if (!tran.rawDesc) return false;
 
-    return ratings.map(({ target, rating }) => {
-      if (rating < 0.1) return false;
+        const rating = StringSimilarity.compareTwoStrings(tran.rawDesc, rawDesc);
 
-      return {
-        rating,
-        target: trans.filter(x => x.rawDesc === target)[0],
-      }
-    }).filter(Boolean).sort((a, b) => b.rating - a.rating).filter((d, i) => i < 15);
+        if (rating < 0.5) return false;
+
+        return {
+          rating,
+          target: tran,
+        }
+      })
+      .filter(Boolean)
+      .sort((a, b) => b.rating - a.rating)
+      .filter((d, i) => i < 15);
   }
 }

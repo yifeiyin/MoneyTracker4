@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Card, CardContent } from '@material-ui/core';
+import { Button } from '@material-ui/core';
 import { connect } from '../overmind'
 
 import { formatDate, assert, parse } from '_core/helpers'
@@ -47,7 +47,7 @@ class ImportScreen extends React.Component {
   state = {
     dropzonePromptText: '',
     canUpload: false,
-    items: [{ state: PENDING, content: { _rawDesc: 'hi' }, id: '1' }],
+    items: [],
     selectedItemId: null,
     searchResult: [],
   };
@@ -105,7 +105,7 @@ class ImportScreen extends React.Component {
   tryParse = (files) => {
     const file = files[0];
     const reader = new FileReader();
-    reader.addEventListener("load", () => {
+    reader.addEventListener('load', () => {
       let rawFileContent = atob(reader.result.split('base64,')[1]);
       let newItems, errorText;
       try {
@@ -140,13 +140,55 @@ class ImportScreen extends React.Component {
 
   }
 
+  autoSelectFirstIfSuitable = () => {
+    if (this.state.searchResult.length === 0) return;
+    if (!this.currentFormValue) return;
+    if (this.currentFormValue.otherSide) return;
+    if (this.currentFormValue.$title) return;
+    if (this.state.searchResult[0].rating !== 100) return;
+    this.onClickSuggestion(0);
+  }
+
+  onClickSuggestion = (index) => {
+    const { otherSideId, title } = this.state.searchResult[index];
+    this.currentFormValue = { ...this.currentFormValue, otherSide: otherSideId, $title: title };
+  }
+
   search = async () => {
-    const result = await global.transactionManager.findSimilar(this.currentFormValue._rawDesc);
-    this.setState({ searchResult: result });
+    if (!this.currentFormValue) return;
+    const similarTrans = await global.transactionManager.findSimilar(this.currentFormValue._rawDesc);
+    const searchResult = [];
+    const set = new Set();
+
+    for (const { rating, target } of similarTrans) {
+      let otherSideId = target.debits?.[0]?.acc;
+      if (!otherSideId) continue;
+
+      const name = global.accountManager.fromIdToName(otherSideId);
+
+      const x = {
+        rating: Math.round(rating * 100),
+        id: target.id,
+        title: target.title,
+        rawDesc: target.rawDesc,
+        otherSide: name,
+        otherSideId,
+      }
+
+      if (set.has(x.title + x.rawDesc + x.otherSide)) continue;
+      set.add(x.title + x.rawDesc + x.otherSide);
+      searchResult.push(x);
+    }
+
+    this.setState({ searchResult }, () => {
+      this.autoSelectFirstIfSuitable();
+    });
   }
 
   onSelectItem = (item) => {
-    this.setState({ selectedItemId: item.id });
+    this.setState({ selectedItemId: item.id }, () => {
+      this.search();
+    });
     this.itemRefs[item.id].scrollIntoView({ behavior: "auto", block: "nearest", inline: "nearest" });
   }
 
@@ -177,6 +219,7 @@ class ImportScreen extends React.Component {
           <Button variant='outlined' onClick={() => this.storeItem()}>Store Item</Button>
           <Button variant='outlined' onClick={() => this.restoreItem()}>Restore Item</Button>
           <Button variant='outlined' onClick={() => localStorage.removeItem('import-screen')}>Clear Stored Item</Button>
+          <Button variant='outlined' onClick={() => this.search()}>Search Again</Button>
         </div>
 
         <div className="flex">
@@ -194,14 +237,17 @@ class ImportScreen extends React.Component {
             )}
           </div>
           <div className='flex flex-col' style={{ flex: 2, height: 'calc(100vh - 130px)' }}>
-            <Button variant='outlined' onClick={() => this.search()}>Search</Button>
-            <div className='bg-blue-400'>
+            <div className='h-60 m-5 rounded shadow overflow-auto'>
               {
-                this.state.searchResult.map(({ rating, target }, index) =>
-                  <div key={String(index)} className={index % 2 === 0 ? "bg-blue-300" : ""}>
-                    <div className="text-xl">{Math.round(rating * 100)}</div>
-                    <div className="text-base">{target.rawDesc}</div>
-                    <div className="text-sm"><pre>{JSON.stringify(target, null, 2)}</pre></div>
+                this.state.searchResult.map(({ rating, title, otherSide, rawDesc }, index) =>
+                  <div key={String(index)} className={index % 2 === 0 ? "bg-gray-100" : ""}>
+                    <div className="flex p-2 h-16 transition hover:bg-gray-200 cursor-pointer" onClick={() => this.onClickSuggestion(index)}>
+                      <div className="text-xl self-center font-black mr-2">{rating === 100 ? '✅' : rating}</div>
+                      <div className="flex flex-col">
+                        <div className="text-base font-bold">{otherSide}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{title}</div>
+                        <div className="text-base"><pre>{rawDesc}</pre></div>
+                      </div>
+                    </div>
                   </div>
                 )
               }
@@ -217,7 +263,12 @@ class ImportScreen extends React.Component {
               }
             </div>
 
-            <div className="grid grid-cols-3 gap-x-4 gap-y-10 mt-20 p-16">
+            <div className="grid grid-cols-3 gap-x-4 gap-y-4 mt-10 p-16">
+              {/* <span></span>
+              <span></span>
+              <Button onClick={() => this.action(ADD, 'next')} variant='contained' color='primary'>{'First'}<ImportItemState state={ADD} />{' & Next'}</Button> */}
+
+
               <Button onClick={() => this.action(IGNORE, 'next')} variant='contained' color='primary'><ImportItemState state={IGNORE} />{' & Next'}</Button>
               <Button onClick={() => this.action(PENDING, 'next')} variant='contained' color='primary'><ImportItemState state={PENDING} />{' & Next'}</Button>
               <Button onClick={() => this.action(ADD, 'next')} variant='contained' color='primary'><ImportItemState state={ADD} />{' & Next'}</Button>
@@ -245,16 +296,14 @@ function ListItem({ onRef, state, content, isFocused, onPress }) {
   const rawDescReadable = content?._rawDesc ?? '???';
 
   return (
-    <Card ref={ref => onRef(ref)} raised={isFocused} onClick={onPress} className='m-2'>
-      <CardContent>
-        <div className="flex justify-between items-center">
-          <ImportItemState state={state} />
-          <span>{datetimeReadable}</span>
-          <span>{amountReadable}</span>
-        </div>
-        <span className='font-mono'>{rawDescReadable}</span>
-      </CardContent>
-    </Card>
+    <div className={'m-2 cursor-pointer rounded bg-white px-3 py-2 transition border ' + (isFocused ? 'shadow-lg border-black' : 'shadow')} ref={ref => onRef(ref)} onClick={onPress}>
+      <div className="flex justify-between items-center">
+        <ImportItemState state={state} />
+        <span>{datetimeReadable}</span>
+        <span>{amountReadable}</span>
+      </div>
+      <span className='font-mono'>{rawDescReadable}</span>
+    </div>
   )
 }
 
